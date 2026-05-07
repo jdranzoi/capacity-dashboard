@@ -5,7 +5,7 @@ import { format, parseISO } from 'date-fns'
 const METRICS = [
   { key: 'netCapacityHours' as const, label: 'Net capacity', worklog: false },
   { key: 'plannedHours' as const, label: 'Planned', worklog: false },
-  { key: 'availabilityHours' as const, label: 'Availability', worklog: false },
+  { key: 'availabilityHours' as const, label: 'Remaining capacity', worklog: false },
   { key: 'ptoHours' as const, label: 'PTO', worklog: true },
   { key: 'billableHours' as const, label: 'Billable', worklog: true },
   { key: 'loggedHours' as const, label: 'Logged', worklog: true },
@@ -46,10 +46,11 @@ export function WeeklyHeadlineSection({
       <div>
         <h2 className="text-base font-semibold">Weekly metrics — {monthLabel}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Net capacity, planned, and availability are monthly snapshot values split by Mon–Fri
-          weight. PTO uses Tempo worklogs flagged as PTO in the reference month (by worklog date,
-          through calendar month end, not the MTD cap used for billable and logged). Billable and logged
-          stay MTD
+          Net capacity, planned, and remaining capacity are monthly snapshot values split by Mon–Fri
+          weight. Remaining capacity is the ingested bench figure (net capacity minus planned hours at
+          sync); hours logged as PTO are not subtracted in this row. PTO uses Tempo worklogs flagged as
+          PTO in the reference month (by worklog date, through calendar month end, not the MTD cap used
+          for billable and logged). Billable and logged stay MTD
           {asOfDate ? ` through ${asOfDate}` : ''}. Planned excludes PTO plan lines.
         </p>
       </div>

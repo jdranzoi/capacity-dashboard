@@ -28,7 +28,7 @@ export type WeeklyHeadline = {
   netCapacityHours: number
   /** Prorated from `fact_plans` (is_pto = false), latest sync. */
   plannedHours: number
-  /** Prorated from `fact_bench.availability_hours`, latest sync. */
+  /** Remaining capacity (bench): prorated from `fact_bench.availability_hours`, latest sync. */
   availabilityHours: number
   /** From `fact_worklogs` where is_pto = true; sums through calendar month end (not the MTD worklog cap). */
   ptoHours: number
