@@ -18,6 +18,8 @@ async function WeeklyData() {
     <WeeklyHeadlineSection
       monthLabel={data.monthLabel}
       asOfDate={data.asOfDate}
+      snapshotId={data.snapshotId}
+      syncCreatedAt={data.syncCreatedAt}
       weeks={data.weeks}
     />
   )
@@ -25,14 +27,7 @@ async function WeeklyData() {
 
 export default function OverviewPage() {
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-xl font-semibold">Overview</h1>
-        <p className="text-sm text-muted-foreground">
-          Month-to-date workload from Tempo worklogs (single section while we validate the pipeline).
-        </p>
-      </div>
-
+    <div className="flex flex-col gap-6">
       <Suspense fallback={<WeeklyHeadlineSkeleton />}>
         <WeeklyData />
       </Suspense>

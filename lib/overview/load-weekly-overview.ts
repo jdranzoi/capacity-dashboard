@@ -39,6 +39,10 @@ export type WeeklyHeadline = {
 export type WeeklyOverviewData = {
   monthLabel: string
   asOfDate: string | null
+  /** Latest `sync_snapshot.id` used for snapshot facts (read-only). */
+  snapshotId: string | null
+  /** `sync_snapshot.created_at` for the row above (ingestion freshness). */
+  syncCreatedAt: string | null
   weeks: WeeklyHeadline[]
   error: string | null
 }
@@ -103,6 +107,8 @@ export async function loadWeeklyOverview(
   const empty: WeeklyOverviewData = {
     monthLabel,
     asOfDate: null,
+    snapshotId: null,
+    syncCreatedAt: null,
     weeks: [],
     error: null,
   }
@@ -248,6 +254,8 @@ export async function loadWeeklyOverview(
     return {
       monthLabel,
       asOfDate: logThroughStr,
+      snapshotId: latest.id,
+      syncCreatedAt: latest.createdAt,
       weeks,
       error: null,
     }

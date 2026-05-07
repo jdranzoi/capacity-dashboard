@@ -2,34 +2,40 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export function WeeklyHeadlineSkeleton() {
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <Skeleton className="h-5 w-56" />
-        <Skeleton className="h-4 w-[480px] max-w-full" />
+    <div className="flex flex-col gap-6">
+      <div className="space-y-3 border-b border-border/80 pb-5">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-64" />
+          <Skeleton className="h-4 w-full max-w-xl" />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Skeleton className="h-9 w-56" />
+          <Skeleton className="h-16 min-w-[200px] flex-1" />
+          <Skeleton className="h-8 w-24" />
+        </div>
       </div>
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/40">
-              {Array.from({ length: 7 }).map((_, i) => (
-                <th key={i} className="px-4 py-2">
-                  <Skeleton className="h-3 w-10 ml-auto" style={i === 0 ? { marginLeft: 0 } : {}} />
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: 6 }).map((_, row) => (
-              <tr key={row} className="border-b border-border/50 last:border-0">
-                {Array.from({ length: 7 }).map((_, col) => (
-                  <td key={col} className="px-4 py-2.5">
-                    <Skeleton className="h-4 w-12 ml-auto" style={col === 0 ? { marginLeft: 0, width: '80px' } : {}} />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="rounded-xl border border-border p-3">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="mt-2 h-7 w-20" />
+            <Skeleton className="mt-2 h-3 w-full" />
+            <Skeleton className="mt-3 h-10 w-full" />
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-12">
+        <Skeleton className="h-72 rounded-xl lg:col-span-7" />
+        <Skeleton className="h-72 rounded-xl lg:col-span-3" />
+        <Skeleton className="h-72 rounded-xl lg:col-span-2" />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-12">
+        <Skeleton className="h-80 rounded-xl lg:col-span-6" />
+        <Skeleton className="h-56 rounded-xl lg:col-span-3" />
+        <Skeleton className="h-56 rounded-xl lg:col-span-3" />
       </div>
     </div>
   )
