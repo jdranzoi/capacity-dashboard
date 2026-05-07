@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { SyncStatus } from './sync-status'
 import { SignOutButton } from './sign-out-button'
+import { ThemeToggle } from './theme-toggle'
 
 const roleLabels: Record<string, string> = {
   admin: 'Admin',
@@ -30,19 +31,20 @@ export async function Header() {
   const roleLabel = roleLabels[role] ?? role
 
   return (
-    <header className="flex h-14 items-center justify-between border-b px-6">
+    <header className="flex h-12 shrink-0 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm">
       <SyncStatus />
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
         {roleLabel && (
-          <Badge variant="secondary" className="text-xs">
+          <Badge variant="secondary" className="text-xs font-medium">
             {roleLabel}
           </Badge>
         )}
         <div className="flex items-center gap-2">
-          <Avatar className="h-7 w-7">
-            <AvatarFallback className="text-xs">{getInitials(displayName)}</AvatarFallback>
+          <Avatar className="h-6 w-6">
+            <AvatarFallback className="text-[10px]">{getInitials(displayName)}</AvatarFallback>
           </Avatar>
-          <span className="text-sm text-muted-foreground">{displayName}</span>
+          <span className="text-xs text-muted-foreground">{displayName}</span>
         </div>
         <SignOutButton />
       </div>

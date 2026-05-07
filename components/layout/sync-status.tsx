@@ -1,5 +1,6 @@
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServiceClientCached } from "@/lib/supabase/server";
 import { formatDistanceToNow } from "date-fns";
+import { cacheLife } from "next/cache";
 
 type StatusTier = "fresh" | "stale" | "old" | "error";
 
@@ -30,20 +31,25 @@ const tierDot: Record<StatusTier, string> = {
 };
 
 export async function SyncStatus() {
+  'use cache'
+  cacheLife('minutes')
+
   let completedAt: string | null = null;
+  let snapshotId: string | null = null;
   let status: string | null = null;
 
   try {
-    const supabase = await createServiceClient();
+    const supabase = createServiceClientCached();
     const { data, error } = await supabase
       .from("sync_snapshot")
-      .select("created_at")
+      .select("id, created_at")
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (error) throw error;
     completedAt = data?.created_at ?? null;
+    snapshotId = data?.id ?? null;
     status = null;
   } catch {
     // Supabase not yet configured — show no-data state
@@ -57,10 +63,23 @@ export async function SyncStatus() {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${tierStyles[tier]}`}
+      className={`inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-full px-2.5 py-1 text-xs font-medium ${tierStyles[tier]}`}
+      title={snapshotId ?? undefined}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${tierDot[tier]}`} />
-      {label}
+      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${tierDot[tier]}`} />
+      <span className="min-w-0">
+        {label}
+        {snapshotId && completedAt && status !== "failed" ? (
+          <>
+            <span className="mx-1 opacity-50" aria-hidden>
+              ·
+            </span>
+            <span className="font-mono text-[10px] font-normal tracking-tight break-all">
+              {snapshotId}
+            </span>
+          </>
+        ) : null}
+      </span>
     </span>
   );
 }

@@ -314,7 +314,6 @@ export type Database = {
           pto_days: number
           pto_hours: number
           snapshot_id: string
-          source: string
           total_working_days: number
           zone_id: string | null
         }
@@ -329,7 +328,6 @@ export type Database = {
           pto_days?: number
           pto_hours?: number
           snapshot_id: string
-          source: string
           total_working_days: number
           zone_id?: string | null
         }
@@ -344,7 +342,6 @@ export type Database = {
           pto_days?: number
           pto_hours?: number
           snapshot_id?: string
-          source?: string
           total_working_days?: number
           zone_id?: string | null
         }

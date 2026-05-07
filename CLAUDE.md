@@ -99,10 +99,10 @@ The overview shows one card per **ISO week** (Monday start) that overlaps the **
 | Net capacity | `fact_capacity` | Latest `sync_snapshot` row; filter `month_date` to the month; sum `net_capacity_hours` by `person_id` (add across `source` if multiple rows per person). **Prorate** the org total to the week: Mon–Fri count in (week `∩` month) / Mon–Fri count in full month. |
 | Planned | `fact_plans` | Same `snapshot_id` and `month_date`. **Exclude** PTO plan lines: `is_pto = false`. Sum `planned_hours` org-wide, same proration as net capacity. |
 | Availability (bench) | `fact_bench` | Same `snapshot_id` and `month_date`. Sum `availability_hours` (treat null as 0), same proration. Cross-checks month-level `net - planned` from ingestion. |
-| PTO | `fact_worklogs` | Rows with `is_pto = true`: sum `logged_seconds` to hours, bucket by `log_date` to the same ISO week. Respects the **worklog** date cap only (see below). |
-| Billable / Logged | `fact_worklogs` | Non-`is_pto` rows: `billable_seconds` / `logged_seconds` to hours. |
+| PTO | `fact_worklogs` | Rows with `is_pto = true`: sum `logged_seconds` to hours, bucket by `log_date` to the same ISO week. **Upper bound:** calendar **end** of reference month — not the MTD worklog cap (so future-dated PTO rows in `fact_worklogs` count toward their week). Rows still require ingestion. |
+| Billable / Logged | `fact_worklogs` | Non-`is_pto` rows: `billable_seconds` / `logged_seconds` to hours. Uses the MTD/sync worklog date cap below. |
 
-**Worklog `log_date` cap:** `min(calendar end of month, start-of-day of last sync `sync_snapshot.created_at`, start of today)` so MTD and sync freshness stay consistent. Snapshot facts are **full-month** v2 values; they are not clipped to that day cap.
+**Worklog `log_date` cap (billable + logged only):** `min(calendar end of month, start-of-day of last sync `sync_snapshot.created_at`, start of today)` so MTD and sync freshness stay consistent. Snapshot facts are **full-month** v2 values; they are not clipped to that day cap. **PTO** worklogs use the calendar-month end bound only (no today/sync clamp).
 
 **Proration note:** The split uses **calendar** Mon–Fri only (see `prorate-to-weeks.ts`). It does not yet use per-zone `dim_holiday` or `net_working_days` from `fact_capacity` to split within the month. If that alignment is required, change the weight function and update this section.
 
@@ -135,6 +135,75 @@ All routes require authentication. No public pages. Session is validated via `@s
 | `/flags` | Open risk flags, severity, age |
 | `/pipeline` | Deal list with capacity impact estimate |
 | `/ask` | Agent query interface (calls `/api/chat`, returns agent response) |
+
+## Frontend design system
+
+### Required skills — invoke before any UI work
+
+Before writing or modifying any component, layout, or styling, invoke these three skills in order:
+
+1. `/frontend-design` — commits to the aesthetic direction and guards against generic output
+2. `/next-best-practices` — enforces RSC boundaries, async patterns, and file conventions
+3. `/next-cache-components` — determines which server components get `'use cache'` and at what profile
+
+Do not skip these even for small changes. They are the source of truth for how this UI is built.
+
+### Established aesthetic direction
+
+**Refined utilitarian dark-first.** Vercel-adjacent: monochromatic, high-contrast, data-legible.
+
+- **Font:** Geist (already loaded via `next/font/google`). Do not swap it. Do not add a second display font.
+- **Color space:** oklch throughout. All palette changes go in `app/globals.css` CSS custom properties only — never inline color values in components.
+- **Dark mode:** default. The `<html>` element carries the `dark` class at root layout level.
+- **Accent:** neutral (white-ish on dark, charcoal on light). No colored accents unless a specific data status demands it (e.g. `--destructive` for risk flags).
+- **Borders:** hairline only — `oklch(1 0 0 / 8%)` on dark, `oklch(0.88 0 0)` on light. No heavy dividers.
+- **Spacing:** generous negative space in content areas; tight, precise spacing within components.
+- **Motion:** CSS transitions only (`transition-[width]`, `transition-colors`, `duration-150–200ms`). No Motion library unless a specific interaction cannot be done in CSS.
+
+### Design constraints — what not to do
+
+- Do not use Inter, Roboto, Space Grotesk, or any font other than Geist/Geist Mono
+- Do not use purple gradients, colorful card backgrounds, or bright accent palettes
+- Do not inline color values — all colors come from CSS custom property tokens
+- Do not add decorative illustrations, icons-as-art, or background textures unless explicitly requested
+- Do not introduce new animation libraries (Framer Motion, Motion) for simple transitions
+- Do not break the monochromatic palette for non-semantic reasons
+
+### Sidebar collapse/expand pattern
+
+The sidebar uses a CSS-variable-driven width transition. State is managed in a React context.
+
+- `components/layout/sidebar-context.tsx` — `SidebarProvider` (`'use client'`) + `useSidebar()` hook; persists to `localStorage`
+- `components/layout/sidebar.tsx` — reads `useSidebar()`; width driven by `--sidebar-w` / `--sidebar-w-collapsed` vars; labels fade out when collapsed; toggle button lives at sidebar bottom
+- `app/(dashboard)/layout.tsx` — wraps children in `SidebarProvider`; provider is the only client boundary in the layout shell
+- CSS vars: `--sidebar-w: 220px`, `--sidebar-w-collapsed: 52px`, transition `180ms cubic-bezier(0.4,0,0.2,1)`
+
+The `Header` and all page content remain Server Components — they are passed as `{children}` props through the client provider, not rendered inside it.
+
+### RSC and caching conventions
+
+Enable PPR in `next.config.ts`:
+```ts
+const nextConfig = { cacheComponents: true }
+```
+
+| Component type | Directive | Profile |
+|---|---|---|
+| Auth session checks (layout, header) | none — must be fresh | — |
+| Sync status, last-run metadata | `'use cache'` | `cacheLife('minutes')` |
+| Aggregate data (capacity, bench, plans) | `'use cache'` | `cacheLife({ stale: 120, revalidate: 300 })` |
+| Per-user or session-scoped data | extract outside cache, pass as arg | — |
+
+Never put `cookies()` or `headers()` inside a `'use cache'` function. Extract at the Server Component level and pass as props.
+
+### Component authoring rules
+
+- All styling via Tailwind utility classes + `cn()` (clsx + tailwind-merge). No `style={{}}` props for colors or spacing.
+- Variants via CVA (`class-variance-authority`). Never branch on props with inline ternaries for more than one class.
+- Use `data-slot` attributes on compound component parts so parent selectors can target them.
+- `@container` queries for card-internal responsive layouts (already established in `components/ui/card.tsx`).
+- Skeleton states use `components/ui/skeleton.tsx` — do not add new loading primitives.
+- New page-level data components go in `components/<route-name>/` mirroring the app route (e.g. `components/team/`).
 
 ## Security rules (non-negotiable)
 

@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase/server'
+import { createServiceClientCached } from '@/lib/supabase/server'
 
 export type LatestSyncSnapshot = {
   id: string
@@ -11,7 +11,7 @@ export type LatestSyncSnapshot = {
  * and for a consistent "last sync" label in the UI.
  */
 export async function getLatestSyncSnapshot(): Promise<LatestSyncSnapshot | null> {
-  const supabase = await createServiceClient()
+  const supabase = createServiceClientCached()
   const { data, error } = await supabase
     .from('sync_snapshot')
     .select('id, created_at')

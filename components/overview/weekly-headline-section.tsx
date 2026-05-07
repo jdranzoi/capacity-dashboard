@@ -1,13 +1,20 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import type { WeeklyHeadline } from '@/lib/overview/load-weekly-overview'
+import { cn } from '@/lib/utils'
+import { format, parseISO } from 'date-fns'
 
-function Row({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="flex justify-between gap-2">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium tabular-nums">{value}h</span>
-    </div>
-  )
+const METRICS = [
+  { key: 'netCapacityHours' as const, label: 'Net capacity', worklog: false },
+  { key: 'plannedHours' as const, label: 'Planned', worklog: false },
+  { key: 'availabilityHours' as const, label: 'Availability', worklog: false },
+  { key: 'ptoHours' as const, label: 'PTO', worklog: true },
+  { key: 'billableHours' as const, label: 'Billable', worklog: true },
+  { key: 'loggedHours' as const, label: 'Logged', worklog: true },
+]
+
+type MetricKey = (typeof METRICS)[number]['key']
+
+function fmt(n: number): string {
+  return n === 0 ? '—' : `${n}h`
 }
 
 export function WeeklyHeadlineSection({
@@ -19,37 +26,80 @@ export function WeeklyHeadlineSection({
   asOfDate: string | null
   weeks: WeeklyHeadline[]
 }) {
-  return (
-    <section className="flex flex-col gap-3">
-      <div>
-        <h2 className="text-base font-semibold">Weekly metrics</h2>
-        <CardDescription>
-          Net capacity, planned, and availability are monthly snapshot values (latest sync) split across
-          weeks by Mon–Fri; worklogs and PTO are from Tempo. Non-PTO billable and logged for {monthLabel}
-          {asOfDate ? ` (worklogs through ${asOfDate})` : ''}. Planned hours exclude PTO plan lines.
-        </CardDescription>
-      </div>
-      {weeks.length === 0 ? (
+  if (weeks.length === 0) {
+    return (
+      <section>
         <p className="text-sm text-muted-foreground">No weeks in this month range.</p>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {weeks.map((w) => (
-            <Card key={w.weekStart} size="sm">
-              <CardHeader className="border-b pb-3">
-                <CardTitle className="text-sm">{w.weekLabel}</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-2 pt-3 text-sm">
-                <Row label="Net capacity" value={w.netCapacityHours} />
-                <Row label="Planned" value={w.plannedHours} />
-                <Row label="Availability" value={w.availabilityHours} />
-                <Row label="PTO" value={w.ptoHours} />
-                <Row label="Billable" value={w.billableHours} />
-                <Row label="Logged" value={w.loggedHours} />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      </section>
+    )
+  }
+
+  const monthTotals = Object.fromEntries(
+    METRICS.map(({ key }) => [
+      key,
+      Math.round(weeks.reduce((s, w) => s + w[key], 0) * 10) / 10,
+    ])
+  ) as Record<MetricKey, number>
+
+  return (
+    <section className="flex flex-col gap-4">
+      <div>
+        <h2 className="text-base font-semibold">Weekly metrics — {monthLabel}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Net capacity, planned, and availability are monthly snapshot values split by Mon–Fri
+          weight. PTO uses Tempo worklogs flagged as PTO in the reference month (by worklog date,
+          through calendar month end, not the MTD cap used for billable and logged). Billable and logged
+          stay MTD
+          {asOfDate ? ` through ${asOfDate}` : ''}. Planned excludes PTO plan lines.
+        </p>
+      </div>
+
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40">
+              <th className="px-4 py-2 text-left text-xs font-normal text-muted-foreground">
+                Metric
+              </th>
+              {weeks.map((w) => (
+                <th
+                  key={w.weekStart}
+                  className="px-4 py-2 text-right text-xs font-normal text-muted-foreground tabular-nums"
+                >
+                  {format(parseISO(w.weekStart), 'MMM d')}
+                </th>
+              ))}
+              <th className="border-l border-border px-4 py-2 text-right text-xs font-normal text-muted-foreground">
+                Month
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {METRICS.map(({ key, label, worklog }, idx) => {
+              const isGroupBoundary = worklog && !METRICS[idx - 1]?.worklog
+              return (
+                <tr
+                  key={key}
+                  className={cn(
+                    'border-b border-border/50 last:border-0',
+                    isGroupBoundary && 'border-t border-border'
+                  )}
+                >
+                  <td className="px-4 py-2.5 text-muted-foreground">{label}</td>
+                  {weeks.map((w) => (
+                    <td key={w.weekStart} className="px-4 py-2.5 text-right tabular-nums">
+                      {fmt(w[key])}
+                    </td>
+                  ))}
+                  <td className="border-l border-border px-4 py-2.5 text-right tabular-nums text-muted-foreground">
+                    {fmt(monthTotals[key])}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </section>
   )
 }

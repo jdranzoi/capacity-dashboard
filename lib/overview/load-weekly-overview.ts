@@ -1,4 +1,5 @@
-import { createServiceClient } from '@/lib/supabase/server'
+import { connection } from 'next/server'
+import { createServiceClientCached } from '@/lib/supabase/server'
 import { getLatestSyncSnapshot } from '@/lib/data/latest-sync-snapshot'
 import { buildWeekdayWeightMap } from '@/lib/overview/prorate-to-weeks'
 import {
@@ -29,7 +30,7 @@ export type WeeklyHeadline = {
   plannedHours: number
   /** Prorated from `fact_bench.availability_hours`, latest sync. */
   availabilityHours: number
-  /** From `fact_worklogs` where is_pto = true (logged time, hours). */
+  /** From `fact_worklogs` where is_pto = true; sums through calendar month end (not the MTD worklog cap). */
   ptoHours: number
   billableHours: number
   loggedHours: number
@@ -85,15 +86,19 @@ async function pagedQuery<T>(run: (from: number) => Promise<{ data: unknown; err
 }
 
 export async function loadWeeklyOverview(
-  referenceDate = new Date(),
-  now: Date = new Date()
+  referenceDate?: Date,
+  now?: Date
 ): Promise<WeeklyOverviewData> {
-  const monthStart = startOfMonth(referenceDate)
-  const monthEnd = endOfMonth(referenceDate)
+  await connection()
+  const _referenceDate = referenceDate ?? new Date()
+  const _now = now ?? new Date()
+  const monthStart = startOfMonth(_referenceDate)
+  const monthEnd = endOfMonth(_referenceDate)
   const monthLabel = formatMonthLabel(monthStart)
   const monthStartStr = format(monthStart, 'yyyy-MM-dd')
+  const monthEndStr = format(monthEnd, 'yyyy-MM-dd')
   const weekKeys = weeksOverlappingMonth(monthStart, monthEnd)
-  const weightByWeek = buildWeekdayWeightMap(weekKeys, monthStart, monthEnd, referenceDate)
+  const weightByWeek = buildWeekdayWeightMap(weekKeys, monthStart, monthEnd, _referenceDate)
 
   const empty: WeeklyOverviewData = {
     monthLabel,
@@ -112,24 +117,24 @@ export async function loadWeeklyOverview(
       }
     }
 
-    const logThroughStr = logThroughDate(monthEnd, latest.createdAt, now)
+    const logThroughStr = logThroughDate(monthEnd, latest.createdAt, _now)
     const snapshotId = latest.id
-    const supabase = await createServiceClient()
+    const supabase = createServiceClientCached()
 
-    const [capRes, planRes, benchRes, wlRes] = await Promise.all([
-      pagedQuery<{ person_id: string; net_capacity_hours: number; source: string }>(async (from) =>
+    const [capRes, planRes, benchRes, wlRes, ptoWlRes] = await Promise.all([
+      pagedQuery<{ person_id: string; net_capacity_hours: number }>(async (from) =>
         supabase
           .from('fact_capacity')
-          .select('person_id, net_capacity_hours, source')
+          .select('person_id, net_capacity_hours')
           .eq('snapshot_id', snapshotId)
           .eq('month_date', monthStartStr)
           .order('person_id')
           .range(from, from + PAGE - 1)
       ),
-      pagedQuery<{ person_id: string; planned_hours: number | null; is_pto: boolean }>(async (from) =>
+      pagedQuery<{ person_id: string; planned_hours: number | null }>(async (from) =>
         supabase
           .from('fact_plans')
-          .select('person_id, planned_hours, is_pto')
+          .select('person_id, planned_hours')
           .eq('snapshot_id', snapshotId)
           .eq('month_date', monthStartStr)
           .eq('is_pto', false)
@@ -148,13 +153,26 @@ export async function loadWeeklyOverview(
         log_date: string
         billable_seconds: number
         logged_seconds: number
-        is_pto: boolean
       }>(async (from) =>
         supabase
           .from('fact_worklogs')
-          .select('log_date, billable_seconds, logged_seconds, is_pto')
+          .select('log_date, billable_seconds, logged_seconds')
+          .eq('is_pto', false)
           .gte('log_date', monthStartStr)
           .lte('log_date', logThroughStr)
+          .order('log_date', { ascending: true })
+          .range(from, from + PAGE - 1)
+      ),
+      pagedQuery<{
+        log_date: string
+        logged_seconds: number
+      }>(async (from) =>
+        supabase
+          .from('fact_worklogs')
+          .select('log_date, logged_seconds')
+          .eq('is_pto', true)
+          .gte('log_date', monthStartStr)
+          .lte('log_date', monthEndStr)
           .order('log_date', { ascending: true })
           .range(from, from + PAGE - 1)
       ),
@@ -171,6 +189,9 @@ export async function loadWeeklyOverview(
     }
     if (wlRes.error) {
       return { ...empty, error: `Could not load worklogs: ${wlRes.error}` }
+    }
+    if (ptoWlRes.error) {
+      return { ...empty, error: `Could not load PTO worklogs: ${ptoWlRes.error}` }
     }
 
     const byPerson = new Map<string, number>()
@@ -194,24 +215,24 @@ export async function loadWeeklyOverview(
     const byWeekPto = new Map<string, number>()
 
     for (const row of wlRes.rows) {
-      const logDate = parse(row.log_date, 'yyyy-MM-dd', referenceDate)
+      const logDate = parse(row.log_date, 'yyyy-MM-dd', _referenceDate)
       const wk = format(startOfWeek(logDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')
-
-      if (row.is_pto) {
-        byWeekPto.set(wk, (byWeekPto.get(wk) ?? 0) + Number(row.logged_seconds) / 3600)
-        continue
-      }
-
       if (!byWeek.has(wk)) byWeek.set(wk, { billable: 0, logged: 0 })
       const bucket = byWeek.get(wk)!
       bucket.billable += Number(row.billable_seconds) / 3600
       bucket.logged += Number(row.logged_seconds) / 3600
     }
 
+    for (const row of ptoWlRes.rows) {
+      const logDate = parse(row.log_date, 'yyyy-MM-dd', _referenceDate)
+      const wk = format(startOfWeek(logDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+      byWeekPto.set(wk, (byWeekPto.get(wk) ?? 0) + Number(row.logged_seconds) / 3600)
+    }
+
     const weeks: WeeklyHeadline[] = weekKeys.map((wk) => {
       const w = weightByWeek.get(wk) ?? 0
       const b = byWeek.get(wk) ?? { billable: 0, logged: 0 }
-      const weekStartD = parse(wk, 'yyyy-MM-dd', referenceDate)
+      const weekStartD = parse(wk, 'yyyy-MM-dd', _referenceDate)
       return {
         weekLabel: `Week of ${format(weekStartD, 'MMM d')}`,
         weekStart: wk,
