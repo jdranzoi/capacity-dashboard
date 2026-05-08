@@ -102,6 +102,17 @@ The overview shows one card per **ISO week** (Monday start) that overlaps the **
 | PTO | `fact_worklogs` | Rows with `is_pto = true`: sum `logged_seconds` to hours, bucket by `log_date` to the same ISO week. **Upper bound:** calendar **end** of reference month — not the MTD worklog cap (so future-dated PTO rows in `fact_worklogs` count toward their week). Rows still require ingestion. |
 | Billable / Logged | `fact_worklogs` | Non-`is_pto` rows: `billable_seconds` / `logged_seconds` to hours. Uses the MTD/sync worklog date cap below. |
 
+**Weekly detail table — Utilization (derived row):** Org-level **billable utilization vs prorated net capacity** for each ISO week and for the MTD totals column.
+
+| Scope | Formula |
+|---|---|
+| Per week | `(billable_hours_week / net_capacity_hours_week) * 100`. Values rounded to one decimal for display. When billable or net capacity for that cell is zero or negative, the UI shows an em dash (consistent with zero billable hours as empty). |
+| MTD total column | `(sum of billable_hours across weeks shown) / (sum of net_capacity_hours across those weeks) * 100` — ratio of **summed** hours, not the average of weekly percentages. |
+
+Relationship to **C-005**: same billable-vs-capacity ratio as `fullMonthUtilization` when the denominator is the **portion of the month’s net capacity attributed to that week** (Mon–Fri overlap weights), not the full-month denominator used in `timeAdjustedUtilization`. Implementation: `overviewWeeklyBillableUtilizationPct` in `lib/overview/overview-metrics.ts`.
+
+This is **not** the **Utilization (MTD)** donut on the same page, which is the mean of per-person `(logged_hours / elapsed_weekdays / 8) * 100` with elapsed weekdays adjusted for PTO (`loadWeeklyOverview` → `mtdUtilizationAvgPct`).
+
 **Worklog `log_date` cap (billable + logged only):** `min(calendar end of month, start-of-day of last sync `sync_snapshot.created_at`, start of today)` so MTD and sync freshness stay consistent. Snapshot facts are **full-month** v2 values; they are not clipped to that day cap. **PTO** worklogs use the calendar-month end bound only (no today/sync clamp).
 
 **Proration note:** The split uses **calendar** Mon–Fri only (see `prorate-to-weeks.ts`). It does not yet use per-zone `dim_holiday` or `net_working_days` from `fact_capacity` to split within the month. If that alignment is required, change the weight function and update this section.
@@ -152,7 +163,7 @@ Do not skip these even for small changes. They are the source of truth for how t
 
 **Refined utilitarian dark-first.** Vercel-adjacent: monochromatic, high-contrast, data-legible.
 
-- **Font:** Geist (already loaded via `next/font/google`). Do not swap it. Do not add a second display font.
+- **Font:** Inter for UI sans text; JetBrains Mono for monospace (both via `next/font/google`). Do not add a second display font beyond this pairing.
 - **Color space:** oklch throughout. All palette changes go in `app/globals.css` CSS custom properties only — never inline color values in components.
 - **Dark mode:** default. The `<html>` element carries the `dark` class at root layout level.
 - **Accent:** neutral (white-ish on dark, charcoal on light). No colored accents unless a specific data status demands it (e.g. `--destructive` for risk flags).
@@ -162,7 +173,7 @@ Do not skip these even for small changes. They are the source of truth for how t
 
 ### Design constraints — what not to do
 
-- Do not use Inter, Roboto, Space Grotesk, or any font other than Geist/Geist Mono
+- Do not use Geist, Roboto, Space Grotesk, or any font other than Inter / JetBrains Mono for this app
 - Do not use purple gradients, colorful card backgrounds, or bright accent palettes
 - Do not inline color values — all colors come from CSS custom property tokens
 - Do not add decorative illustrations, icons-as-art, or background textures unless explicitly requested

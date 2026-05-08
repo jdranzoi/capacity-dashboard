@@ -3,6 +3,7 @@ import {
   WeeklyEvolutionChart,
   WorkloadGauges,
 } from '@/components/overview/overview-workload-charts'
+import { OverviewMonthPicker } from '@/components/overview/overview-month-picker'
 import { Button } from '@/components/ui/button'
 import type { WeeklyHeadline } from '@/lib/overview/load-weekly-overview'
 import {
@@ -10,58 +11,16 @@ import {
   fmtHoursKpi,
   fmtPct,
   OVERVIEW_METRIC_ROWS,
+  overviewWeeklyBillableUtilizationPct,
   sumMetricTotals,
   type OverviewMetricKey,
 } from '@/lib/overview/overview-metrics'
+import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
 import { cn } from '@/lib/utils'
 import { addDays, format, parseISO } from 'date-fns'
 import { Download } from 'lucide-react'
 import type { ReactNode } from 'react'
-
-function MetricSparkline({
-  values,
-  cssVar,
-}: {
-  values: number[]
-  cssVar: string
-}) {
-  const w = 112
-  const h = 38
-  const pad = 2
-  if (values.length === 0) return null
-  const max = Math.max(...values, 1e-9)
-  const min = Math.min(...values, 0)
-  const range = max - min || 1
-  const innerW = w - 2 * pad
-  const innerH = h - 2 * pad
-  const pts = values.map((v, i) => {
-    const x =
-      pad + (i / Math.max(values.length - 1, 1)) * innerW
-    const y = pad + innerH - ((v - min) / range) * innerH
-    return `${x.toFixed(1)},${y.toFixed(1)}`
-  })
-
-  return (
-    <svg
-      width={w}
-      height={h}
-      className="mt-3 w-full max-w-full"
-      viewBox={`0 0 ${w} ${h}`}
-      preserveAspectRatio="none"
-      aria-hidden
-    >
-      <polyline
-        fill="none"
-        stroke={`var(${cssVar})`}
-        strokeWidth={1.6}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-        points={pts.join(' ')}
-        opacity={0.92}
-      />
-    </svg>
-  )
-}
+import { Suspense } from 'react'
 
 function buildKpiSubline(
   totals: Record<OverviewMetricKey, number>,
@@ -82,55 +41,33 @@ function buildKpiSubline(
         return <p className={muted}>vs Plan —</p>
       }
       return (
-        <p className={muted}>
-          vs Plan {fmtHoursKpi(plan)} · {fmtPct(((net - plan) / plan) * 100)}
-        </p>
+        <p className={muted}>vs Plan {fmtHoursKpi(plan)}</p>
       )
     case 'plannedHours':
       if (net <= 0) {
         return <p className={muted}>vs Cap —</p>
       }
-      return (
-        <p className={muted}>
-          vs Cap {fmtHoursKpi(net)} · {fmtPct((plan / net) * 100)}
-        </p>
-      )
+      return <p className={muted}>vs Cap {fmtHoursKpi(net)}</p>
     case 'availabilityHours':
       if (net <= 0) {
         return <p className={muted}>vs Cap —</p>
       }
-      return (
-        <p className={muted}>
-          vs Cap {fmtHoursKpi(net)} · {fmtPct((avail / net) * 100)}
-        </p>
-      )
+      return <p className={muted}>vs Cap {fmtHoursKpi(net)}</p>
     case 'ptoHours':
       if (avail <= 0) {
         return <p className={muted}>vs Avail —</p>
       }
-      return (
-        <p className={muted}>
-          vs Avail {fmtHoursKpi(avail)} · {fmtPct((pto / avail) * 100)}
-        </p>
-      )
+      return <p className={muted}>vs Avail {fmtHoursKpi(avail)}</p>
     case 'billableHours':
       if (plan <= 0) {
         return <p className={muted}>vs Planned —</p>
       }
-      return (
-        <p className={muted}>
-          vs Planned {fmtHoursKpi(plan)} · {fmtPct((bill / plan) * 100)}
-        </p>
-      )
+      return <p className={muted}>vs Planned {fmtHoursKpi(plan)}</p>
     case 'loggedHours':
       if (plan <= 0) {
         return <p className={muted}>vs Planned —</p>
       }
-      return (
-        <p className={muted}>
-          vs Planned {fmtHoursKpi(plan)} · {fmtPct((log / plan) * 100)}
-        </p>
-      )
+      return <p className={muted}>vs Planned {fmtHoursKpi(plan)}</p>
     default:
       return null
   }
@@ -140,12 +77,12 @@ function FutureSlot({ label, className }: { label: string; className?: string })
   return (
     <div
       className={cn(
-        'flex flex-col rounded-xl border border-dashed border-border bg-muted/10 p-4 text-xs text-muted-foreground',
+        'flex h-full min-h-0 flex-col rounded-xl border border-dashed border-border bg-muted/10 p-4 text-xs text-muted-foreground',
         className
       )}
     >
-      <span className="font-medium text-foreground/85">{label}</span>
-      <span className="mt-2 text-[0.7rem] leading-snug">
+      <span className="shrink-0 font-medium tracking-tight text-foreground/85">{label}</span>
+      <span className="mt-2 flex-1 text-[0.7rem] leading-snug">
         Reserved for a future release.
       </span>
     </div>
@@ -157,13 +94,21 @@ export function WeeklyHeadlineSection({
   asOfDate,
   snapshotId,
   syncCreatedAt,
+  mtdUtilizationAvgPct,
   weeks,
+  monthPicker,
 }: {
   monthLabel: string
   asOfDate: string | null
   snapshotId: string | null
   syncCreatedAt: string | null
+  mtdUtilizationAvgPct: number | null
   weeks: WeeklyHeadline[]
+  /** When set, replaces the static week-range chip with a month dropdown + range hint. */
+  monthPicker?: {
+    options: OverviewMonthOption[]
+    selectedMonthKey: string
+  }
 }) {
   if (weeks.length === 0) {
     return (
@@ -218,9 +163,30 @@ export function WeeklyHeadlineSection({
         </div>
 
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-          <p className="rounded-lg bg-muted/25 px-3 py-2 text-xs text-muted-foreground ring-1 ring-foreground/10 tabular-nums">
-            {rangeLabel}
-          </p>
+          {monthPicker ? (
+            <div className="flex flex-col gap-1">
+              <Suspense
+                fallback={
+                  <div
+                    className="h-9 min-w-[11.5rem] animate-pulse rounded-lg bg-muted/40 ring-1 ring-foreground/10"
+                    aria-hidden
+                  />
+                }
+              >
+                <OverviewMonthPicker
+                  options={monthPicker.options}
+                  selectedMonthKey={monthPicker.selectedMonthKey}
+                />
+              </Suspense>
+              <p className="text-[0.7rem] text-muted-foreground tabular-nums">
+                Weeks overlapping month: {rangeLabel}
+              </p>
+            </div>
+          ) : (
+            <p className="rounded-lg bg-muted/25 px-3 py-2 text-xs text-muted-foreground ring-1 ring-foreground/10 tabular-nums">
+              {rangeLabel}
+            </p>
+          )}
           <div className="flex flex-wrap items-center gap-2 lg:justify-end">
             <FutureSlot label="Compare with" className="min-w-[200px] flex-1 py-2.5 lg:flex-none" />
             <Button
@@ -238,13 +204,11 @@ export function WeeklyHeadlineSection({
         </div>
       </header>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-        {OVERVIEW_METRIC_ROWS.map((row) => {
-          const values = weeks.map((w) => w[row.key])
-          return (
+      <div className="grid gap-3 sm:grid-cols-2 sm:items-stretch xl:grid-cols-6">
+        {OVERVIEW_METRIC_ROWS.map((row) => (
             <div
               key={row.key}
-              className="flex flex-col rounded-xl bg-card p-3 text-card-foreground ring-1 ring-foreground/10"
+              className="flex h-full min-h-0 flex-col rounded-xl bg-card p-3 text-card-foreground ring-1 ring-foreground/10"
             >
               <p className="text-xs font-medium text-muted-foreground">
                 {row.label} (MTD)
@@ -256,40 +220,48 @@ export function WeeklyHeadlineSection({
                 {fmtHoursKpi(totals[row.key])}
               </p>
               {buildKpiSubline(totals, row.key)}
-              <MetricSparkline values={values} cssVar={row.cssVar} />
             </div>
-          )
-        })}
+          ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-7">
-          <WeeklyEvolutionChart weeks={weeks} />
+      <div className="grid gap-4 lg:grid-cols-12 lg:items-stretch lg:min-h-[min(28rem,52vh)]">
+        <div className="h-full min-h-0 lg:col-span-4">
+          <WeeklyEvolutionChart weeks={weeks} className="h-full" />
         </div>
-        <div className="lg:col-span-3">
+        <div className="h-full min-h-0 lg:col-span-3">
           <CapacityUsageDonuts
             net={totals.netCapacityHours}
             planned={totals.plannedHours}
-            availability={totals.availabilityHours}
             pto={totals.ptoHours}
-            billable={totals.billableHours}
+            mtdUtilizationAvgPct={mtdUtilizationAvgPct}
+            className="h-full"
           />
         </div>
-        <div className="lg:col-span-2 lg:self-start">
-          <FutureSlot label="Filters" className="min-h-[220px] lg:min-h-[min(100%,320px)]" />
+        <div className="flex h-full min-h-0 lg:col-span-3">
+          <WorkloadGauges
+            planned={totals.plannedHours}
+            billable={totals.billableHours}
+            productivityPct={productivityPct}
+            efficiencyPct={efficiencyPct}
+            className="h-full w-full"
+          />
+        </div>
+        <div className="h-full min-h-0 lg:col-span-2">
+          <FutureSlot label="Filters" className="h-full min-h-[12rem] lg:min-h-0" />
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
-        <div className="lg:col-span-6">
-          <div className="mb-2 flex items-baseline justify-between gap-2">
-            <h2 className="text-sm font-medium">Weekly detail (hours)</h2>
-            <p className="text-[0.65rem] text-muted-foreground">
-              Billable and logged through{asOfDate ? ` ${asOfDate}` : ' —'}
-            </p>
-          </div>
-          <div className="overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/10">
-            <table className="w-full border-collapse text-sm">
+      <div className="grid gap-4 lg:grid-cols-12 lg:items-stretch lg:min-h-[min(32rem,58vh)]">
+        <div className="flex h-full min-h-0 lg:col-span-7">
+          <div className="flex h-full min-h-0 w-full flex-col rounded-xl bg-card p-4 text-card-foreground ring-1 ring-foreground/10">
+            <div className="mb-3 flex shrink-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+              <h2 className="text-sm font-medium tracking-tight">Weekly detail (hours)</h2>
+              <p className="text-[0.65rem] text-muted-foreground">
+                Billable and logged through{asOfDate ? ` ${asOfDate}` : ' —'}
+              </p>
+            </div>
+            <div className="min-h-0 flex-1 overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
@@ -341,22 +313,42 @@ export function WeeklyHeadlineSection({
                     </tr>
                   )
                 })}
+                <tr className="border-t border-border bg-muted/15">
+                  <td className="px-4 py-2.5 font-medium text-foreground">
+                    Utilization
+                  </td>
+                  {weeks.map((w) => (
+                    <td
+                      key={`util-${w.weekStart}`}
+                      className="px-4 py-2.5 text-right tabular-nums text-muted-foreground"
+                    >
+                      {fmtPct(
+                        overviewWeeklyBillableUtilizationPct(
+                          w.billableHours,
+                          w.netCapacityHours
+                        )
+                      )}
+                    </td>
+                  ))}
+                  <td className="border-l border-border px-4 py-2.5 text-right tabular-nums text-muted-foreground">
+                    {fmtPct(
+                      overviewWeeklyBillableUtilizationPct(
+                        totals.billableHours,
+                        totals.netCapacityHours
+                      )
+                    )}
+                  </td>
+                </tr>
               </tbody>
             </table>
+            </div>
           </div>
         </div>
 
-        <div className="lg:col-span-3">
-          <WorkloadGauges
-            productivityPct={productivityPct}
-            efficiencyPct={efficiencyPct}
-          />
-        </div>
-
-        <div className="lg:col-span-3">
-          <div className="rounded-xl bg-card p-4 text-sm text-card-foreground ring-1 ring-foreground/10">
-            <h3 className="text-sm font-medium">Definitions</h3>
-            <ul className="mt-3 space-y-2 text-[0.7rem] leading-snug text-muted-foreground">
+        <div className="flex h-full min-h-0 lg:col-span-5">
+          <div className="flex h-full min-h-0 w-full flex-col rounded-xl bg-card p-4 text-sm text-card-foreground ring-1 ring-foreground/10">
+            <h3 className="shrink-0 text-sm font-medium tracking-tight">Definitions</h3>
+            <ul className="mt-3 min-h-0 flex-1 space-y-2 overflow-y-auto text-[0.7rem] leading-snug text-muted-foreground">
               {OVERVIEW_METRIC_ROWS.map((row) => (
                 <li key={row.key} className="flex gap-2">
                   <span
@@ -372,8 +364,28 @@ export function WeeklyHeadlineSection({
                   </span>
                 </li>
               ))}
+              <li className="flex gap-2">
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-muted-foreground/55" />
+                <span>
+                  <span className="font-medium text-foreground/90">
+                    Utilization
+                  </span>
+                  {': '}
+                  Billable hours divided by net capacity for that week (same ratio shape as C-005 billable vs
+                  monthly target, using prorated net capacity per ISO week). MTD column uses total billable
+                  divided by total net capacity. Implemented as{' '}
+                  <span className="font-mono text-[0.65rem] text-foreground/80">
+                    overviewWeeklyBillableUtilizationPct
+                  </span>{' '}
+                  in{' '}
+                  <span className="font-mono text-[0.65rem] text-foreground/80">
+                    lib/overview/overview-metrics.ts
+                  </span>
+                  . Differs from the Utilization (MTD) donut (mean per-person logged vs elapsed workdays at 8h/day).
+                </span>
+              </li>
             </ul>
-            <div className="mt-4 border-t border-border pt-3 text-[0.65rem] text-muted-foreground">
+            <div className="mt-4 shrink-0 border-t border-border pt-3 text-[0.65rem] text-muted-foreground">
               <p>Source: Tempo (ingested via capacity sync)</p>
               {lastUpdateLabel ? (
                 <p className="mt-1">Last sync: {lastUpdateLabel}</p>

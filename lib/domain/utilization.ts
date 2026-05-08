@@ -4,6 +4,9 @@
 // v2 sources: `fact_capacity.net_capacity_hours` (latest `snapshot_id` from `sync_snapshot` for that
 // person + month) for monthly target; `daysElapsed` / `totalWorkingDays` from the zone + holiday
 // calendar (see `dim_holiday`, `dim_date`, and lib/overview/working-days.ts) when rolling up in Stage 2.
+//
+// Org overview weekly-detail utilization: billable / prorated net capacity per ISO week
+// (`overviewWeeklyBillableUtilizationPct` in lib/overview/overview-metrics.ts); see CLAUDE.md Overview metrics.
 
 /**
  * Time-adjusted billable utilization.

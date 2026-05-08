@@ -6,6 +6,7 @@ import {
   addDays,
   endOfMonth,
   format,
+  getISODay,
   min as minDate,
   parse,
   parseISO,
@@ -13,7 +14,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns'
-import { formatMonthLabel } from './working-days'
+import { formatMonthLabel, countWeekdaysFromMonthStartThrough } from './working-days'
 
 const PAGE = 1000
 
@@ -43,6 +44,13 @@ export type WeeklyOverviewData = {
   snapshotId: string | null
   /** `sync_snapshot.created_at` for the row above (ingestion freshness). */
   syncCreatedAt: string | null
+  /**
+   * Mean of per-person MTD utilization: `(logged / elapsedWorkingDays / 8) * 100`
+   * where `elapsedWorkingDays` = Mon–Fri from month start through `asOf` minus distinct
+   * weekday PTO dates in that window (worklogs `is_pto`). Only people in `fact_capacity`
+   * for the month with `elapsedWorkingDays > 0` are included. Null if none qualify.
+   */
+  mtdUtilizationAvgPct: number | null
   weeks: WeeklyHeadline[]
   error: string | null
 }
@@ -91,7 +99,9 @@ async function pagedQuery<T>(run: (from: number) => Promise<{ data: unknown; err
 
 export async function loadWeeklyOverview(
   referenceDate?: Date,
-  now?: Date
+  now?: Date,
+  /** When set, use this sync anchor instead of the global latest `sync_snapshot`. */
+  snapshot?: { id: string; createdAt: string }
 ): Promise<WeeklyOverviewData> {
   await connection()
   const _referenceDate = referenceDate ?? new Date()
@@ -109,13 +119,14 @@ export async function loadWeeklyOverview(
     asOfDate: null,
     snapshotId: null,
     syncCreatedAt: null,
+    mtdUtilizationAvgPct: null,
     weeks: [],
     error: null,
   }
 
   try {
-    const latest = await getLatestSyncSnapshot()
-    if (!latest) {
+    const resolved = snapshot ?? (await getLatestSyncSnapshot())
+    if (!resolved) {
       return {
         ...empty,
         error:
@@ -123,8 +134,9 @@ export async function loadWeeklyOverview(
       }
     }
 
-    const logThroughStr = logThroughDate(monthEnd, latest.createdAt, _now)
-    const snapshotId = latest.id
+    const logThroughStr = logThroughDate(monthEnd, resolved.createdAt, _now)
+    const logThroughD = parse(logThroughStr, 'yyyy-MM-dd', _referenceDate)
+    const snapshotId = resolved.id
     const supabase = createServiceClientCached()
 
     const [capRes, planRes, benchRes, wlRes, ptoWlRes] = await Promise.all([
@@ -156,13 +168,14 @@ export async function loadWeeklyOverview(
           .range(from, from + PAGE - 1)
       ),
       pagedQuery<{
+        person_id: string
         log_date: string
         billable_seconds: number
         logged_seconds: number
       }>(async (from) =>
         supabase
           .from('fact_worklogs')
-          .select('log_date, billable_seconds, logged_seconds')
+          .select('person_id, log_date, billable_seconds, logged_seconds')
           .eq('is_pto', false)
           .gte('log_date', monthStartStr)
           .lte('log_date', logThroughStr)
@@ -170,12 +183,13 @@ export async function loadWeeklyOverview(
           .range(from, from + PAGE - 1)
       ),
       pagedQuery<{
+        person_id: string
         log_date: string
         logged_seconds: number
       }>(async (from) =>
         supabase
           .from('fact_worklogs')
-          .select('log_date, logged_seconds')
+          .select('person_id, log_date, logged_seconds')
           .eq('is_pto', true)
           .gte('log_date', monthStartStr)
           .lte('log_date', monthEndStr)
@@ -217,6 +231,49 @@ export async function loadWeeklyOverview(
       0
     )
 
+    const workingWeekdaysThroughAsOf = countWeekdaysFromMonthStartThrough(
+      startOfDay(logThroughD),
+      _referenceDate
+    )
+
+    const loggedHoursByPerson = new Map<string, number>()
+    for (const row of wlRes.rows) {
+      const pid = row.person_id
+      const h = Number(row.logged_seconds) / 3600
+      loggedHoursByPerson.set(pid, (loggedHoursByPerson.get(pid) ?? 0) + h)
+    }
+
+    const ptoWeekdayDatesByPerson = new Map<string, Set<string>>()
+    for (const row of ptoWlRes.rows) {
+      if (row.log_date > logThroughStr) continue
+      const d = parse(row.log_date, 'yyyy-MM-dd', _referenceDate)
+      const iso = getISODay(d)
+      if (iso < 1 || iso > 5) continue
+      const pid = row.person_id
+      let set = ptoWeekdayDatesByPerson.get(pid)
+      if (!set) {
+        set = new Set()
+        ptoWeekdayDatesByPerson.set(pid, set)
+      }
+      set.add(row.log_date)
+    }
+
+    const capacityPersonIds = new Set(capRes.rows.map((r) => r.person_id))
+    const utilizationSamples: number[] = []
+    if (workingWeekdaysThroughAsOf > 0) {
+      for (const pid of capacityPersonIds) {
+        const ptoDays = ptoWeekdayDatesByPerson.get(pid)?.size ?? 0
+        const elapsed = workingWeekdaysThroughAsOf - ptoDays
+        if (elapsed <= 0) continue
+        const logged = loggedHoursByPerson.get(pid) ?? 0
+        utilizationSamples.push((logged / elapsed / 8) * 100)
+      }
+    }
+    const mtdUtilizationAvgPct =
+      utilizationSamples.length > 0
+        ? roundH(utilizationSamples.reduce((a, b) => a + b, 0) / utilizationSamples.length)
+        : null
+
     const byWeek = new Map<string, { billable: number; logged: number }>()
     const byWeekPto = new Map<string, number>()
 
@@ -254,8 +311,9 @@ export async function loadWeeklyOverview(
     return {
       monthLabel,
       asOfDate: logThroughStr,
-      snapshotId: latest.id,
-      syncCreatedAt: latest.createdAt,
+      snapshotId: resolved.id,
+      syncCreatedAt: resolved.createdAt,
+      mtdUtilizationAvgPct,
       weeks,
       error: null,
     }
