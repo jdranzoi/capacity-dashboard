@@ -14,7 +14,19 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns'
-import { formatMonthLabel, countWeekdaysFromMonthStartThrough } from './working-days'
+import {
+  meanPersonLoggedUtilizationPct,
+  personLoggedUtilizationPct,
+  roundMetricOneDecimal,
+  STANDARD_WORKDAY_HOURS,
+} from '@/lib/domain/workload-metrics'
+import {
+  elapsedNetWeekdaysForPerson,
+  holidaysByZoneEligibleWeekdays,
+  NO_WEEKDAY_DATES,
+  weekdayDateStringsMonthThrough,
+} from '@/lib/overview/elapsed-net-weekdays'
+import { formatMonthLabel } from './working-days'
 
 const PAGE = 1000
 
@@ -45,10 +57,11 @@ export type WeeklyOverviewData = {
   /** `sync_snapshot.created_at` for the row above (ingestion freshness). */
   syncCreatedAt: string | null
   /**
-   * Mean of per-person MTD utilization: `(logged / elapsedWorkingDays / 8) * 100`
-   * where `elapsedWorkingDays` = Mon–Fri from month start through `asOf` minus distinct
-   * weekday PTO dates in that window (worklogs `is_pto`). Only people in `fact_capacity`
-   * for the month with `elapsedWorkingDays > 0` are included. Null if none qualify.
+   * Mean of per-person logged utilization (`meanPersonLoggedUtilizationPct` over samples from
+   * `personLoggedUtilizationPct` in `lib/domain/workload-metrics.ts`).
+   * Elapsed net weekdays = Mon–Fri from month start through `asOf`, minus `dim_holiday` dates for the
+   * person's `dim_person.zone_id` in that window (weekdays only), minus distinct weekday PTO dates from
+   * `fact_worklogs` (`is_pto`, capped by the same `asOf` as non-PTO logs).
    */
   mtdUtilizationAvgPct: number | null
   weeks: WeeklyHeadline[]
@@ -139,7 +152,7 @@ export async function loadWeeklyOverview(
     const snapshotId = resolved.id
     const supabase = createServiceClientCached()
 
-    const [capRes, planRes, benchRes, wlRes, ptoWlRes] = await Promise.all([
+    const [capRes, planRes, benchRes, wlRes, ptoWlRes, holidayRes] = await Promise.all([
       pagedQuery<{ person_id: string; net_capacity_hours: number }>(async (from) =>
         supabase
           .from('fact_capacity')
@@ -196,6 +209,15 @@ export async function loadWeeklyOverview(
           .order('log_date', { ascending: true })
           .range(from, from + PAGE - 1)
       ),
+      pagedQuery<{ zone_id: string; date: string }>(async (from) =>
+        supabase
+          .from('dim_holiday')
+          .select('zone_id, date')
+          .gte('date', monthStartStr)
+          .lte('date', logThroughStr)
+          .order('date')
+          .range(from, from + PAGE - 1)
+      ),
     ])
 
     if (capRes.error) {
@@ -212,6 +234,9 @@ export async function loadWeeklyOverview(
     }
     if (ptoWlRes.error) {
       return { ...empty, error: `Could not load PTO worklogs: ${ptoWlRes.error}` }
+    }
+    if (holidayRes.error) {
+      return { ...empty, error: `Could not load dim_holiday: ${holidayRes.error}` }
     }
 
     const byPerson = new Map<string, number>()
@@ -231,9 +256,13 @@ export async function loadWeeklyOverview(
       0
     )
 
-    const workingWeekdaysThroughAsOf = countWeekdaysFromMonthStartThrough(
-      startOfDay(logThroughD),
-      _referenceDate
+    const eligibleWeekdaysThroughAsOf = weekdayDateStringsMonthThrough(
+      _referenceDate,
+      logThroughD
+    )
+    const holidaysByZone = holidaysByZoneEligibleWeekdays(
+      holidayRes.rows,
+      eligibleWeekdaysThroughAsOf
     )
 
     const loggedHoursByPerson = new Map<string, number>()
@@ -259,19 +288,41 @@ export async function loadWeeklyOverview(
     }
 
     const capacityPersonIds = new Set(capRes.rows.map((r) => r.person_id))
-    const utilizationSamples: number[] = []
-    if (workingWeekdaysThroughAsOf > 0) {
-      for (const pid of capacityPersonIds) {
-        const ptoDays = ptoWeekdayDatesByPerson.get(pid)?.size ?? 0
-        const elapsed = workingWeekdaysThroughAsOf - ptoDays
-        if (elapsed <= 0) continue
-        const logged = loggedHoursByPerson.get(pid) ?? 0
-        utilizationSamples.push((logged / elapsed / 8) * 100)
+
+    const personZoneById = new Map<string, string | null>()
+    const personIdList = Array.from(capacityPersonIds)
+    const ZONE_BATCH = 200
+    for (let i = 0; i < personIdList.length; i += ZONE_BATCH) {
+      const slice = personIdList.slice(i, i + ZONE_BATCH)
+      const { data: peopleRows, error: zoneErr } = await supabase
+        .from('dim_person')
+        .select('id, zone_id')
+        .in('id', slice)
+      if (zoneErr) {
+        return { ...empty, error: `Could not load dim_person (zones): ${zoneErr.message}` }
       }
+      for (const row of peopleRows ?? []) {
+        personZoneById.set(row.id, row.zone_id)
+      }
+    }
+
+    const utilizationSamples: number[] = []
+    for (const pid of capacityPersonIds) {
+      const zoneId = personZoneById.get(pid) ?? null
+      const zoneHolidayDates =
+        zoneId != null ? holidaysByZone.get(zoneId) ?? NO_WEEKDAY_DATES : NO_WEEKDAY_DATES
+      const elapsed = elapsedNetWeekdaysForPerson({
+        eligibleWeekdayDates: eligibleWeekdaysThroughAsOf,
+        zoneHolidayDates,
+        personPtoWeekdayDates: ptoWeekdayDatesByPerson.get(pid) ?? NO_WEEKDAY_DATES,
+      })
+      const logged = loggedHoursByPerson.get(pid) ?? 0
+      const pct = personLoggedUtilizationPct(logged, elapsed, STANDARD_WORKDAY_HOURS)
+      if (pct !== null) utilizationSamples.push(pct)
     }
     const mtdUtilizationAvgPct =
       utilizationSamples.length > 0
-        ? roundH(utilizationSamples.reduce((a, b) => a + b, 0) / utilizationSamples.length)
+        ? roundMetricOneDecimal(meanPersonLoggedUtilizationPct(utilizationSamples)!)
         : null
 
     const byWeek = new Map<string, { billable: number; logged: number }>()

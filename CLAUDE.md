@@ -90,7 +90,7 @@ Never hard-code a snapshot ID.
 
 ### Overview page (`/`) — weekly metrics (implementation contract)
 
-**Code:** `lib/overview/load-weekly-overview.ts`, `lib/overview/prorate-to-weeks.ts`, `components/overview/weekly-headline-section.tsx`.
+**Code:** `lib/domain/workload-metrics.ts` (formulas), `lib/overview/elapsed-net-weekdays.ts` (elapsed weekdays − holidays − PTO), `lib/overview/load-weekly-overview.ts`, `lib/overview/prorate-to-weeks.ts`, `components/overview/weekly-headline-section.tsx`.
 
 The overview shows one card per **ISO week** (Monday start) that overlaps the **reference month**. Each card lists, in order:
 
@@ -102,16 +102,16 @@ The overview shows one card per **ISO week** (Monday start) that overlaps the **
 | PTO | `fact_worklogs` | Rows with `is_pto = true`: sum `logged_seconds` to hours, bucket by `log_date` to the same ISO week. **Upper bound:** calendar **end** of reference month — not the MTD worklog cap (so future-dated PTO rows in `fact_worklogs` count toward their week). Rows still require ingestion. |
 | Billable / Logged | `fact_worklogs` | Non-`is_pto` rows: `billable_seconds` / `logged_seconds` to hours. Uses the MTD/sync worklog date cap below. |
 
-**Weekly detail table — Utilization (derived row):** Org-level **billable utilization vs prorated net capacity** for each ISO week and for the MTD totals column.
+**Weekly detail table — Utilization (derived row):** Org-level **logged utilization vs prorated net capacity** for each ISO week and for the MTD totals column. **Billable** is not used here — billable vs logged is **efficiency** (`billableVersusLoggedEfficiencyPct`), not utilization.
 
 | Scope | Formula |
 |---|---|
-| Per week | `(billable_hours_week / net_capacity_hours_week) * 100`. Values rounded to one decimal for display. When billable or net capacity for that cell is zero or negative, the UI shows an em dash (consistent with zero billable hours as empty). |
-| MTD total column | `(sum of billable_hours across weeks shown) / (sum of net_capacity_hours across those weeks) * 100` — ratio of **summed** hours, not the average of weekly percentages. |
+| Per week | `(logged_hours_week / net_capacity_hours_week) * 100`. Values rounded to one decimal for display. When logged or net capacity for that cell is zero or negative, the UI shows an em dash (consistent with zero logged hours as empty). |
+| MTD total column | `(sum of logged_hours across weeks shown) / (sum of net_capacity_hours across those weeks) * 100` — ratio of **summed** hours, not the average of weekly percentages. |
 
-Relationship to **C-005**: same billable-vs-capacity ratio as `fullMonthUtilization` when the denominator is the **portion of the month’s net capacity attributed to that week** (Mon–Fri overlap weights), not the full-month denominator used in `timeAdjustedUtilization`. Implementation: `overviewWeeklyBillableUtilizationPct` in `lib/overview/overview-metrics.ts`.
+**Not C-005:** formal billable utilization for contracts remains `timeAdjustedUtilization` / `fullMonthUtilization` in `lib/domain/utilization.ts`. The weekly table row is dashboard logged-vs-capacity at org roll-up. Implementation: `overviewWeeklyLoggedUtilizationPct` in `lib/domain/workload-metrics.ts`.
 
-This is **not** the **Utilization (MTD)** donut on the same page, which is the mean of per-person `(logged_hours / elapsed_weekdays / 8) * 100` with elapsed weekdays adjusted for PTO (`loadWeeklyOverview` → `mtdUtilizationAvgPct`).
+The **Utilization (MTD)** donut uses the same **logged** basis per person: **`personLoggedUtilizationPct`** (`(logged_hours / elapsed_net_weekdays / 8) * 100`) where **`elapsed_net_weekdays`** subtracts zone **`dim_holiday`** weekdays through `asOf` and weekday **PTO**, then **`meanPersonLoggedUtilizationPct`** (`loadWeeklyOverview` → `mtdUtilizationAvgPct`). The donut **averages people**; the table row **aggregates hours first** — they can still differ when capacity weights differ from elapsed×8 per person.
 
 **Worklog `log_date` cap (billable + logged only):** `min(calendar end of month, start-of-day of last sync `sync_snapshot.created_at`, start of today)` so MTD and sync freshness stay consistent. Snapshot facts are **full-month** v2 values; they are not clipped to that day cap. **PTO** worklogs use the calendar-month end bound only (no today/sync clamp).
 
@@ -245,6 +245,8 @@ billable_utilization = billable_hours / (monthly_target × days_elapsed / total_
 
 Must match `capacity/SKILL.md` exactly. If this formula changes, update `capacity/doc/CONTRACTS.md`
 and `capacity/doc/DECISIONS.md` before changing any code here.
+
+**Overview workload KPIs** (logged utilization, productivity, efficiency, weekly billable vs capacity, capacity-share ratios) live in `lib/domain/workload-metrics.ts`; keep UI and loaders free of duplicated formulas.
 
 ## Cross-repo coordination — READ FIRST
 

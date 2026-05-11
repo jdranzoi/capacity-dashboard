@@ -73,25 +73,3 @@ export function fmtPct(n: number | null): string {
   if (n === null || Number.isNaN(n)) return '—'
   return `${n.toLocaleString('en-US', { maximumFractionDigits: 1 })}%`
 }
-
-/**
- * Weekly-detail table utilization (org roll-up): billable hours vs prorated net capacity for that ISO week.
- *
- * Same billable-vs-capacity relationship as C-005 `fullMonthUtilization` when the denominator is the month's
- * net capacity allocated to that week via Mon-Fri overlap weights (`prorate-to-weeks`), not the full-month total.
- *
- * - UI shows "—" when either input is non-positive (matches treating zero billable hours as empty in the table).
- * - MTD total column: `(sum billable) / (sum net capacity) * 100`, not the average of weekly percentages.
- *
- * Distinct from `mtdUtilizationAvgPct` in `loadWeeklyOverview`: mean of per-person `(logged / elapsedWeekdays / 8) * 100`.
- *
- * @see lib/domain/utilization.ts — C-005
- * @see CLAUDE.md — Overview weekly metrics, Weekly detail table (Utilization)
- */
-export function overviewWeeklyBillableUtilizationPct(
-  billableHours: number,
-  netCapacityHours: number
-): number | null {
-  if (billableHours <= 0 || netCapacityHours <= 0) return null
-  return Math.round((billableHours / netCapacityHours) * 1000) / 10
-}

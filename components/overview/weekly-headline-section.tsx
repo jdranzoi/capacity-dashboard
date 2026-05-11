@@ -5,16 +5,20 @@ import {
 } from '@/components/overview/overview-workload-charts'
 import { OverviewMonthPicker } from '@/components/overview/overview-month-picker'
 import { Button } from '@/components/ui/button'
+import {
+  billableVersusLoggedEfficiencyPct,
+  loggedVersusPlannedProductivityPct,
+  overviewWeeklyLoggedUtilizationPct,
+} from "@/lib/domain/workload-metrics";
 import type { WeeklyHeadline } from '@/lib/overview/load-weekly-overview'
 import {
   fmtHoursCell,
   fmtHoursKpi,
   fmtPct,
   OVERVIEW_METRIC_ROWS,
-  overviewWeeklyBillableUtilizationPct,
   sumMetricTotals,
   type OverviewMetricKey,
-} from '@/lib/overview/overview-metrics'
+} from "@/lib/overview/overview-metrics";
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
 import { cn } from '@/lib/utils'
 import { addDays, format, parseISO } from 'date-fns'
@@ -122,14 +126,14 @@ export function WeeklyHeadlineSection({
     OVERVIEW_METRIC_ROWS.map(({ key }) => [key, sumMetricTotals(weeks, key)])
   ) as Record<OverviewMetricKey, number>
 
-  const productivityPct =
-    totals.plannedHours > 0
-      ? (totals.loggedHours / totals.plannedHours) * 100
-      : null
-  const efficiencyPct =
-    totals.loggedHours > 0
-      ? (totals.billableHours / totals.loggedHours) * 100
-      : null
+  const productivityPct = loggedVersusPlannedProductivityPct(
+    totals.loggedHours,
+    totals.plannedHours,
+  );
+  const efficiencyPct = billableVersusLoggedEfficiencyPct(
+    totals.billableHours,
+    totals.loggedHours,
+  );
 
   const firstWeek = parseISO(weeks[0].weekStart)
   const lastWeekEnd = addDays(parseISO(weeks[weeks.length - 1].weekStart), 6)
@@ -188,7 +192,10 @@ export function WeeklyHeadlineSection({
             </p>
           )}
           <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-            <FutureSlot label="Compare with" className="min-w-[200px] flex-1 py-2.5 lg:flex-none" />
+            <FutureSlot
+              label="Compare with"
+              className="min-w-[200px] flex-1 py-2.5 lg:flex-none"
+            />
             <Button
               type="button"
               variant="outline"
@@ -206,22 +213,22 @@ export function WeeklyHeadlineSection({
 
       <div className="grid gap-3 sm:grid-cols-2 sm:items-stretch xl:grid-cols-6">
         {OVERVIEW_METRIC_ROWS.map((row) => (
-            <div
-              key={row.key}
-              className="flex h-full min-h-0 flex-col rounded-xl bg-card p-3 text-card-foreground ring-1 ring-foreground/10"
+          <div
+            key={row.key}
+            className="flex h-full min-h-0 flex-col rounded-xl bg-card p-3 text-card-foreground ring-1 ring-foreground/10"
+          >
+            <p className="text-xs font-medium text-muted-foreground">
+              {row.label} (MTD)
+            </p>
+            <p
+              className="mt-1 text-lg font-semibold tabular-nums tracking-tight"
+              style={{ color: `var(${row.cssVar})` }}
             >
-              <p className="text-xs font-medium text-muted-foreground">
-                {row.label} (MTD)
-              </p>
-              <p
-                className="mt-1 text-lg font-semibold tabular-nums tracking-tight"
-                style={{ color: `var(${row.cssVar})` }}
-              >
-                {fmtHoursKpi(totals[row.key])}
-              </p>
-              {buildKpiSubline(totals, row.key)}
-            </div>
-          ))}
+              {fmtHoursKpi(totals[row.key])}
+            </p>
+            {buildKpiSubline(totals, row.key)}
+          </div>
+        ))}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-12 lg:items-stretch lg:min-h-[min(28rem,52vh)]">
@@ -247,7 +254,10 @@ export function WeeklyHeadlineSection({
           />
         </div>
         <div className="h-full min-h-0 lg:col-span-2">
-          <FutureSlot label="Filters" className="h-full min-h-[12rem] lg:min-h-0" />
+          <FutureSlot
+            label="Filters"
+            className="h-full min-h-[12rem] lg:min-h-0"
+          />
         </div>
       </div>
 
@@ -255,99 +265,103 @@ export function WeeklyHeadlineSection({
         <div className="flex h-full min-h-0 lg:col-span-7">
           <div className="flex h-full min-h-0 w-full flex-col rounded-xl bg-card p-4 text-card-foreground ring-1 ring-foreground/10">
             <div className="mb-3 flex shrink-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-              <h2 className="text-sm font-medium tracking-tight">Weekly detail (hours)</h2>
+              <h2 className="text-sm font-medium tracking-tight">
+                Weekly detail (hours)
+              </h2>
               <p className="text-[0.65rem] text-muted-foreground">
-                Billable and logged through{asOfDate ? ` ${asOfDate}` : ' —'}
+                Billable and logged through{asOfDate ? ` ${asOfDate}` : " —"}
               </p>
             </div>
             <div className="min-h-0 flex-1 overflow-x-auto">
               <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
-                    Metric
-                  </th>
-                  {weeks.map((w) => (
-                    <th
-                      key={w.weekStart}
-                      className="px-4 py-2.5 text-right text-xs font-normal text-muted-foreground tabular-nums"
-                    >
-                      {format(parseISO(w.weekStart), 'MMM d')}
+                <thead>
+                  <tr className="border-b border-border bg-muted/30">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">
+                      Metric
                     </th>
-                  ))}
-                  <th className="border-l border-border px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
-                    MTD total
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {OVERVIEW_METRIC_ROWS.map((rowDef, idx) => {
-                  const { key, label, worklog } = rowDef
-                  const isGroupBoundary =
-                    worklog && !OVERVIEW_METRIC_ROWS[idx - 1]?.worklog
-                  return (
-                    <tr
-                      key={key}
-                      className={cn(
-                        'border-b border-border/45 last:border-0',
-                        isGroupBoundary && 'border-t border-border'
-                      )}
-                    >
-                      <td
-                        className="px-4 py-2.5 font-medium"
-                        style={{ color: `var(${rowDef.cssVar})` }}
+                    {weeks.map((w) => (
+                      <th
+                        key={w.weekStart}
+                        className="px-4 py-2.5 text-right text-xs font-normal text-muted-foreground tabular-nums"
                       >
-                        {label}
-                      </td>
-                      {weeks.map((w) => (
+                        {format(parseISO(w.weekStart), "MMM d")}
+                      </th>
+                    ))}
+                    <th className="border-l border-border px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
+                      MTD total
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {OVERVIEW_METRIC_ROWS.map((rowDef, idx) => {
+                    const { key, label, worklog } = rowDef;
+                    const isGroupBoundary =
+                      worklog && !OVERVIEW_METRIC_ROWS[idx - 1]?.worklog;
+                    return (
+                      <tr
+                        key={key}
+                        className={cn(
+                          "border-b border-border/45 last:border-0",
+                          isGroupBoundary && "border-t border-border",
+                        )}
+                      >
                         <td
-                          key={w.weekStart}
-                          className="px-4 py-2.5 text-right tabular-nums"
+                          className="px-4 py-2.5 font-medium"
+                          style={{ color: `var(${rowDef.cssVar})` }}
                         >
-                          {fmtHoursCell(w[key])}
+                          {label}
                         </td>
-                      ))}
-                      <td className="border-l border-border px-4 py-2.5 text-right tabular-nums text-muted-foreground">
-                        {fmtHoursCell(totals[key])}
+                        {weeks.map((w) => (
+                          <td
+                            key={w.weekStart}
+                            className="px-4 py-2.5 text-right tabular-nums"
+                          >
+                            {fmtHoursCell(w[key])}
+                          </td>
+                        ))}
+                        <td className="border-l border-border px-4 py-2.5 text-right tabular-nums text-muted-foreground">
+                          {fmtHoursCell(totals[key])}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  <tr className="border-t border-border bg-muted/15">
+                    <td className="px-4 py-2.5 font-medium text-foreground">
+                      Utilization
+                    </td>
+                    {weeks.map((w) => (
+                      <td
+                        key={`util-${w.weekStart}`}
+                        className="px-4 py-2.5 text-right tabular-nums text-muted-foreground"
+                      >
+                        {fmtPct(
+                          overviewWeeklyLoggedUtilizationPct(
+                            w.loggedHours,
+                            w.netCapacityHours,
+                          ),
+                        )}
                       </td>
-                    </tr>
-                  )
-                })}
-                <tr className="border-t border-border bg-muted/15">
-                  <td className="px-4 py-2.5 font-medium text-foreground">
-                    Utilization
-                  </td>
-                  {weeks.map((w) => (
-                    <td
-                      key={`util-${w.weekStart}`}
-                      className="px-4 py-2.5 text-right tabular-nums text-muted-foreground"
-                    >
+                    ))}
+                    <td className="border-l border-border px-4 py-2.5 text-right tabular-nums text-muted-foreground">
                       {fmtPct(
-                        overviewWeeklyBillableUtilizationPct(
-                          w.billableHours,
-                          w.netCapacityHours
-                        )
+                        overviewWeeklyLoggedUtilizationPct(
+                          totals.loggedHours,
+                          totals.netCapacityHours,
+                        ),
                       )}
                     </td>
-                  ))}
-                  <td className="border-l border-border px-4 py-2.5 text-right tabular-nums text-muted-foreground">
-                    {fmtPct(
-                      overviewWeeklyBillableUtilizationPct(
-                        totals.billableHours,
-                        totals.netCapacityHours
-                      )
-                    )}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
 
         <div className="flex h-full min-h-0 lg:col-span-5">
           <div className="flex h-full min-h-0 w-full flex-col rounded-xl bg-card p-4 text-sm text-card-foreground ring-1 ring-foreground/10">
-            <h3 className="shrink-0 text-sm font-medium tracking-tight">Definitions</h3>
+            <h3 className="shrink-0 text-sm font-medium tracking-tight">
+              Definitions
+            </h3>
             <ul className="mt-3 min-h-0 flex-1 space-y-2 overflow-y-auto text-[0.7rem] leading-snug text-muted-foreground">
               {OVERVIEW_METRIC_ROWS.map((row) => (
                 <li key={row.key} className="flex gap-2">
@@ -359,30 +373,89 @@ export function WeeklyHeadlineSection({
                     <span className="font-medium text-foreground/90">
                       {row.label}
                     </span>
-                    {': '}
+                    {": "}
                     {definitionBlurb(row.key)}
                   </span>
                 </li>
               ))}
               <li className="flex gap-2">
                 <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-muted-foreground/55" />
-                <span>
-                  <span className="font-medium text-foreground/90">
-                    Utilization
-                  </span>
-                  {': '}
-                  Billable hours divided by net capacity for that week (same ratio shape as C-005 billable vs
-                  monthly target, using prorated net capacity per ISO week). MTD column uses total billable
-                  divided by total net capacity. Implemented as{' '}
-                  <span className="font-mono text-[0.65rem] text-foreground/80">
-                    overviewWeeklyBillableUtilizationPct
-                  </span>{' '}
-                  in{' '}
-                  <span className="font-mono text-[0.65rem] text-foreground/80">
-                    lib/overview/overview-metrics.ts
-                  </span>
-                  . Differs from the Utilization (MTD) donut (mean per-person logged vs elapsed workdays at 8h/day).
-                </span>
+                <div className="min-w-0 flex-1 space-y-1.5 text-[0.7rem] leading-snug text-muted-foreground">
+                  <p>
+                    <span className="font-medium text-foreground/90">
+                      Utilization
+                    </span>
+                    {" — "}
+                    How much of available capacity people actually spent on
+                    work, based on{" "}
+                    <span className="text-foreground/85">
+                      logged hours only
+                    </span>
+                    . Billable hours measure{" "}
+                    <em className="not-italic text-foreground/85">
+                      billing efficiency
+                    </em>{" "}
+                    (billable vs logged), not utilization—you cannot “raise
+                    utilization” by billing more if time is already fully
+                    logged.
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground/85">
+                      Weekly columns:
+                    </span>{" "}
+                    organization net capacity used that ISO week —{" "}
+                    <span className="font-mono text-[0.65rem] text-foreground/80">
+                      (logged hours that week ÷ net capacity that week) × 100
+                    </span>
+                    .
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground/85">
+                      Weekly table · MTD total column:
+                    </span>{" "}
+                    same formula as the weekly cells, but applied to hour
+                    totals:{" "}
+                    <span className="font-mono text-[0.65rem] text-foreground/80">
+                      (sum of logged hours in all week columns ÷ sum of net
+                      capacity in all week columns) × 100
+                    </span>
+                    . That is <span className="text-foreground/85">not</span>{" "}
+                    the average of the weekly percentages.
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground/85">
+                      Why MTD total can look low early on:
+                    </span>{" "}
+                    Logged and billable hours stop at the “through” date in the
+                    table header; empty weeks show “—” because nothing is booked
+                    yet. Net capacity still appears for every ISO week that
+                    overlaps the month—the denominator includes those future
+                    slices—while the numerator only includes hours logged so
+                    far. Until more weeks accumulate time, this ratio stays
+                    below a busy single week. Example shape: if logged exists
+                    only in the first two columns but capacity sums five
+                    columns, you divide roughly “two weeks of effort” by “five
+                    weeks’ worth of scheduled capacity.”
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground/85">
+                      Utilization (MTD) in Capacity usage:
+                    </span>{" "}
+                    average utilization across people with capacity this month.
+                    Each person is{" "}
+                    <span className="font-mono text-[0.65rem] text-foreground/80">
+                      (their logged hours ÷ (eligible weekdays × 8h)) × 100
+                    </span>
+                    , where eligible weekdays are Mon–Fri from the start of the
+                    month through “today,” minus regional company holidays that
+                    already occurred for their location and minus weekdays taken
+                    as PTO.{" "}
+                    <span className="italic text-muted-foreground/95">
+                      Example: 25 h logged with 5 eligible days → 25 ÷ (5 × 8) ×
+                      100 = 62.5%.
+                    </span>
+                  </p>
+                </div>
               </li>
             </ul>
             <div className="mt-4 shrink-0 border-t border-border pt-3 text-[0.65rem] text-muted-foreground">
@@ -395,7 +468,7 @@ export function WeeklyHeadlineSection({
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 function definitionBlurb(key: OverviewMetricKey): string {

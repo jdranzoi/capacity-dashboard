@@ -1,17 +1,18 @@
-import type { WeeklyHeadline } from '@/lib/overview/load-weekly-overview'
+import { hoursSharePercentage } from "@/lib/domain/workload-metrics";
+import type { WeeklyHeadline } from "@/lib/overview/load-weekly-overview";
 import {
   OVERVIEW_CHART_BAR_KEYS,
   OVERVIEW_METRIC_ROWS,
   type OverviewMetricKey,
-} from '@/lib/overview/overview-metrics'
+} from "@/lib/overview/overview-metrics";
 import { cn } from "@/lib/utils";
-import { format, parseISO } from 'date-fns'
+import { format, parseISO } from "date-fns";
 
-const BAR_KEYS = OVERVIEW_CHART_BAR_KEYS
+const BAR_KEYS = OVERVIEW_CHART_BAR_KEYS;
 
 function metricCssVar(key: OverviewMetricKey): string {
-  const row = OVERVIEW_METRIC_ROWS.find((r) => r.key === key)
-  return row ? `var(${row.cssVar})` : 'var(--muted-foreground)'
+  const row = OVERVIEW_METRIC_ROWS.find((r) => r.key === key);
+  return row ? `var(${row.cssVar})` : "var(--muted-foreground)";
 }
 
 export function WeeklyEvolutionChart({
@@ -47,7 +48,7 @@ export function WeeklyEvolutionChart({
   const barX0 = (gi: number) => padL + gi * groupW + (groupW - innerBarW) / 2;
 
   /** Logged line aligns to Planned bar (not group center). */
-  const plannedBarIndex = BAR_KEYS.indexOf('plannedHours');
+  const plannedBarIndex = BAR_KEYS.indexOf("plannedHours");
   const loggedLineX = (gi: number) =>
     barX0(gi) + plannedBarIndex * (barW + barGap) + barW / 2;
 
@@ -253,9 +254,6 @@ function MtdUtilizationDonut({
           <p className="text-[0.7rem] leading-tight text-muted-foreground">
             Utilization (MTD)
           </p>
-          <p className="text-[0.65rem] leading-snug text-muted-foreground/90">
-            Mean per person vs net workdays (Mon–Fri, excl. PTO) · 8h/day
-          </p>
         </div>
       </div>
     );
@@ -265,7 +263,6 @@ function MtdUtilizationDonut({
     <Donut
       pct={utilizationAvgPct}
       label="Utilization (MTD)"
-      subtitle="Mean per person vs net workdays (Mon–Fri, excl. PTO) · 8h/day"
       primaryCssVar={mtdUtilizationStrokeVar(utilizationAvgPct)}
     />
   );
@@ -284,8 +281,8 @@ export function CapacityUsageDonuts({
   mtdUtilizationAvgPct: number | null;
   className?: string;
 }) {
-  const planVsCap = net > 0 ? (planned / net) * 100 : 0;
-  const ptoVsCap = net > 0 ? (pto / net) * 100 : 0;
+  const planVsCap = hoursSharePercentage(planned, net);
+  const ptoVsCap = hoursSharePercentage(pto, net);
 
   return (
     <div
@@ -316,19 +313,19 @@ export function CapacityUsageDonuts({
   );
 }
 
-const SEMI_ARC_LEN = Math.PI * 40
+const SEMI_ARC_LEN = Math.PI * 40;
 
 function SemiGauge({
   pct,
   title,
   goalLabel,
 }: {
-  pct: number | null
-  title: string
-  goalLabel: string
+  pct: number | null;
+  title: string;
+  goalLabel: string;
 }) {
-  const p = pct === null ? 0 : Math.min(100, Math.max(0, pct))
-  const dash = (p / 100) * SEMI_ARC_LEN
+  const p = pct === null ? 0 : Math.min(100, Math.max(0, pct));
+  const dash = (p / 100) * SEMI_ARC_LEN;
 
   return (
     <div className="flex w-full max-w-sm flex-row items-center gap-3">
@@ -394,7 +391,7 @@ export function WorkloadGauges({
   efficiencyPct: number | null;
   className?: string;
 }) {
-  const billVsPlan = planned > 0 ? (billable / planned) * 100 : 0;
+  const billVsPlan = hoursSharePercentage(billable, planned);
 
   return (
     <div

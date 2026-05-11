@@ -29,7 +29,7 @@ export function countWeekdaysInMonthForDate(d: Date): number {
 
 /**
  * C-005 — working days from the first of the month through `through` (inclusive, capped to that month).
- * Uses Mon–Fri only; `dim_holiday` and zone-based calendars can extend this in Stage 2.
+ * Mon–Fri only. Logged utilization on `/` subtracts zone **`dim_holiday`** and weekday **PTO** inside this band (`lib/overview/elapsed-net-weekdays.ts`).
  */
 export function countWeekdaysFromMonthStartThrough(through: Date, month: Date): number {
   const first = startOfMonth(month)
