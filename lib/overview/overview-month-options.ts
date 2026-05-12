@@ -1,6 +1,6 @@
 import { connection } from 'next/server'
 import { createServiceClientCached } from '@/lib/supabase/server'
-import { endOfMonth, format, parseISO } from 'date-fns'
+import { endOfMonth, format, parseISO, startOfMonth } from 'date-fns'
 
 import { formatMonthLabel } from '@/lib/overview/working-days'
 
@@ -15,6 +15,23 @@ export type OverviewMonthOption = {
   label: string
   snapshotId: string
   syncCreatedAt: string
+}
+
+/**
+ * Picks the month from `?month=` when valid; otherwise current calendar month when present in options;
+ * else the first option (newest data).
+ */
+export function resolveSelectedOverviewMonth(
+  options: OverviewMonthOption[],
+  monthParam: string | undefined
+): OverviewMonthOption | null {
+  if (options.length === 0) return null
+  if (monthParam) {
+    const hit = options.find((o) => o.monthKey === monthParam)
+    if (hit) return hit
+  }
+  const currentKey = format(startOfMonth(new Date()), 'yyyy-MM')
+  return options.find((o) => o.monthKey === currentKey) ?? options[0]
 }
 
 type FactCapacityJoinRow = {

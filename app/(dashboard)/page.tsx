@@ -1,4 +1,4 @@
-import { parse, format, startOfMonth } from 'date-fns'
+import { parse } from 'date-fns'
 import { Suspense } from 'react'
 
 import { OverviewRoutePendingShell } from '@/components/overview/overview-route-pending-shell'
@@ -8,21 +8,8 @@ import { WeeklyHeadlineSkeleton } from '@/components/overview/weekly-headline-sk
 import { loadWeeklyOverview } from '@/lib/overview/load-weekly-overview'
 import {
   loadOverviewMonthOptions,
-  type OverviewMonthOption,
+  resolveSelectedOverviewMonth,
 } from '@/lib/overview/overview-month-options'
-
-function resolveSelectedMonth(
-  options: OverviewMonthOption[],
-  monthParam: string | undefined
-): OverviewMonthOption | null {
-  if (options.length === 0) return null
-  if (monthParam) {
-    const hit = options.find((o) => o.monthKey === monthParam)
-    if (hit) return hit
-  }
-  const currentKey = format(startOfMonth(new Date()), 'yyyy-MM')
-  return options.find((o) => o.monthKey === currentKey) ?? options[0]
-}
 
 async function WeeklyData({
   searchParams,
@@ -40,7 +27,7 @@ async function WeeklyData({
     )
   }
 
-  const selected = resolveSelectedMonth(options, monthParam)
+  const selected = resolveSelectedOverviewMonth(options, monthParam)
   if (!selected) {
     return (
       <div className="rounded-lg border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">

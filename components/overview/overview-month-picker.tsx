@@ -11,15 +11,22 @@ export function OverviewMonthPicker({
   options,
   selectedMonthKey,
   className,
+  /** When provided (e.g. `/team` route pending shell), overrides overview context. */
+  pendingNavigation,
 }: {
   options: OverviewMonthOption[]
   selectedMonthKey: string
   className?: string
+  pendingNavigation?: {
+    navigateWithTransition: (href: string) => void
+    isPending: boolean
+  } | null
 }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const routePending = useOverviewRoutePending()
+  const effectivePending = pendingNavigation ?? routePending
 
   const onChange = useCallback(
     (monthKey: string) => {
@@ -31,16 +38,16 @@ export function OverviewMonthPicker({
       }
       const q = p.toString()
       const href = q ? `${pathname}?${q}` : pathname
-      if (routePending) {
-        routePending.navigateWithTransition(href)
+      if (effectivePending) {
+        effectivePending.navigateWithTransition(href)
       } else {
         router.push(href, { scroll: false })
       }
     },
-    [pathname, routePending, router, searchParams]
+    [effectivePending, pathname, router, searchParams]
   )
 
-  const isPending = routePending?.isPending ?? false
+  const isPending = effectivePending?.isPending ?? false
 
   if (options.length === 0) {
     return null

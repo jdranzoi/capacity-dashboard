@@ -1,15 +1,19 @@
-import { Skeleton } from '@/components/ui/skeleton'
+import { Suspense } from 'react'
 
-export default function TeamPage() {
+import { TeamPageData } from '@/components/team/team-page-data'
+import { TeamPageSkeleton } from '@/components/team/team-page-skeleton'
+import { TeamRoutePendingShell } from '@/components/team/team-route-pending-shell'
+
+export default function TeamPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>
+}) {
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold">Team</h1>
-        <p className="text-sm text-muted-foreground">
-          Individual utilization by role — coming in Phase B.
-        </p>
-      </div>
-      <Skeleton className="h-96 rounded-lg" />
-    </div>
+    <TeamRoutePendingShell>
+      <Suspense fallback={<TeamPageSkeleton />}>
+        <TeamPageData searchParams={searchParams} />
+      </Suspense>
+    </TeamRoutePendingShell>
   )
 }
