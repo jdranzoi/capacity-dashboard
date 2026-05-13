@@ -17,9 +17,9 @@ import {
 import {
   meanPersonLoggedUtilizationPct,
   personLoggedUtilizationPct,
-  roundMetricOneDecimal,
   STANDARD_WORKDAY_HOURS,
 } from '@/lib/domain/workload-metrics'
+import { roundDisplayStat } from '@/lib/format/display-stats'
 import {
   elapsedNetWeekdaysForPerson,
   holidaysByZoneEligibleWeekdays,
@@ -29,10 +29,6 @@ import {
 import { formatMonthLabel } from './working-days'
 
 const PAGE = 1000
-
-function roundH(n: number): number {
-  return Math.round(n * 10) / 10
-}
 
 export type WeeklyHeadline = {
   weekLabel: string
@@ -344,7 +340,7 @@ export async function loadWeeklyOverview(
     }
     const mtdUtilizationAvgPct =
       utilizationSamples.length > 0
-        ? roundMetricOneDecimal(meanPersonLoggedUtilizationPct(utilizationSamples)!)
+        ? roundDisplayStat(meanPersonLoggedUtilizationPct(utilizationSamples)!)
         : null
 
     const loggedHoursOrgTotal = Array.from(loggedHoursByPerson.values()).reduce((a, b) => a + b, 0)
@@ -358,12 +354,12 @@ export async function loadWeeklyOverview(
     )
 
     const orgMonthRollupHours: OrgMonthRollupHours = {
-      netCapacityHours: roundH(totalNetCapacity),
-      plannedHours: roundH(totalPlanned),
-      availabilityHours: roundH(totalAvailability),
-      loggedHoursMtd: roundH(loggedHoursOrgTotal),
-      billableHoursMtd: roundH(billableHoursOrgTotal),
-      ptoHoursMonth: roundH(ptoHoursOrgTotal),
+      netCapacityHours: roundDisplayStat(totalNetCapacity),
+      plannedHours: roundDisplayStat(totalPlanned),
+      availabilityHours: roundDisplayStat(totalAvailability),
+      loggedHoursMtd: roundDisplayStat(loggedHoursOrgTotal),
+      billableHoursMtd: roundDisplayStat(billableHoursOrgTotal),
+      ptoHoursMonth: roundDisplayStat(ptoHoursOrgTotal),
     }
 
     const byWeek = new Map<string, { billable: number; logged: number }>()
@@ -391,12 +387,12 @@ export async function loadWeeklyOverview(
       return {
         weekLabel: `Week of ${format(weekStartD, 'MMM d')}`,
         weekStart: wk,
-        netCapacityHours: roundH(totalNetCapacity * w),
-        plannedHours: roundH(totalPlanned * w),
-        availabilityHours: roundH(totalAvailability * w),
-        ptoHours: roundH(byWeekPto.get(wk) ?? 0),
-        billableHours: roundH(b.billable),
-        loggedHours: roundH(b.logged),
+        netCapacityHours: roundDisplayStat(totalNetCapacity * w),
+        plannedHours: roundDisplayStat(totalPlanned * w),
+        availabilityHours: roundDisplayStat(totalAvailability * w),
+        ptoHours: roundDisplayStat(byWeekPto.get(wk) ?? 0),
+        billableHours: roundDisplayStat(b.billable),
+        loggedHours: roundDisplayStat(b.logged),
       }
     })
 

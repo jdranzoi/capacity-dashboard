@@ -1,3 +1,4 @@
+import { roundDisplayStat } from '@/lib/format/display-stats'
 import type { WeeklyHeadline } from '@/lib/overview/load-weekly-overview'
 
 export const OVERVIEW_METRIC_ROWS = [
@@ -54,22 +55,23 @@ export function sumMetricTotals(
   weeks: WeeklyHeadline[],
   key: OverviewMetricKey
 ): number {
-  return Math.round(weeks.reduce((s, w) => s + w[key], 0) * 10) / 10
+  return roundDisplayStat(weeks.reduce((s, w) => s + w[key], 0))
 }
 
 export function fmtHoursCell(n: number): string {
-  return n === 0 ? '—' : `${n}h`
+  return n === 0 ? '—' : `${roundDisplayStat(n)}h`
 }
 
 export function fmtHoursKpi(n: number): string {
   if (n === 0) return '—'
-  return `${n.toLocaleString('en-US', {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
+  const i = roundDisplayStat(n)
+  return `${i.toLocaleString('en-US', {
+    maximumFractionDigits: 0,
   })}h`
 }
 
 export function fmtPct(n: number | null): string {
   if (n === null || Number.isNaN(n)) return '—'
-  return `${n.toLocaleString('en-US', { maximumFractionDigits: 1 })}%`
+  const i = roundDisplayStat(n)
+  return `${i.toLocaleString('en-US', { maximumFractionDigits: 0 })}%`
 }

@@ -6,13 +6,10 @@
  * stay consistent when definitions change.
  */
 
+import { roundDisplayStat } from '@/lib/format/display-stats'
+
 /** Standard day length used for logged utilization vs elapsed net working days (dashboard convention). */
 export const STANDARD_WORKDAY_HOURS = 8 as const
-
-/** Round to one decimal for displayed KPIs (matches overview loaders). */
-export function roundMetricOneDecimal(n: number): number {
-  return Math.round(n * 10) / 10
-}
 
 /**
  * Arithmetic mean. Empty input → null.
@@ -106,6 +103,8 @@ export function billableVersusLoggedEfficiencyPct(
  *
  * UI shows "—" when logged or net capacity for that cell is non-positive (aligned with zero logged as empty hours).
  *
+ * **Return value** is rounded to the nearest integer for display consistency (`roundDisplayStat`).
+ *
  * @see CLAUDE.md — Overview weekly metrics
  */
 export function overviewWeeklyLoggedUtilizationPct(
@@ -113,5 +112,5 @@ export function overviewWeeklyLoggedUtilizationPct(
   netCapacityHours: number
 ): number | null {
   if (loggedHours <= 0 || netCapacityHours <= 0) return null
-  return roundMetricOneDecimal((loggedHours / netCapacityHours) * 100)
+  return roundDisplayStat((loggedHours / netCapacityHours) * 100)
 }

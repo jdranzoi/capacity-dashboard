@@ -1,6 +1,8 @@
 import { hoursSharePercentage } from "@/lib/domain/workload-metrics";
+import { roundDisplayStat } from "@/lib/format/display-stats";
 import type { WeeklyHeadline } from "@/lib/overview/load-weekly-overview";
 import {
+  fmtPct,
   OVERVIEW_CHART_BAR_KEYS,
   OVERVIEW_METRIC_ROWS,
   type OverviewMetricKey,
@@ -177,7 +179,7 @@ function Donut({
 }) {
   const r = 36;
   const c = 2 * Math.PI * r;
-  const p = Math.min(100, Math.max(0, pct));
+  const p = Math.min(100, Math.max(0, roundDisplayStat(pct)));
   const dash = (p / 100) * c;
 
   return (
@@ -188,7 +190,7 @@ function Donut({
         viewBox="0 0 100 100"
         className="-rotate-90 shrink-0"
         role="img"
-        aria-label={`${label}: ${Math.round(p)} percent`}
+        aria-label={`${label}: ${p} percent`}
       >
         <circle
           cx={50}
@@ -211,7 +213,7 @@ function Donut({
       </svg>
       <div className="flex min-h-[88px] min-w-0 flex-1 flex-col justify-center gap-0.5 text-left">
         <p className="text-sm font-semibold tabular-nums text-foreground">
-          {pct.toLocaleString("en-US", { maximumFractionDigits: 1 })}%
+          {fmtPct(pct)}
         </p>
         <p className="text-[0.7rem] leading-tight text-muted-foreground">
           {label}
@@ -263,7 +265,7 @@ function MtdUtilizationDonut({
     <Donut
       pct={utilizationAvgPct}
       label="Utilization (MTD)"
-      primaryCssVar={mtdUtilizationStrokeVar(utilizationAvgPct)}
+      primaryCssVar={mtdUtilizationStrokeVar(roundDisplayStat(utilizationAvgPct))}
     />
   );
 }
@@ -324,7 +326,8 @@ function SemiGauge({
   title: string;
   goalLabel: string;
 }) {
-  const p = pct === null ? 0 : Math.min(100, Math.max(0, pct));
+  const p =
+    pct === null ? 0 : Math.min(100, Math.max(0, roundDisplayStat(pct)));
   const dash = (p / 100) * SEMI_ARC_LEN;
 
   return (
@@ -339,7 +342,7 @@ function SemiGauge({
           aria-label={
             pct === null
               ? `${title}: no data`
-              : `${title}: ${Math.round(p)} percent`
+              : `${title}: ${p} percent`
           }
         >
           <path
@@ -363,9 +366,7 @@ function SemiGauge({
       </div>
       <div className="flex min-h-[88px] min-w-0 flex-1 flex-col justify-center gap-0.5 text-left">
         <p className="text-sm font-semibold tabular-nums text-foreground">
-          {pct === null
-            ? "—"
-            : `${pct.toLocaleString("en-US", { maximumFractionDigits: 1 })}%`}
+          {pct === null ? "—" : fmtPct(pct)}
         </p>
         <p className="text-[0.7rem] leading-tight text-muted-foreground">
           {title}

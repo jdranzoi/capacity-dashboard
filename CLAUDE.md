@@ -106,7 +106,7 @@ The overview shows one card per **ISO week** (Monday start) that overlaps the **
 
 | Scope | Formula |
 |---|---|
-| Per week | `(logged_hours_week / net_capacity_hours_week) * 100`. Values rounded to one decimal for display. When logged or net capacity for that cell is zero or negative, the UI shows an em dash (consistent with zero logged hours as empty). |
+| Per week | `(logged_hours_week / net_capacity_hours_week) * 100`. Values rounded to the **nearest integer** for display (`roundDisplayStat` / shared formatters). When logged or net capacity for that cell is zero or negative, the UI shows an em dash (consistent with zero logged hours as empty). |
 | MTD total column | `(sum of logged_hours across weeks shown) / (sum of net_capacity_hours across those weeks) * 100` — ratio of **summed** hours, not the average of weekly percentages. |
 
 **Not C-005:** formal billable utilization for contracts remains `timeAdjustedUtilization` / `fullMonthUtilization` in `lib/domain/utilization.ts`. The weekly table row is dashboard logged-vs-capacity at org roll-up. Implementation: `overviewWeeklyLoggedUtilizationPct` in `lib/domain/workload-metrics.ts`.
@@ -207,6 +207,15 @@ const nextConfig = { cacheComponents: true }
 
 Never put `cookies()` or `headers()` inside a `'use cache'` function. Extract at the Server Component level and pass as props.
 
+### Display statistics (KPIs)
+
+All **user-visible** headline statistics (hours, utilization and efficiency percentages, shares in donuts, weekly table roll-ups) use **whole numbers**, **rounded to the nearest integer** (`Math.round` via `roundDisplayStat` in `lib/format/display-stats.ts`). Do not add fractional digits in components unless a documented exception exists.
+
+- Prefer **`fmtHoursKpi`**, **`fmtPct`**, and **`fmtHoursCell`** from `lib/overview/overview-metrics.ts` for text output.
+- Loaders that feed those views (e.g. `load-weekly-overview`) normalize hour payloads with the same rounding so tables and charts stay aligned with labels.
+
+Internal formulas may use floating-point until the display boundary; contracts such as **C-005** remain the source of truth for formal utilization math.
+
 ### Component authoring rules
 
 - All styling via Tailwind utility classes + `cn()` (clsx + tailwind-merge). No `style={{}}` props for colors or spacing.
@@ -246,7 +255,7 @@ billable_utilization = billable_hours / (monthly_target × days_elapsed / total_
 Must match `capacity/SKILL.md` exactly. If this formula changes, update `capacity/doc/CONTRACTS.md`
 and `capacity/doc/DECISIONS.md` before changing any code here.
 
-**Overview workload KPIs** (logged utilization, productivity, efficiency, weekly billable vs capacity, capacity-share ratios) live in `lib/domain/workload-metrics.ts`; keep UI and loaders free of duplicated formulas.
+**Overview workload KPIs** (logged utilization, productivity, efficiency, weekly billable vs capacity, capacity-share ratios) live in `lib/domain/workload-metrics.ts`; keep UI and loaders free of duplicated formulas. **Display** of those KPIs uses integer rounding via `roundDisplayStat` and the shared formatters in `lib/overview/overview-metrics.ts` (see *Display statistics (KPIs)*).
 
 ## Cross-repo coordination — READ FIRST
 
