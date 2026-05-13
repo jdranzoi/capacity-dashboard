@@ -74,7 +74,7 @@ Suggested components (create incrementally):
 | --- | --- | --- |
 | P0 | Page structure + slots + `components/team/` scaffolding | Done |
 | P1 | Month picker + URL `searchParams` | Done |
-| P2 | Monthly org loader + KPI row using centralized domain | Pending |
+| P2 | Monthly org loader + KPI row using centralized domain | Done |
 | P3 | Previous month comparison + trends | Pending |
 | P4 | Persistent filters in URL | Pending |
 | P5 | Role widgets: utilization table, distribution, headcount | Pending |
@@ -83,9 +83,9 @@ Suggested components (create incrementally):
 
 ## Default next implementation step
 
-**Phase 2**: Monthly org-level KPI row — `lib/team/load-team-overview.ts` (or similar) with latest `sync_snapshot`, plus domain helpers; replace skeleton cards in `team-page-shell.tsx` with real data components.
+**Phase 3**: Previous-month deltas, trend sparklines, and optional KPI strip refinements — extend `TeamKpiSection` placeholder rail.
 
-Phases 0 + 1 are implemented (`/team?month=`, shell slots, toolbar filters as disabled placeholders).
+Phase 2 is implemented: org monthly rollup ships from `loadWeeklyOverview` as `orgMonthRollupHours`, wrapped by `lib/team/load-team-month-kpis.ts` (`overviewWeeklyLoggedUtilizationPct`, `billableVersusLoggedEfficiencyPct`).
 
 ## References
 

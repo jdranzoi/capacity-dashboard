@@ -3,6 +3,7 @@ import {
   loadOverviewMonthOptions,
   resolveSelectedOverviewMonth,
 } from '@/lib/overview/overview-month-options'
+import { loadTeamMonthKpis } from '@/lib/team/load-team-month-kpis'
 
 export async function TeamPageData({
   searchParams,
@@ -30,10 +31,24 @@ export async function TeamPageData({
     )
   }
 
+  const { data: kpis, error: kpisError } = await loadTeamMonthKpis(selected.monthStartStr, {
+    id: selected.snapshotId,
+    createdAt: selected.syncCreatedAt,
+  })
+
+  if (kpisError || !kpis) {
+    return (
+      <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        {kpisError ?? 'Could not load team KPIs.'}
+      </div>
+    )
+  }
+
   return (
     <TeamPageShell
       referenceMonthLabel={selected.label}
       monthPicker={{ options, selectedMonthKey: selected.monthKey }}
+      kpis={kpis}
     />
   )
 }

@@ -1,25 +1,18 @@
 import { TeamToolbar } from '@/components/team/team-toolbar'
-import { Skeleton } from '@/components/ui/skeleton'
+import type { TeamMonthKpisPayload } from '@/lib/team/load-team-month-kpis'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { TeamKpiSection } from '@/components/team/team-kpi-section'
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
-
-const KPI_SLOT_LABELS = [
-  'Net capacity',
-  'Planned',
-  'Logged',
-  'Billable',
-  'Utilization',
-  'Billable efficiency',
-  'Open capacity',
-  'PTO impact',
-] as const
 
 export function TeamPageShell({
   referenceMonthLabel,
   monthPicker,
+  kpis,
 }: {
   referenceMonthLabel: string
   monthPicker: { options: OverviewMonthOption[]; selectedMonthKey: string } | null
+  kpis: TeamMonthKpisPayload
 }) {
   return (
     <div className="flex flex-col gap-8">
@@ -40,31 +33,7 @@ export function TeamPageShell({
 
       <TeamToolbar monthPicker={monthPicker} />
 
-      <section data-slot="team-kpis" aria-labelledby="team-kpis-heading">
-        <h2
-          id="team-kpis-heading"
-          className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground"
-        >
-          Current operations
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {KPI_SLOT_LABELS.map((label) => (
-            <div
-              key={label}
-              className="rounded-xl border border-border bg-card/30 p-3 ring-1 ring-foreground/5"
-            >
-              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                {label}
-              </p>
-              <div className="mt-2 flex items-baseline gap-2">
-                <Skeleton className="h-8 w-20 rounded-md" />
-              </div>
-              <p className="mt-2 text-[10px] text-muted-foreground/80">Fill: value and vs prior</p>
-              <Skeleton className="mt-2 h-7 w-full rounded-md" />
-            </div>
-          ))}
-        </div>
-      </section>
+      <TeamKpiSection kpis={kpis} />
 
       <section data-slot="team-analytics-grid" aria-labelledby="team-analytics-heading">
         <h2

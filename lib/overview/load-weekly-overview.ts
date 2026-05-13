@@ -49,6 +49,21 @@ export type WeeklyHeadline = {
   loggedHours: number
 }
 
+export type OrgMonthRollupHours = {
+  /** Sum of `fact_capacity.net_capacity_hours` across people (adds duplicate `source` rows per person). */
+  netCapacityHours: number
+  /** Non-PTO `fact_plans` hours for org. */
+  plannedHours: number
+  /** `fact_bench.availability_hours` org sum. */
+  availabilityHours: number
+  /** Non-PTO worklogs summed through overview MTD cap (`asOf`). */
+  loggedHoursMtd: number
+  /** Billable slice of non-PTO worklogs through same cap. */
+  billableHoursMtd: number
+  /** PTO hours through calendar month end (no MTD/sync clamp per overview contract). */
+  ptoHoursMonth: number
+}
+
 export type WeeklyOverviewData = {
   monthLabel: string
   asOfDate: string | null
@@ -56,6 +71,12 @@ export type WeeklyOverviewData = {
   snapshotId: string | null
   /** `sync_snapshot.created_at` for the row above (ingestion freshness). */
   syncCreatedAt: string | null
+  /**
+   * Org-level sums for headline KPIs — same ingestion rules as overview weekly cards
+   * (capacity/planned/bench = full month snapshot facts; logged/billable = MTD `asOfDate`;
+   * PTO through calendar month end).
+   */
+  orgMonthRollupHours: OrgMonthRollupHours | null
   /**
    * Mean of per-person logged utilization (`meanPersonLoggedUtilizationPct` over samples from
    * `personLoggedUtilizationPct` in `lib/domain/workload-metrics.ts`).
@@ -132,6 +153,7 @@ export async function loadWeeklyOverview(
     asOfDate: null,
     snapshotId: null,
     syncCreatedAt: null,
+    orgMonthRollupHours: null,
     mtdUtilizationAvgPct: null,
     weeks: [],
     error: null,
@@ -325,6 +347,25 @@ export async function loadWeeklyOverview(
         ? roundMetricOneDecimal(meanPersonLoggedUtilizationPct(utilizationSamples)!)
         : null
 
+    const loggedHoursOrgTotal = Array.from(loggedHoursByPerson.values()).reduce((a, b) => a + b, 0)
+    const billableHoursOrgTotal = wlRes.rows.reduce(
+      (s, row) => s + Number(row.billable_seconds) / 3600,
+      0
+    )
+    const ptoHoursOrgTotal = ptoWlRes.rows.reduce(
+      (s, row) => s + Number(row.logged_seconds) / 3600,
+      0
+    )
+
+    const orgMonthRollupHours: OrgMonthRollupHours = {
+      netCapacityHours: roundH(totalNetCapacity),
+      plannedHours: roundH(totalPlanned),
+      availabilityHours: roundH(totalAvailability),
+      loggedHoursMtd: roundH(loggedHoursOrgTotal),
+      billableHoursMtd: roundH(billableHoursOrgTotal),
+      ptoHoursMonth: roundH(ptoHoursOrgTotal),
+    }
+
     const byWeek = new Map<string, { billable: number; logged: number }>()
     const byWeekPto = new Map<string, number>()
 
@@ -364,6 +405,7 @@ export async function loadWeeklyOverview(
       asOfDate: logThroughStr,
       snapshotId: resolved.id,
       syncCreatedAt: resolved.createdAt,
+      orgMonthRollupHours,
       mtdUtilizationAvgPct,
       weeks,
       error: null,
