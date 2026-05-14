@@ -70,6 +70,12 @@ export function fmtHoursKpi(n: number): string {
   })}h`
 }
 
+/** Whole-person counts (headline KPIs). */
+export function fmtHeadcountKpi(n: number): string {
+  const i = roundDisplayStat(n)
+  return i.toLocaleString('en-US', { maximumFractionDigits: 0 })
+}
+
 export function fmtPct(n: number | null): string {
   if (n === null || Number.isNaN(n)) return '—'
   const i = roundDisplayStat(n)

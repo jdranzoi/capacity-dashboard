@@ -3,14 +3,20 @@ import {
   loadOverviewMonthOptions,
   resolveSelectedOverviewMonth,
 } from '@/lib/overview/overview-month-options'
+import { loadTeamFilterOptions } from '@/lib/team/load-team-filter-options'
 import { loadTeamMonthKpis } from '@/lib/team/load-team-month-kpis'
+import { parseTeamRouteFilters } from '@/lib/team/team-route-filters'
 
 export async function TeamPageData({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const { month: monthParam } = await searchParams
+  const raw = await searchParams
+  const routeFilters = parseTeamRouteFilters(raw)
+
+  const monthParam = raw.month
+  const monthStr = Array.isArray(monthParam) ? monthParam[0] : monthParam
 
   const { options, error } = await loadOverviewMonthOptions()
   if (error) {
@@ -21,7 +27,7 @@ export async function TeamPageData({
     )
   }
 
-  const selected = resolveSelectedOverviewMonth(options, monthParam)
+  const selected = resolveSelectedOverviewMonth(options, monthStr)
   if (!selected) {
     return (
       <div className="rounded-lg border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
@@ -31,10 +37,26 @@ export async function TeamPageData({
     )
   }
 
-  const { data: kpis, error: kpisError } = await loadTeamMonthKpis(selected.monthStartStr, {
-    id: selected.snapshotId,
-    createdAt: selected.syncCreatedAt,
-  })
+  const { data: filterOptions, error: filterOptionsError } = await loadTeamFilterOptions(
+    selected.snapshotId,
+    selected.monthStartStr
+  )
+  if (filterOptionsError || !filterOptions) {
+    return (
+      <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        {filterOptionsError ?? 'Could not load team filters.'}
+      </div>
+    )
+  }
+
+  const { data: kpis, error: kpisError } = await loadTeamMonthKpis(
+    selected.monthStartStr,
+    {
+      id: selected.snapshotId,
+      createdAt: selected.syncCreatedAt,
+    },
+    routeFilters
+  )
 
   if (kpisError || !kpis) {
     return (
@@ -48,6 +70,8 @@ export async function TeamPageData({
     <TeamPageShell
       referenceMonthLabel={selected.label}
       monthPicker={{ options, selectedMonthKey: selected.monthKey }}
+      filterOptions={filterOptions}
+      routeFilters={routeFilters}
       kpis={kpis}
     />
   )

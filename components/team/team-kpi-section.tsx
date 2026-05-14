@@ -1,5 +1,5 @@
 import type { TeamMonthKpisPayload } from "@/lib/team/load-team-month-kpis";
-import { fmtHoursKpi, fmtPct } from "@/lib/overview/overview-metrics";
+import { fmtHeadcountKpi, fmtHoursKpi, fmtPct } from "@/lib/overview/overview-metrics";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
@@ -17,7 +17,7 @@ function KpiCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-card/30 p-3 ring-1 ring-foreground/5",
+        "min-w-36 shrink-0 grow basis-0 rounded-xl border border-border bg-card/30 p-3 ring-1 ring-foreground/5",
         className,
       )}
     >
@@ -37,7 +37,7 @@ function KpiCard({
 }
 
 export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
-  const { rollupHours: r, asOfDate } = kpis;
+  const { rollupHours: r, asOfDate, headcountTotal } = kpis;
   const mtdNote = asOfDate
     ? `Non-PTO worklogs through ${asOfDate}`
     : "Overview worklog bound";
@@ -91,6 +91,12 @@ export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
       value: fmtHoursKpi(r.ptoHoursMonth),
       footnote: "PTO logs through calendar month end",
     },
+    {
+      title: "Headcount (total)",
+      value: fmtHeadcountKpi(headcountTotal),
+      footnote:
+        "People with capacity rows for this month (same scope as filters).",
+    },
   ];
 
   return (
@@ -101,7 +107,7 @@ export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
       >
         Current operations
       </h2>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="flex flex-nowrap gap-3 overflow-x-auto pb-1 [scrollbar-gutter:stable]">
         {items.map((item) => (
           <KpiCard
             key={item.title}

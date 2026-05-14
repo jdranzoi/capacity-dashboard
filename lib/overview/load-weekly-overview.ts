@@ -81,6 +81,11 @@ export type WeeklyOverviewData = {
    * `fact_worklogs` (`is_pto`, capped by the same `asOf` as non-PTO logs).
    */
   mtdUtilizationAvgPct: number | null
+  /**
+   * Distinct `person_id` in `fact_capacity` for the reference month (after optional person filter).
+   * Same people scope as org capacity / planned / bench rollups.
+   */
+  capacityHeadcount: number
   weeks: WeeklyHeadline[]
   error: string | null
 }
@@ -131,7 +136,13 @@ export async function loadWeeklyOverview(
   referenceDate?: Date,
   now?: Date,
   /** When set, use this sync anchor instead of the global latest `sync_snapshot`. */
-  snapshot?: { id: string; createdAt: string }
+  snapshot?: { id: string; createdAt: string },
+  /**
+   * Restrict headline rollups and weekly rows to these people (must be a subset of
+   * `fact_capacity` rows for the month). `null` / `undefined` = full org.
+   * An empty set means no matching people — zeroed metrics with the same week spine.
+   */
+  personIdFilter?: Set<string> | null
 ): Promise<WeeklyOverviewData> {
   await connection()
   const _referenceDate = referenceDate ?? new Date()
@@ -151,6 +162,7 @@ export async function loadWeeklyOverview(
     syncCreatedAt: null,
     orgMonthRollupHours: null,
     mtdUtilizationAvgPct: null,
+    capacityHeadcount: 0,
     weeks: [],
     error: null,
   }
@@ -168,6 +180,42 @@ export async function loadWeeklyOverview(
     const logThroughStr = logThroughDate(monthEnd, resolved.createdAt, _now)
     const logThroughD = parse(logThroughStr, 'yyyy-MM-dd', _referenceDate)
     const snapshotId = resolved.id
+
+    if (personIdFilter && personIdFilter.size === 0) {
+      const weeksZeroed: WeeklyHeadline[] = weekKeys.map((wk) => {
+        const weekStartD = parse(wk, 'yyyy-MM-dd', _referenceDate)
+        return {
+          weekLabel: `Week of ${format(weekStartD, 'MMM d')}`,
+          weekStart: wk,
+          netCapacityHours: 0,
+          plannedHours: 0,
+          availabilityHours: 0,
+          ptoHours: 0,
+          billableHours: 0,
+          loggedHours: 0,
+        }
+      })
+      const zeros: OrgMonthRollupHours = {
+        netCapacityHours: 0,
+        plannedHours: 0,
+        availabilityHours: 0,
+        loggedHoursMtd: 0,
+        billableHoursMtd: 0,
+        ptoHoursMonth: 0,
+      }
+      return {
+        monthLabel,
+        asOfDate: logThroughStr,
+        snapshotId: resolved.id,
+        syncCreatedAt: resolved.createdAt,
+        orgMonthRollupHours: zeros,
+        mtdUtilizationAvgPct: null,
+        capacityHeadcount: 0,
+        weeks: weeksZeroed,
+        error: null,
+      }
+    }
+
     const supabase = createServiceClientCached()
 
     const [capRes, planRes, benchRes, wlRes, ptoWlRes, holidayRes] = await Promise.all([
@@ -190,10 +238,10 @@ export async function loadWeeklyOverview(
           .order('person_id')
           .range(from, from + PAGE - 1)
       ),
-      pagedQuery<{ availability_hours: number | null }>(async (from) =>
+      pagedQuery<{ person_id: string; availability_hours: number | null }>(async (from) =>
         supabase
           .from('fact_bench')
-          .select('availability_hours')
+          .select('person_id, availability_hours')
           .eq('snapshot_id', snapshotId)
           .eq('month_date', monthStartStr)
           .range(from, from + PAGE - 1)
@@ -257,19 +305,37 @@ export async function loadWeeklyOverview(
       return { ...empty, error: `Could not load dim_holiday: ${holidayRes.error}` }
     }
 
+    const capRows =
+      personIdFilter == null
+        ? capRes.rows
+        : capRes.rows.filter((r) => personIdFilter.has(r.person_id))
+    const planRows =
+      personIdFilter == null
+        ? planRes.rows
+        : planRes.rows.filter((r) => personIdFilter.has(r.person_id))
+    const benchRows =
+      personIdFilter == null
+        ? benchRes.rows
+        : benchRes.rows.filter((r) => personIdFilter.has(r.person_id))
+    const wlRows =
+      personIdFilter == null
+        ? wlRes.rows
+        : wlRes.rows.filter((r) => personIdFilter.has(r.person_id))
+    const ptoRows =
+      personIdFilter == null
+        ? ptoWlRes.rows
+        : ptoWlRes.rows.filter((r) => personIdFilter.has(r.person_id))
+
     const byPerson = new Map<string, number>()
-    for (const r of capRes.rows) {
+    for (const r of capRows) {
       const h = Number(r.net_capacity_hours)
       byPerson.set(r.person_id, (byPerson.get(r.person_id) ?? 0) + h)
     }
     const totalNetCapacity = Array.from(byPerson.values()).reduce((a, b) => a + b, 0)
 
-    const totalPlanned = planRes.rows.reduce(
-      (s, r) => s + Number(r.planned_hours ?? 0),
-      0
-    )
+    const totalPlanned = planRows.reduce((s, r) => s + Number(r.planned_hours ?? 0), 0)
 
-    const totalAvailability = benchRes.rows.reduce(
+    const totalAvailability = benchRows.reduce(
       (s, r) => s + Number(r.availability_hours ?? 0),
       0
     )
@@ -284,14 +350,14 @@ export async function loadWeeklyOverview(
     )
 
     const loggedHoursByPerson = new Map<string, number>()
-    for (const row of wlRes.rows) {
+    for (const row of wlRows) {
       const pid = row.person_id
       const h = Number(row.logged_seconds) / 3600
       loggedHoursByPerson.set(pid, (loggedHoursByPerson.get(pid) ?? 0) + h)
     }
 
     const ptoWeekdayDatesByPerson = new Map<string, Set<string>>()
-    for (const row of ptoWlRes.rows) {
+    for (const row of ptoRows) {
       if (row.log_date > logThroughStr) continue
       const d = parse(row.log_date, 'yyyy-MM-dd', _referenceDate)
       const iso = getISODay(d)
@@ -305,7 +371,7 @@ export async function loadWeeklyOverview(
       set.add(row.log_date)
     }
 
-    const capacityPersonIds = new Set(capRes.rows.map((r) => r.person_id))
+    const capacityPersonIds = new Set(capRows.map((r) => r.person_id))
 
     const personZoneById = new Map<string, string | null>()
     const personIdList = Array.from(capacityPersonIds)
@@ -344,11 +410,11 @@ export async function loadWeeklyOverview(
         : null
 
     const loggedHoursOrgTotal = Array.from(loggedHoursByPerson.values()).reduce((a, b) => a + b, 0)
-    const billableHoursOrgTotal = wlRes.rows.reduce(
+    const billableHoursOrgTotal = wlRows.reduce(
       (s, row) => s + Number(row.billable_seconds) / 3600,
       0
     )
-    const ptoHoursOrgTotal = ptoWlRes.rows.reduce(
+    const ptoHoursOrgTotal = ptoRows.reduce(
       (s, row) => s + Number(row.logged_seconds) / 3600,
       0
     )
@@ -365,7 +431,7 @@ export async function loadWeeklyOverview(
     const byWeek = new Map<string, { billable: number; logged: number }>()
     const byWeekPto = new Map<string, number>()
 
-    for (const row of wlRes.rows) {
+    for (const row of wlRows) {
       const logDate = parse(row.log_date, 'yyyy-MM-dd', _referenceDate)
       const wk = format(startOfWeek(logDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')
       if (!byWeek.has(wk)) byWeek.set(wk, { billable: 0, logged: 0 })
@@ -374,7 +440,7 @@ export async function loadWeeklyOverview(
       bucket.logged += Number(row.logged_seconds) / 3600
     }
 
-    for (const row of ptoWlRes.rows) {
+    for (const row of ptoRows) {
       const logDate = parse(row.log_date, 'yyyy-MM-dd', _referenceDate)
       const wk = format(startOfWeek(logDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')
       byWeekPto.set(wk, (byWeekPto.get(wk) ?? 0) + Number(row.logged_seconds) / 3600)
@@ -403,6 +469,7 @@ export async function loadWeeklyOverview(
       syncCreatedAt: resolved.createdAt,
       orgMonthRollupHours,
       mtdUtilizationAvgPct,
+      capacityHeadcount: roundDisplayStat(capacityPersonIds.size),
       weeks,
       error: null,
     }

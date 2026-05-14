@@ -7,7 +7,12 @@ import { TeamRoutePendingShell } from '@/components/team/team-route-pending-shel
 export default function TeamPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string }>
+  searchParams: Promise<{
+    month?: string
+    role?: string
+    zone?: string
+    project?: string
+  }>
 }) {
   return (
     <TeamRoutePendingShell>

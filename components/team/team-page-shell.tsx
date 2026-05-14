@@ -1,5 +1,7 @@
 import { TeamToolbar } from '@/components/team/team-toolbar'
+import type { TeamFilterOptionsPayload } from '@/lib/team/load-team-filter-options'
 import type { TeamMonthKpisPayload } from '@/lib/team/load-team-month-kpis'
+import type { TeamRouteFilters } from '@/lib/team/team-route-filters'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TeamKpiSection } from '@/components/team/team-kpi-section'
@@ -8,10 +10,14 @@ import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
 export function TeamPageShell({
   referenceMonthLabel,
   monthPicker,
+  filterOptions,
+  routeFilters,
   kpis,
 }: {
   referenceMonthLabel: string
   monthPicker: { options: OverviewMonthOption[]; selectedMonthKey: string } | null
+  filterOptions: TeamFilterOptionsPayload
+  routeFilters: TeamRouteFilters
   kpis: TeamMonthKpisPayload
 }) {
   return (
@@ -31,7 +37,11 @@ export function TeamPageShell({
         </Button>
       </header>
 
-      <TeamToolbar monthPicker={monthPicker} />
+      <TeamToolbar
+        monthPicker={monthPicker}
+        filterOptions={filterOptions}
+        routeFilters={routeFilters}
+      />
 
       <TeamKpiSection kpis={kpis} />
 

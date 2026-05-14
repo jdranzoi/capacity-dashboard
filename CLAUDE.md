@@ -52,6 +52,8 @@ Do not write new dashboard queries against v1 tables.
 | `dim_holiday` | Company-observed holidays with `zone_id FK → dim_zone` |
 | `dim_date` | Date spine for calendar joins |
 
+**D-021 (formal model):** No denormalized text copies of FK-target values (e.g. dropped `dim_person.role` / `zone` / `team`, `dim_project.client`). Join `dim_role`, `dim_zone`, etc. See `capacity/doc/DECISIONS.md`.
+
 #### Sync anchor
 
 | Table | Purpose |

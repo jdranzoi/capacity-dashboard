@@ -98,11 +98,8 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
-          role: string | null
           role_id: string | null
-          team: string | null
           updated_at: string | null
-          zone: string
           zone_id: string | null
         }
         Insert: {
@@ -111,11 +108,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
-          role?: string | null
           role_id?: string | null
-          team?: string | null
           updated_at?: string | null
-          zone: string
           zone_id?: string | null
         }
         Update: {
@@ -124,11 +118,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
-          role?: string | null
           role_id?: string | null
-          team?: string | null
           updated_at?: string | null
-          zone?: string
           zone_id?: string | null
         }
         Relationships: [
@@ -150,7 +141,6 @@ export type Database = {
       }
       dim_project: {
         Row: {
-          client: string | null
           created_at: string | null
           end_date: string | null
           id: string
@@ -165,7 +155,6 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          client?: string | null
           created_at?: string | null
           end_date?: string | null
           id?: string
@@ -180,7 +169,6 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          client?: string | null
           created_at?: string | null
           end_date?: string | null
           id?: string

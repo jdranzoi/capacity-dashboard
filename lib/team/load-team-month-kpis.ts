@@ -1,4 +1,5 @@
-import { parse } from 'date-fns'
+import { connection } from 'next/server'
+import { endOfMonth, format, parse } from 'date-fns'
 
 import {
   billableVersusLoggedEfficiencyPct,
@@ -8,6 +9,9 @@ import {
   loadWeeklyOverview,
   type OrgMonthRollupHours,
 } from '@/lib/overview/load-weekly-overview'
+import { createServiceClientCached } from '@/lib/supabase/server'
+import { resolveFilteredPersonIds } from '@/lib/team/resolve-filtered-person-ids'
+import type { TeamRouteFilters } from '@/lib/team/team-route-filters'
 
 export type TeamMonthKpisPayload = {
   monthLabel: string
@@ -23,14 +27,40 @@ export type TeamMonthKpisPayload = {
   utilizationOrgPct: number | null
   /** `@/lib/domain/workload-metrics.billableVersusLoggedEfficiencyPct`. */
   billableEfficiencyPct: number | null
+  /**
+   * People with `fact_capacity` for the month (same scope as rollups, including URL filters).
+   */
+  headcountTotal: number
 }
 
 export async function loadTeamMonthKpis(
   monthStartStr: string,
-  snapshot: { id: string; createdAt: string }
+  snapshot: { id: string; createdAt: string },
+  routeFilters: TeamRouteFilters
 ): Promise<{ data: TeamMonthKpisPayload | null; error: string | null }> {
+  await connection()
   const referenceDate = parse(monthStartStr, 'yyyy-MM-dd', new Date())
-  const overview = await loadWeeklyOverview(referenceDate, undefined, snapshot)
+  const monthEndStr = format(endOfMonth(referenceDate), 'yyyy-MM-dd')
+
+  const supabase = createServiceClientCached()
+  const { personIds, error: filterError } = await resolveFilteredPersonIds(
+    supabase,
+    snapshot.id,
+    monthStartStr,
+    monthEndStr,
+    routeFilters
+  )
+  if (filterError) {
+    return { data: null, error: filterError }
+  }
+
+  const personIdFilter = personIds
+  const overview = await loadWeeklyOverview(
+    referenceDate,
+    undefined,
+    snapshot,
+    personIdFilter
+  )
 
   if (overview.error) {
     return { data: null, error: overview.error }
@@ -62,6 +92,7 @@ export async function loadTeamMonthKpis(
       rollupHours,
       utilizationOrgPct,
       billableEfficiencyPct,
+      headcountTotal: overview.capacityHeadcount,
     },
     error: null,
   }

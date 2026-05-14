@@ -18,7 +18,7 @@ Charts and cards consume DTOs shaped in loaders using domain functions.
 | --- | --- | --- |
 | Period (month) | `fact_capacity.month_date` / month spine; same pattern as overview (`?month=`) | Reuse or extract `loadOverviewMonthOptions`. |
 | “Current operations” vs “future planning” | Not a first-class schema toggle | Phase 2+: UI-only mode or disabled until product definition. |
-| Filters: team, role, client, project, region | `dim_person.team`, `dim_role`, `dim_project.client`, plans/worklogs joins, `dim_zone` | URL query params; filter in loader. |
+| Filters: role, project, region | `dim_role`, `dim_zone`, `dim_project` + plans/worklogs joins | URL query params; filter in loader. No `team` / `client` text columns — see **D-021** (`capacity/doc/DECISIONS.md`). |
 | KPI cards: net capacity, planned, logged, billable, utilization, billable efficiency, open capacity, PTO | `fact_capacity`, `fact_plans` (`is_pto`), `fact_worklogs`, `fact_bench` | Org-level or filtered rollups; PTO from worklogs with `is_pto = true`. |
 | Utilization (multiple surfaces) | Capacity + worklogs + working-day math (overview-aligned) | Reuse `personLoggedUtilizationPct` / C-005 per surface definition. |
 | Skills / demand | **`dim_person` has no skills column**; `dim_project.tech_stack` is project-level | (A) Derive from assigned projects via `fact_plans`, or (B) defer section until a skill dimension exists. |
@@ -32,7 +32,7 @@ Charts and cards consume DTOs shaped in loaders using domain functions.
 │ SLOT-A: Page header (title + subtitle)                     [optional Export] │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ SLOT-B: Context bar — period (month picker) | filter placeholders             │
-│         (role, team, client, project, zone — some may stay disabled early)   │
+│         (role, project, zone — per D-021: no denormalized team/client text)  │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ SLOT-C: “Current operations” — KPI card row (responsive wrap)                 │
 │         value | vs previous period | sparkline TBD                           │
@@ -62,8 +62,8 @@ Suggested components (create incrementally):
 | **0** | Empty layout + labeled slots (`Skeleton` or “Fill: …”) | No new Supabase surface; structure only. |
 | **1** | SLOT-A + minimal SLOT-B: title + month picker via `?month=` (same as `/`) | `loadOverviewMonthOptions` or shared helper. |
 | **2** | SLOT-C: real **org-aggregated** KPIs for selected month | Latest `sync_snapshot`; sums from `fact_capacity`, `fact_plans`, `fact_bench`, `fact_worklogs` with worklog date cap aligned to overview. Domain: extend/reuse `workload-metrics.ts` and `utilization.ts` as appropriate. |
-| **3** | Prior-month comparison + optional `%` change on cards | Same aggregations for prior `month_date`; domain: e.g. `periodOverPeriodChangePct`. Sparklines last (monthly or weekly series). |
-| **4** | Filters (query params) on aggregates + downstream sections | Filter in loader (SQL `in` / post-filter by volume). |
+| **3** | Prior-month comparison + optional `%` change on cards | **Cancelled for now** — revisit after P5/P7 if still needed. |
+| **4** | Filters (query params) on aggregates + downstream sections | Filter in loader: resolve person IDs from `dim_*` + `fact_plans` / `fact_worklogs`; pass into `loadWeeklyOverview`. |
 | **5** | SLOT-D1–D3: role / group aggregates | Group-by in loader; Recharts consistent with overview. |
 | **6** | SLOT-D4 skills or explicit placeholder | Data model decision. |
 | **7** | SLOT-E: staffing grid by person | Loader: `dim_person` + per-person rollups; missing DB fields → em dash or hidden columns. |
@@ -75,17 +75,19 @@ Suggested components (create incrementally):
 | P0 | Page structure + slots + `components/team/` scaffolding | Done |
 | P1 | Month picker + URL `searchParams` | Done |
 | P2 | Monthly org loader + KPI row using centralized domain | Done |
-| P3 | Previous month comparison + trends | Pending |
-| P4 | Persistent filters in URL | Pending |
+| P3 | Previous month comparison + trends | Cancelled |
+| P4 | Persistent filters in URL | Done |
 | P5 | Role widgets: utilization table, distribution, headcount | Pending |
 | P6 | Skills section or explicit deferral | Pending |
 | P7 | Person-level staffing grid + TanStack Table | Pending |
 
 ## Default next implementation step
 
-**Phase 3**: Previous-month deltas, trend sparklines, and optional KPI strip refinements — extend `TeamKpiSection` placeholder rail.
+**Phase 5** (SLOT-D1–D3): Role-level widgets — utilization table, capacity distribution, headcount — using filtered person scope where applicable.
 
-Phase 2 is implemented: org monthly rollup ships from `loadWeeklyOverview` as `orgMonthRollupHours`, wrapped by `lib/team/load-team-month-kpis.ts` (`overviewWeeklyLoggedUtilizationPct`, `billableVersusLoggedEfficiencyPct`).
+Phase 4 is implemented: URL params `role`, `zone`, `project` (with `month`) feed `resolveFilteredPersonIds` → optional person-id set passed to `loadWeeklyOverview` so org KPIs respect filters. Toolbar options load from `lib/team/load-team-filter-options.ts` (**D-021**: `team` / `client` filter axes removed with denormalized columns).
+
+Phase 2 remains: org monthly rollup from `loadWeeklyOverview` as `orgMonthRollupHours`, wrapped by `lib/team/load-team-month-kpis.ts` (`overviewWeeklyLoggedUtilizationPct`, `billableVersusLoggedEfficiencyPct`).
 
 ## References
 
