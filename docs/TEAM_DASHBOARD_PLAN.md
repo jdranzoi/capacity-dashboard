@@ -63,7 +63,7 @@ Suggested components (create incrementally):
 | **1** | SLOT-A + minimal SLOT-B: title + month picker via `?month=` (same as `/`) | `loadOverviewMonthOptions` or shared helper. |
 | **2** | SLOT-C: real **org-aggregated** KPIs for selected month | Latest `sync_snapshot`; sums from `fact_capacity`, `fact_plans`, `fact_bench`, `fact_worklogs` with worklog date cap aligned to overview. Domain: extend/reuse `workload-metrics.ts` and `utilization.ts` as appropriate. |
 | **3** | Prior-month comparison + optional `%` change on cards | **Cancelled for now** — revisit after P5/P7 if still needed. |
-| **4** | Filters (query params) on aggregates + downstream sections | Filter in loader: resolve person IDs from `dim_*` + `fact_plans` / `fact_worklogs`; pass into `loadWeeklyOverview`. |
+| **4** | Filters (query params) on aggregates + downstream sections | Person scope via `resolveFilteredPersonIds` → `loadWeeklyOverview`. With `?project=`, **Planned / Logged / Billable** (+ utilization & efficiency) use **project-scoped** sums (`load-project-scoped-hours.ts`, same snapshot/month, overview `asOfDate` cap). |
 | **5** | SLOT-D1–D3: role / group aggregates | Group-by in loader; Recharts consistent with overview. |
 | **6** | SLOT-D4 skills or explicit placeholder | Data model decision. |
 | **7** | SLOT-E: staffing grid by person | Loader: `dim_person` + per-person rollups; missing DB fields → em dash or hidden columns. |

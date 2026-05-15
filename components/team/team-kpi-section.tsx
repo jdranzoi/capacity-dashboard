@@ -37,11 +37,30 @@ function KpiCard({
 }
 
 export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
-  const { rollupHours: r, asOfDate, headcountTotal } = kpis;
+  const { rollupHours: r, asOfDate, headcountTotal, projectScopedHours: scoped } =
+    kpis;
   const mtdNote = asOfDate
     ? `Non-PTO worklogs through ${asOfDate}`
     : "Overview worklog bound";
   const snapshotNote = "Snapshot facts for reference month";
+  const plannedHours = scoped?.plannedHours ?? r.plannedHours;
+  const loggedHours = scoped?.loggedHoursMtd ?? r.loggedHoursMtd;
+  const billableHours = scoped?.billableHoursMtd ?? r.billableHoursMtd;
+  const plannedFootnote = scoped
+    ? `${snapshotNote} Selected project only (non-PTO plans).`
+    : snapshotNote;
+  const logBillFootnote = scoped
+    ? `${mtdNote} Selected project only.`
+    : mtdNote;
+  const utilizationFootnote = scoped
+    ? "Logged on selected project ÷ monthly net capacity (filtered people)."
+    : "Org logged ÷ monthly net capacity (snapshot).";
+  const efficiencyFootnote =
+    kpis.billableEfficiencyPct === null
+      ? "— when logged hours are zero"
+      : scoped
+        ? `${mtdNote} Selected project only.`
+        : mtdNote;
 
   const items: {
     title: string;
@@ -55,31 +74,28 @@ export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
     },
     {
       title: "Planned",
-      value: fmtHoursKpi(r.plannedHours),
-      footnote: snapshotNote,
+      value: fmtHoursKpi(plannedHours),
+      footnote: plannedFootnote,
     },
     {
       title: "Logged",
-      value: fmtHoursKpi(r.loggedHoursMtd),
-      footnote: mtdNote,
+      value: fmtHoursKpi(loggedHours),
+      footnote: logBillFootnote,
     },
     {
       title: "Billable",
-      value: fmtHoursKpi(r.billableHoursMtd),
-      footnote: mtdNote,
+      value: fmtHoursKpi(billableHours),
+      footnote: logBillFootnote,
     },
     {
       title: "Utilization",
       value: fmtPct(kpis.utilizationOrgPct ?? null),
-      footnote: "Org logged ÷ monthly net capacity (snapshot).",
+      footnote: utilizationFootnote,
     },
     {
       title: "Billable efficiency",
       value: fmtPct(kpis.billableEfficiencyPct ?? null),
-      footnote:
-        kpis.billableEfficiencyPct === null
-          ? "— when logged hours are zero"
-          : mtdNote,
+      footnote: efficiencyFootnote,
     },
     {
       title: "Open capacity",
@@ -94,8 +110,7 @@ export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
     {
       title: "Headcount (total)",
       value: fmtHeadcountKpi(headcountTotal),
-      footnote:
-        "People with capacity rows for this month (same scope as filters).",
+      footnote: `${snapshotNote}`,
     },
   ];
 

@@ -1,4 +1,5 @@
 import { createServiceClientCached } from "@/lib/supabase/server";
+import { SyncSnapshotIdCopy } from "@/components/layout/sync-snapshot-id-copy";
 import { formatDistanceToNow } from "date-fns";
 import { cacheLife } from "next/cache";
 
@@ -67,16 +68,17 @@ export async function SyncStatus() {
       title={snapshotId ?? undefined}
     >
       <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${tierDot[tier]}`} />
-      <span className="min-w-0">
-        {label}
+      <span className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5">
+        <span className="shrink-0">{label}</span>
         {snapshotId && completedAt && status !== "failed" ? (
           <>
-            <span className="mx-1 opacity-50" aria-hidden>
+            <span className="mx-0.5 shrink-0 opacity-50" aria-hidden>
               ·
             </span>
-            <span className="font-mono text-[10px] font-normal tracking-tight break-all">
+            <span className="min-w-0 break-all font-mono text-[10px] font-normal tracking-tight">
               {snapshotId}
             </span>
+            <SyncSnapshotIdCopy snapshotId={snapshotId} />
           </>
         ) : null}
       </span>
