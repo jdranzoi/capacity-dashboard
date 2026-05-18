@@ -65,8 +65,8 @@ Suggested components (create incrementally):
 | **3** | Prior-month comparison + optional `%` change on cards | **Cancelled for now** — revisit after P5/P7 if still needed. |
 | **4** | Filters (query params) on aggregates + downstream sections | Person scope via `resolveFilteredPersonIds` → `loadWeeklyOverview`. With `?project=`, **Planned / Logged / Billable** (+ utilization & efficiency) use **project-scoped** sums (`load-project-scoped-hours.ts`, same snapshot/month, overview `asOfDate` cap). |
 | **5** | SLOT-D1–D3: role / group aggregates | Group-by in loader; Recharts consistent with overview. |
-| **6** | SLOT-D4 skills or explicit placeholder | Data model decision. |
-| **7** | SLOT-E: staffing grid by person | Loader: `dim_person` + per-person rollups; missing DB fields → em dash or hidden columns. |
+| **6** | SLOT-D4 skills or explicit placeholder | **On hold** — product wants historical / longitudinal tracking; revisit after data model review (not current-performance-only). |
+| **7** | SLOT-E: staffing grid by person | Loader: `dim_person` + per-person rollups; TanStack Table + pagination (`components/team/team-staffing-grid.tsx`, `lib/team/load-team-staffing-rows.ts`). |
 
 ## Progress tracker
 
@@ -78,14 +78,14 @@ Suggested components (create incrementally):
 | P3 | Previous month comparison + trends | Cancelled |
 | P4 | Persistent filters in URL | Done |
 | P5 | Role widgets: utilization table, distribution, headcount | Done |
-| P6 | Skills section or explicit deferral | Pending |
-| P7 | Person-level staffing grid + TanStack Table | Pending |
+| P6 | Skills section or explicit deferral | **On hold** (historical tracking requirements under review) |
+| P7 | Person-level staffing grid + TanStack Table | Done |
 
 ## Default next implementation step
 
-**Phase 6** (SLOT-D4): Skills metrics — real model or explicit deferral (placeholder already on `/team`).
+**Phase 6** (SLOT-D4) remains **on hold** until skills/historical semantics are defined.
 
-Phase 5 is implemented: `lib/team/load-team-role-analytics.ts` + `components/team/team-analytics-grid.tsx` — utilization table, net-capacity share bar, headcount bars — all scoped to the same URL filters as KPIs (`resolveFilteredPersonIds` → shared in `team-page-data.tsx`). Charts use neutral SVG/CSS (no Recharts dependency in repo).
+Phase 7 is implemented: person-level staffing grid with URL-filter scope, overview-aligned worklog bounds, sortable columns (TanStack), column order Person → Role → Net capacity → Planned → PTO → Logged → Util. → Eff. → Projects (`project_key` list for logged MTD projects), plus rounded hours / percents per display rules.
 
 Phase 2 remains: org monthly rollup from `loadWeeklyOverview` as `orgMonthRollupHours`, wrapped by `lib/team/load-team-month-kpis.ts` (`overviewWeeklyLoggedUtilizationPct`, `billableVersusLoggedEfficiencyPct`).
 

@@ -9,8 +9,7 @@ import {
 } from 'date-fns'
 
 import {
-  meanPersonLoggedUtilizationPct,
-  overviewWeeklyLoggedUtilizationPct,
+  billableVersusLoggedEfficiencyPct,
   personLoggedUtilizationPct,
   STANDARD_WORKDAY_HOURS,
 } from '@/lib/domain/workload-metrics'
@@ -26,18 +25,26 @@ import type { Database } from '@/lib/supabase/database.types'
 const PAGE = 1000
 const DIM_BATCH = 200
 
-export type TeamRoleAnalyticsRow = {
-  roleId: string | null
-  roleKey: string
+export type TeamStaffingProjectRef = {
+  projectId: string
+  /** Stable slug from `dim_project.project_key` (compact grid display). */
+  projectKey: string
+}
+
+export type TeamStaffingRow = {
+  personId: string
+  /** From `dim_person.name`. */
+  personName: string
   roleLabel: string
-  headcount: number
   netCapacityHours: number
   plannedHours: number
   loggedHoursMtd: number
-  /** Mean of per-person pace: logged MTD ÷ (elapsed net weekdays × 8h); same eligibility as overview donut. */
+  /** Logged (MTD) vs elapsed net weekdays × 8h; zone holidays and weekday PTO through worklog as-of. */
   utilizationPct: number | null
-  /** Rolled-up hours ratio: sum logged MTD / sum monthly net capacity. */
-  utilizationCapacityFillPct: number | null
+  billableEfficiencyPct: number | null
+  ptoHoursMonth: number
+  /** Projects with non-PTO logged time in the MTD window (same bound as Logged). */
+  projects: TeamStaffingProjectRef[]
 }
 
 type PagedResult<T> = { rows: T[]; error: string | null }
@@ -63,10 +70,11 @@ function keepPerson(personIdFilter: Set<string> | null, pid: string): boolean {
 }
 
 /**
- * Role-level aggregates for `/team` analytics (D1–D3). Same snapshot/month and worklog
- * upper bound as `loadWeeklyOverview`; respects optional person filter.
+ * Person-level staffing rows for `/team` (SLOT-E). Same snapshot month, worklog MTD cap,
+ * and optional person filter as `loadTeamRoleAnalytics` / `loadWeeklyOverview`.
+ * Row utilization is **pace**: `personLoggedUtilizationPct` with zone holidays and weekday PTO through as-of.
  */
-export async function loadTeamRoleAnalytics(
+export async function loadTeamStaffingRows(
   supabase: SupabaseClient<Database>,
   params: {
     monthStartStr: string
@@ -74,7 +82,7 @@ export async function loadTeamRoleAnalytics(
     personIdFilter: Set<string> | null
     now?: Date
   }
-): Promise<{ data: TeamRoleAnalyticsRow[]; error: string | null }> {
+): Promise<{ data: TeamStaffingRow[]; error: string | null }> {
   const { monthStartStr, snapshot, personIdFilter } = params
   const now = params.now ?? new Date()
 
@@ -112,20 +120,25 @@ export async function loadTeamRoleAnalytics(
           .order('person_id')
           .range(from, from + PAGE - 1)
       ),
-      pagedQuery<{ person_id: string; logged_seconds: number }>(async (from) =>
+      pagedQuery<{
+        person_id: string
+        project_id: string
+        logged_seconds: number
+        billable_seconds: number
+      }>(async (from) =>
         supabase
           .from('fact_worklogs')
-          .select('person_id, logged_seconds')
+          .select('person_id, project_id, logged_seconds, billable_seconds')
           .eq('is_pto', false)
           .gte('log_date', monthStartStr)
           .lte('log_date', logThroughStr)
           .order('person_id')
           .range(from, from + PAGE - 1)
       ),
-      pagedQuery<{ person_id: string; log_date: string }>(async (from) =>
+      pagedQuery<{ person_id: string; log_date: string; logged_seconds: number }>(async (from) =>
         supabase
           .from('fact_worklogs')
-          .select('person_id, log_date')
+          .select('person_id, log_date, logged_seconds')
           .eq('is_pto', true)
           .gte('log_date', monthStartStr)
           .lte('log_date', monthEndStr)
@@ -166,12 +179,31 @@ export async function loadTeamRoleAnalytics(
     }
 
     const loggedByPerson = new Map<string, number>()
+    const billableByPerson = new Map<string, number>()
+    const projectHoursByPerson = new Map<string, Map<string, number>>()
+
     for (const r of wlRes.rows) {
       if (!keepPerson(personIdFilter, r.person_id)) continue
-      loggedByPerson.set(
-        r.person_id,
-        (loggedByPerson.get(r.person_id) ?? 0) + Number(r.logged_seconds) / 3600
-      )
+      const pid = r.person_id
+      const logH = Number(r.logged_seconds) / 3600
+      const billH = Number(r.billable_seconds) / 3600
+      loggedByPerson.set(pid, (loggedByPerson.get(pid) ?? 0) + logH)
+      billableByPerson.set(pid, (billableByPerson.get(pid) ?? 0) + billH)
+
+      let pmap = projectHoursByPerson.get(pid)
+      if (!pmap) {
+        pmap = new Map()
+        projectHoursByPerson.set(pid, pmap)
+      }
+      pmap.set(r.project_id, (pmap.get(r.project_id) ?? 0) + logH)
+    }
+
+    const ptoByPerson = new Map<string, number>()
+    for (const r of ptoRes.rows) {
+      if (!keepPerson(personIdFilter, r.person_id)) continue
+      const pid = r.person_id
+      const h = Number(r.logged_seconds) / 3600
+      ptoByPerson.set(pid, (ptoByPerson.get(pid) ?? 0) + h)
     }
 
     const eligibleWeekdays = teamEligibleWeekdayDates(referenceDate, logThroughStr)
@@ -187,117 +219,122 @@ export async function loadTeamRoleAnalytics(
       return { data: [], error: null }
     }
 
-    const personRoleId = new Map<string, string | null>()
-    const personZoneId = new Map<string, string | null>()
+    const allProjectIds = new Set<string>()
+    for (const pmap of projectHoursByPerson.values()) {
+      for (const [projId, hours] of pmap) {
+        if (hours > 0) allProjectIds.add(projId)
+      }
+    }
+
+    const projectKeyById = new Map<string, string>()
+    const projList = Array.from(allProjectIds)
+    const PROJ_BATCH = 120
+    for (let i = 0; i < projList.length; i += PROJ_BATCH) {
+      const slice = projList.slice(i, i + PROJ_BATCH)
+      const { data: projRows, error: projErr } = await supabase
+        .from('dim_project')
+        .select('id, project_key')
+        .in('id', slice)
+      if (projErr) return { data: [], error: projErr.message }
+      for (const row of projRows ?? []) {
+        projectKeyById.set(row.id, row.project_key)
+      }
+    }
+
+    const roleMeta = new Map<string, { label: string }>()
+    const { data: allRoles, error: roleErr } = await supabase
+      .from('dim_role')
+      .select('id, label')
+    if (roleErr) return { data: [], error: roleErr.message }
+    for (const row of allRoles ?? []) {
+      roleMeta.set(row.id, { label: row.label })
+    }
+
+    const personMeta = new Map<string, { name: string; roleId: string | null; zoneId: string | null }>()
     for (let i = 0; i < capacityPersonIds.length; i += DIM_BATCH) {
       const slice = capacityPersonIds.slice(i, i + DIM_BATCH)
       const { data: people, error: pErr } = await supabase
         .from('dim_person')
-        .select('id, role_id, zone_id')
+        .select('id, name, role_id, zone_id')
         .in('id', slice)
       if (pErr) return { data: [], error: pErr.message }
       for (const row of people ?? []) {
-        personRoleId.set(row.id, row.role_id)
-        personZoneId.set(row.id, row.zone_id)
+        personMeta.set(row.id, {
+          name: row.name,
+          roleId: row.role_id,
+          zoneId: row.zone_id,
+        })
       }
     }
 
-    const roleMeta = new Map<string, { key: string; label: string }>()
-    const { data: allRoles, error: roleErr } = await supabase
-      .from('dim_role')
-      .select('id, key, label')
-    if (roleErr) return { data: [], error: roleErr.message }
-    for (const row of allRoles ?? []) {
-      roleMeta.set(row.id, { key: row.key, label: row.label })
-    }
-
-    type Agg = {
-      headcount: number
-      netCapacityHours: number
-      plannedHours: number
-      loggedHoursMtd: number
-    }
-
-    const groupKey = (roleId: string | null) => (roleId == null ? '__none__' : roleId)
-    const byRole = new Map<string, Agg>()
-    const paceSamplesByRole = new Map<string, number[]>()
-
-    const bump = (roleId: string | null, pid: string) => {
-      const k = groupKey(roleId)
-      let a = byRole.get(k)
-      if (!a) {
-        a = { headcount: 0, netCapacityHours: 0, plannedHours: 0, loggedHoursMtd: 0 }
-        byRole.set(k, a)
-      }
-      a.headcount += 1
-      a.netCapacityHours += capByPerson.get(pid) ?? 0
-      a.plannedHours += plannedByPerson.get(pid) ?? 0
-      a.loggedHoursMtd += loggedByPerson.get(pid) ?? 0
-    }
+    const rowsOut: TeamStaffingRow[] = []
 
     for (const pid of capacityPersonIds) {
-      const rid = personRoleId.get(pid) ?? null
-      bump(rid, pid)
-      const elapsed = teamPersonElapsedNetWeekdays({
+      const meta = personMeta.get(pid)
+      const personName =
+        meta?.name != null && meta.name.trim() !== '' ? meta.name.trim() : '—'
+      const roleId = meta?.roleId ?? null
+      const roleLabel = roleId ? (roleMeta.get(roleId)?.label ?? '—') : '—'
+
+      const netRaw = capByPerson.get(pid) ?? 0
+      const plannedRaw = plannedByPerson.get(pid) ?? 0
+      const loggedRaw = loggedByPerson.get(pid) ?? 0
+      const billRaw = billableByPerson.get(pid) ?? 0
+      const ptoRaw = ptoByPerson.get(pid) ?? 0
+
+      const netRounded = roundDisplayStat(netRaw)
+      const plannedRounded = roundDisplayStat(plannedRaw)
+      const loggedRounded = roundDisplayStat(loggedRaw)
+      const billRounded = roundDisplayStat(billRaw)
+      const ptoRounded = roundDisplayStat(ptoRaw)
+
+      const zoneId = meta?.zoneId ?? null
+      const elapsedNet = teamPersonElapsedNetWeekdays({
         personId: pid,
-        zoneId: personZoneId.get(pid) ?? null,
+        zoneId,
         eligibleWeekdays,
         holidaysByZone,
         ptoWeekdayByPerson,
       })
-      const logged = loggedByPerson.get(pid) ?? 0
-      const pace = personLoggedUtilizationPct(logged, elapsed, STANDARD_WORKDAY_HOURS)
-      if (pace !== null) {
-        const k = groupKey(rid)
-        let samples = paceSamplesByRole.get(k)
-        if (!samples) {
-          samples = []
-          paceSamplesByRole.set(k, samples)
-        }
-        samples.push(pace)
-      }
-    }
-
-    const tmp: { sort: string; row: TeamRoleAnalyticsRow }[] = []
-    for (const [k, agg] of byRole) {
-      const roleId = k === '__none__' ? null : k
-      const meta = roleId ? roleMeta.get(roleId) : null
-      const roleKey = meta?.key ?? 'unassigned'
-      const roleLabel = meta?.label ?? 'Unassigned'
-      const sort = meta ? meta.label.toLowerCase() : 'zzz_unassigned'
-      const netRounded = roundDisplayStat(agg.netCapacityHours)
-      const loggedRounded = roundDisplayStat(agg.loggedHoursMtd)
-      const paceSamples = paceSamplesByRole.get(k) ?? []
-      const utilizationPacePct =
-        paceSamples.length > 0
-          ? roundDisplayStat(meanPersonLoggedUtilizationPct(paceSamples)!)
-          : null
-      const utilizationCapacityFillPct = overviewWeeklyLoggedUtilizationPct(
-        loggedRounded,
-        netRounded
+      const pacePctRaw = personLoggedUtilizationPct(
+        loggedRaw,
+        elapsedNet,
+        STANDARD_WORKDAY_HOURS
       )
-      tmp.push({
-        sort,
-        row: {
-          roleId,
-          roleKey,
-          roleLabel,
-          headcount: agg.headcount,
-          netCapacityHours: netRounded,
-          plannedHours: roundDisplayStat(agg.plannedHours),
-          loggedHoursMtd: loggedRounded,
-          utilizationPct: utilizationPacePct,
-          utilizationCapacityFillPct,
-        },
+      const pacePct = pacePctRaw != null ? roundDisplayStat(pacePctRaw) : null
+
+      const pmap = projectHoursByPerson.get(pid)
+      const projects: TeamStaffingProjectRef[] = []
+      if (pmap) {
+        for (const [projectId, hours] of pmap) {
+          if (hours <= 0) continue
+          projects.push({
+            projectId,
+            projectKey: projectKeyById.get(projectId) ?? projectId,
+          })
+        }
+        projects.sort((a, b) =>
+          a.projectKey.localeCompare(b.projectKey, 'en', { sensitivity: 'base' })
+        )
+      }
+
+      rowsOut.push({
+        personId: pid,
+        personName,
+        roleLabel,
+        netCapacityHours: netRounded,
+        plannedHours: plannedRounded,
+        loggedHoursMtd: loggedRounded,
+        utilizationPct: pacePct,
+        billableEfficiencyPct: billableVersusLoggedEfficiencyPct(billRounded, loggedRounded),
+        ptoHoursMonth: ptoRounded,
+        projects,
       })
     }
 
-    tmp.sort((a, b) => a.sort.localeCompare(b.sort))
-    const rowsOut = tmp.map((t) => t.row)
-
     return { data: rowsOut, error: null }
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'Failed to load role analytics.'
+    const message = e instanceof Error ? e.message : 'Failed to load staffing rows.'
     return { data: [], error: message }
   }
 }

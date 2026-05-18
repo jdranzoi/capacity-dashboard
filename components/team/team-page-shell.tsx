@@ -1,13 +1,14 @@
+import { TeamAnalyticsGrid } from '@/components/team/team-analytics-grid'
 import { TeamKpiSection } from '@/components/team/team-kpi-section'
+import { TeamStaffingGrid } from '@/components/team/team-staffing-grid'
 import { TeamToolbar } from '@/components/team/team-toolbar'
+import { Button } from '@/components/ui/button'
+import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
 import type { TeamFilterOptionsPayload } from '@/lib/team/load-team-filter-options'
 import type { TeamMonthKpisPayload } from '@/lib/team/load-team-month-kpis'
-import type { TeamRouteFilters } from '@/lib/team/team-route-filters'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
-import { TeamAnalyticsGrid } from '@/components/team/team-analytics-grid'
 import type { TeamRoleAnalyticsRow } from '@/lib/team/load-team-role-analytics'
-import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
+import type { TeamStaffingRow } from '@/lib/team/load-team-staffing-rows'
+import type { TeamRouteFilters } from '@/lib/team/team-route-filters'
 
 export function TeamPageShell({
   referenceMonthLabel,
@@ -16,6 +17,7 @@ export function TeamPageShell({
   routeFilters,
   kpis,
   roleAnalyticsRows,
+  staffingRows,
 }: {
   referenceMonthLabel: string
   monthPicker: { options: OverviewMonthOption[]; selectedMonthKey: string } | null
@@ -23,6 +25,7 @@ export function TeamPageShell({
   routeFilters: TeamRouteFilters
   kpis: TeamMonthKpisPayload
   roleAnalyticsRows: TeamRoleAnalyticsRow[]
+  staffingRows: TeamStaffingRow[]
 }) {
   return (
     <div className="flex flex-col gap-8">
@@ -56,21 +59,19 @@ export function TeamPageShell({
         >
           Analytics
         </h2>
-        <TeamAnalyticsGrid rows={roleAnalyticsRows} />
-      </section>
-
-      <section data-slot="team-staffing-grid" aria-labelledby="team-staffing-heading">
-        <h2
-          id="team-staffing-heading"
-          className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground"
-        >
-          Staffing grid
-        </h2>
-        <div className="rounded-xl border border-border bg-card/10 p-4 ring-1 ring-foreground/5">
-          <p className="text-xs text-muted-foreground">Fill: TanStack table — person-level rows</p>
-          <Skeleton className="mt-4 h-12 w-full rounded-lg" />
-          <Skeleton className="mt-2 h-64 w-full rounded-lg" />
-        </div>
+        <TeamAnalyticsGrid
+          rows={roleAnalyticsRows}
+          staffingSlot={
+            <TeamStaffingGrid
+              rows={staffingRows}
+              footnote={
+                kpis.asOfDate
+                  ? `Non-PTO logged and billable through ${kpis.asOfDate}; PTO through calendar month end (overview-aligned).`
+                  : null
+              }
+            />
+          }
+        />
       </section>
     </div>
   )

@@ -52,9 +52,12 @@ export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
   const logBillFootnote = scoped
     ? `${mtdNote} Selected project only.`
     : mtdNote;
-  const utilizationFootnote = scoped
-    ? "Logged on selected project ÷ monthly net capacity (filtered people)."
-    : "Org logged ÷ monthly net capacity (snapshot).";
+  const utilizationCapacityFootnote = scoped
+    ? "Logged on selected project / monthly net capacity (filtered people)."
+    : "Org logged / monthly net capacity (snapshot)."
+  const utilizationPaceFootnote = scoped
+    ? "Mean of people: all non-PTO logs through as-of (not limited to selected project). Elapsed weekdays minus zone holidays and weekday PTO through as-of (8h day)."
+    : "Mean of people: logged / (elapsed net weekdays × 8h). Zone holidays and weekday PTO through worklog as-of.";
   const efficiencyFootnote =
     kpis.billableEfficiencyPct === null
       ? "— when logged hours are zero"
@@ -88,9 +91,14 @@ export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
       footnote: logBillFootnote,
     },
     {
-      title: "Utilization",
+      title: "Capacity fill",
       value: fmtPct(kpis.utilizationOrgPct ?? null),
-      footnote: utilizationFootnote,
+      footnote: utilizationCapacityFootnote,
+    },
+    {
+      title: "Utilization",
+      value: fmtPct(kpis.utilizationPaceAvgPct ?? null),
+      footnote: utilizationPaceFootnote,
     },
     {
       title: "Billable efficiency",

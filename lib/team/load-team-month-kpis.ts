@@ -31,10 +31,16 @@ export type TeamMonthKpisPayload = {
    */
   projectScopedHours: ProjectScopedHours | null
   /**
-   * Org ratio: summed logged (MTD) / monthly net capacity in snapshot facts.
+   * Org capacity fill: summed logged (MTD) / monthly net capacity in snapshot facts.
    * Uses **project-scoped logged** when `projectScopedHours` is set; else org-wide logged.
    */
   utilizationOrgPct: number | null
+  /**
+   * Mean of per-person pace (overview donut definition): logged MTD / (elapsed net weekdays × 8h),
+   * same filters as `loadWeeklyOverview`. Uses **all** non-PTO logs per person when a project filter
+   * is active (not project-scoped hours).
+   */
+  utilizationPaceAvgPct: number | null
   /** Uses project-scoped billable/logged when `projectScopedHours` is set. */
   billableEfficiencyPct: number | null
   /**
@@ -115,6 +121,7 @@ export async function loadTeamMonthKpis(
     loggedForUtil,
     rollupHours.netCapacityHours
   )
+  const utilizationPaceAvgPct = overview.mtdUtilizationAvgPct
   const billableEfficiencyPct = billableVersusLoggedEfficiencyPct(
     billableForEff,
     loggedForEff
@@ -129,6 +136,7 @@ export async function loadTeamMonthKpis(
       rollupHours,
       projectScopedHours,
       utilizationOrgPct,
+      utilizationPaceAvgPct,
       billableEfficiencyPct,
       headcountTotal: overview.capacityHeadcount,
     },

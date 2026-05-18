@@ -1,7 +1,8 @@
-import type { CSSProperties } from 'react'
+import type { ReactNode } from 'react'
 
 import { fmtHeadcountKpi, fmtHoursKpi, fmtPct } from '@/lib/overview/overview-metrics'
 import type { TeamRoleAnalyticsRow } from '@/lib/team/load-team-role-analytics'
+import { utilizationLoggedVsCapacityBarStyles, utilizationLoggedVsCapacityCellStyle } from '@/lib/team/team-utilization-tone'
 
 const SEGMENT_OPACITIES = [0.22, 0.34, 0.46, 0.58, 0.7] as const
 
@@ -11,20 +12,6 @@ function segmentStyle(i: number): { opacity: number } {
 
 function roundPct(n: number): number {
   return Math.round(n)
-}
-
-function roleUtilBarStyles(utilizationPct: number | null): CSSProperties {
-  if (utilizationPct == null || Number.isNaN(utilizationPct)) {
-    return { width: '0%', backgroundColor: 'transparent' }
-  }
-  const widthPct = Math.min(100, Math.max(0, utilizationPct))
-  const mixT = Math.min(1, Math.max(0, utilizationPct / 100))
-  const lowShare = (1 - mixT) * 100
-  const highShare = mixT * 100
-  return {
-    width: `${widthPct}%`,
-    backgroundColor: `color-mix(in oklch, var(--team-util-bar-low) ${lowShare}%, var(--team-util-bar-high) ${highShare}%)`,
-  }
 }
 
 function UtilizationByRoleTable({ rows }: { rows: TeamRoleAnalyticsRow[] }) {
@@ -53,7 +40,11 @@ function UtilizationByRoleTable({ rows }: { rows: TeamRoleAnalyticsRow[] }) {
             <th scope="col" className="py-2 pr-3 text-right tabular-nums">
               Logged
             </th>
-            <th scope="col" className="py-2 pr-3 text-right tabular-nums">
+            <th
+              scope="col"
+              className="py-2 pr-3 text-right tabular-nums"
+              title="Mean per-person pace: logged MTD / (elapsed net weekdays × 8h)"
+            >
               Util
             </th>
             <th scope="col" className="py-2 pl-2">
@@ -71,17 +62,30 @@ function UtilizationByRoleTable({ rows }: { rows: TeamRoleAnalyticsRow[] }) {
               <td className="py-2 pr-3 text-right tabular-nums">{fmtHoursKpi(r.netCapacityHours)}</td>
               <td className="py-2 pr-3 text-right tabular-nums">{fmtHoursKpi(r.plannedHours)}</td>
               <td className="py-2 pr-3 text-right tabular-nums">{fmtHoursKpi(r.loggedHoursMtd)}</td>
-              <td className="py-2 pr-3 text-right tabular-nums">{fmtPct(r.utilizationPct)}</td>
+              <td className="py-2 pr-3 text-right tabular-nums">
+                <span
+                  className="inline-block min-w-14 rounded-md px-2 py-0.5 ring-1 ring-foreground/8"
+                  style={utilizationLoggedVsCapacityCellStyle(r.utilizationPct)}
+                >
+                  {fmtPct(r.utilizationPct)}
+                </span>
+              </td>
               <td className="py-2 pl-2">
                 <div
                   className="h-2 w-full min-w-16 rounded-full bg-muted/50"
                   title={
-                    r.utilizationPct != null
-                      ? `${r.utilizationPct}% logged vs net capacity`
-                      : undefined
+                    [r.utilizationPct != null ? `${r.utilizationPct}% pace (mean per person)` : null,
+                      r.utilizationCapacityFillPct != null
+                        ? `${r.utilizationCapacityFillPct}% capacity fill`
+                        : null]
+                      .filter(Boolean)
+                      .join('. ') || undefined
                   }
                 >
-                  <div className="h-2 min-w-0 rounded-full" style={roleUtilBarStyles(r.utilizationPct)} />
+                  <div
+                    className="h-2 min-w-0 rounded-full"
+                    style={utilizationLoggedVsCapacityBarStyles(r.utilizationPct)}
+                  />
                 </div>
               </td>
             </tr>
@@ -227,7 +231,14 @@ function HeadcountByRoleHorizontalChart({
   )
 }
 
-export function TeamAnalyticsGrid({ rows }: { rows: TeamRoleAnalyticsRow[] }) {
+export function TeamAnalyticsGrid({
+  rows,
+  staffingSlot,
+}: {
+  rows: TeamRoleAnalyticsRow[]
+  /** Full-width staffing table between utilization/headcount row and capacity distribution. */
+  staffingSlot?: ReactNode
+}) {
   const headcountTotalInScope = rows.reduce((s, r) => s + r.headcount, 0)
 
   return (
@@ -270,6 +281,21 @@ export function TeamAnalyticsGrid({ rows }: { rows: TeamRoleAnalyticsRow[] }) {
         </div>
         <HeadcountByRoleHorizontalChart rows={rows} totalHeadcount={headcountTotalInScope} />
       </div>
+      {staffingSlot ? (
+        <div
+          className="flex flex-col gap-3 lg:col-span-2"
+          data-slot="team-staffing-embed"
+          aria-labelledby="team-staffing-subheading"
+        >
+          <h3
+            id="team-staffing-subheading"
+            className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+          >
+            Staffing grid
+          </h3>
+          {staffingSlot}
+        </div>
+      ) : null}
       <div
         className="flex min-h-72 flex-col rounded-xl border border-border bg-card/20 p-4 ring-1 ring-foreground/5 lg:col-span-2"
         data-slot="team-analytics-d3"
@@ -286,7 +312,8 @@ export function TeamAnalyticsGrid({ rows }: { rows: TeamRoleAnalyticsRow[] }) {
       >
         <p className="text-sm font-medium text-foreground">Skills metrics</p>
         <p className="mt-3 text-xs text-muted-foreground">
-          Pending data model (Phase 6). No skills dimension on `dim_person` today.
+          Phase 6 on hold pending historical tracking semantics and schema decisions — no skills dimension on{' '}
+          <span className="font-mono text-[11px]">dim_person</span> today.
         </p>
       </div>
     </div>

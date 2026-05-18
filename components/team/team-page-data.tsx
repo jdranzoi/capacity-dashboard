@@ -7,6 +7,7 @@ import { createServiceClientCached } from '@/lib/supabase/server'
 import { loadTeamFilterOptions } from '@/lib/team/load-team-filter-options'
 import { loadTeamMonthKpis } from '@/lib/team/load-team-month-kpis'
 import { loadTeamRoleAnalytics } from '@/lib/team/load-team-role-analytics'
+import { loadTeamStaffingRows } from '@/lib/team/load-team-staffing-rows'
 import { resolveFilteredPersonIds } from '@/lib/team/resolve-filtered-person-ids'
 import { parseTeamRouteFilters } from '@/lib/team/team-route-filters'
 import { connection } from 'next/server'
@@ -104,6 +105,19 @@ export async function TeamPageData({
     )
   }
 
+  const { data: staffingRows, error: staffingError } = await loadTeamStaffingRows(supabase, {
+    monthStartStr: selected.monthStartStr,
+    snapshot: { id: selected.snapshotId, createdAt: selected.syncCreatedAt },
+    personIdFilter: personIds,
+  })
+  if (staffingError) {
+    return (
+      <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        Could not load staffing grid: {staffingError}
+      </div>
+    )
+  }
+
   return (
     <TeamPageShell
       referenceMonthLabel={selected.label}
@@ -112,6 +126,7 @@ export async function TeamPageData({
       routeFilters={routeFilters}
       kpis={kpis}
       roleAnalyticsRows={roleAnalytics ?? []}
+      staffingRows={staffingRows ?? []}
     />
   )
 }
