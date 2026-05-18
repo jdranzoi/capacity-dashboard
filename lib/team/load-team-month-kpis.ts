@@ -14,7 +14,6 @@ import {
   loadProjectScopedHours,
   type ProjectScopedHours,
 } from '@/lib/team/load-project-scoped-hours'
-import { resolveFilteredPersonIds } from '@/lib/team/resolve-filtered-person-ids'
 import type { TeamRouteFilters } from '@/lib/team/team-route-filters'
 
 export type { ProjectScopedHours }
@@ -47,25 +46,16 @@ export type TeamMonthKpisPayload = {
 export async function loadTeamMonthKpis(
   monthStartStr: string,
   snapshot: { id: string; createdAt: string },
-  routeFilters: TeamRouteFilters
+  routeFilters: TeamRouteFilters,
+  /** Pre-resolved from `resolveFilteredPersonIds` (must match URL filters). */
+  personIdFilter: Set<string> | null
 ): Promise<{ data: TeamMonthKpisPayload | null; error: string | null }> {
   await connection()
   const referenceDate = parse(monthStartStr, 'yyyy-MM-dd', new Date())
   const monthEndStr = format(endOfMonth(referenceDate), 'yyyy-MM-dd')
 
   const supabase = createServiceClientCached()
-  const { personIds, error: filterError } = await resolveFilteredPersonIds(
-    supabase,
-    snapshot.id,
-    monthStartStr,
-    monthEndStr,
-    routeFilters
-  )
-  if (filterError) {
-    return { data: null, error: filterError }
-  }
 
-  const personIdFilter = personIds
   const overview = await loadWeeklyOverview(
     referenceDate,
     undefined,

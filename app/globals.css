@@ -39,6 +39,8 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-team-headcount-bar: var(--team-headcount-bar);
+  --color-team-headcount-bar-label: var(--team-headcount-bar-label);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -94,6 +96,12 @@
   --overview-utilization-warn: oklch(0.72 0.16 95);
   --overview-utilization-caution: oklch(0.62 0.18 55);
   --overview-utilization-critical: oklch(0.52 0.22 25);
+  /* Team / role utilization mini-bars (blue low → red high); mix in component via color-mix */
+  --team-util-bar-low: oklch(0.55 0.16 250);
+  --team-util-bar-high: oklch(0.52 0.22 25);
+  /* Headcount-by-role horizontal bars (semantic blue; label = on-bar text) */
+  --team-headcount-bar: oklch(0.48 0.15 252);
+  --team-headcount-bar-label: oklch(0.99 0 0);
   /* sidebar geometry */
   --sidebar-w: 220px;
   --sidebar-w-collapsed: 52px;
@@ -142,6 +150,10 @@
   --overview-utilization-warn: oklch(0.85 0.14 95);
   --overview-utilization-caution: oklch(0.78 0.15 55);
   --overview-utilization-critical: oklch(0.68 0.2 25);
+  --team-util-bar-low: oklch(0.72 0.14 250);
+  --team-util-bar-high: oklch(0.68 0.2 25);
+  --team-headcount-bar: oklch(0.58 0.16 252);
+  --team-headcount-bar-label: oklch(0.99 0 0);
 }
 
 @layer base {

@@ -1,10 +1,12 @@
+import { TeamKpiSection } from '@/components/team/team-kpi-section'
 import { TeamToolbar } from '@/components/team/team-toolbar'
 import type { TeamFilterOptionsPayload } from '@/lib/team/load-team-filter-options'
 import type { TeamMonthKpisPayload } from '@/lib/team/load-team-month-kpis'
 import type { TeamRouteFilters } from '@/lib/team/team-route-filters'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { TeamKpiSection } from '@/components/team/team-kpi-section'
+import { TeamAnalyticsGrid } from '@/components/team/team-analytics-grid'
+import type { TeamRoleAnalyticsRow } from '@/lib/team/load-team-role-analytics'
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
 
 export function TeamPageShell({
@@ -13,12 +15,14 @@ export function TeamPageShell({
   filterOptions,
   routeFilters,
   kpis,
+  roleAnalyticsRows,
 }: {
   referenceMonthLabel: string
   monthPicker: { options: OverviewMonthOption[]; selectedMonthKey: string } | null
   filterOptions: TeamFilterOptionsPayload
   routeFilters: TeamRouteFilters
   kpis: TeamMonthKpisPayload
+  roleAnalyticsRows: TeamRoleAnalyticsRow[]
 }) {
   return (
     <div className="flex flex-col gap-8">
@@ -52,20 +56,7 @@ export function TeamPageShell({
         >
           Analytics
         </h2>
-        <div className="grid gap-4 lg:grid-cols-2">
-          {['Utilization by role', 'Capacity distribution', 'Headcount by role', 'Skills metrics'].map(
-            (title) => (
-              <div
-                key={title}
-                className="flex min-h-72 flex-col rounded-xl border border-border bg-card/20 p-4 ring-1 ring-foreground/5"
-              >
-                <p className="text-sm font-medium text-foreground">{title}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Fill: chart / table</p>
-                <Skeleton className="mt-4 flex-1 rounded-lg" />
-              </div>
-            )
-          )}
-        </div>
+        <TeamAnalyticsGrid rows={roleAnalyticsRows} />
       </section>
 
       <section data-slot="team-staffing-grid" aria-labelledby="team-staffing-heading">
