@@ -1,6 +1,5 @@
 'use client'
 
-import { WeeklyHeadlineSkeleton } from '@/components/overview/weekly-headline-skeleton'
 import {
   createContext,
   useCallback,
@@ -27,8 +26,7 @@ export function useOverviewRoutePending(): OverviewRoutePendingValue | null {
 
 /**
  * Wraps `/` overview content so `router.push` for `?month=` runs inside `useTransition`.
- * Suspense often does not re-show its fallback for same-route search-only navigations (PPR);
- * `isPending` gives a reliable loading overlay until the RSC payload replaces the tree.
+ * Pair with `OverviewRouteSection` per slot — section fallbacks replace stale content while pending.
  */
 export function OverviewRoutePendingShell({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -47,20 +45,12 @@ export function OverviewRoutePendingShell({ children }: { children: ReactNode })
     <OverviewRoutePendingContext.Provider
       value={{ navigateWithTransition, isPending }}
     >
-      <div className="relative flex min-h-[50vh] flex-col gap-6">
+      <div
+        className="flex min-h-[50vh] flex-col gap-6"
+        aria-busy={isPending}
+        aria-live="polite"
+      >
         {children}
-        {isPending ? (
-          <div
-            className="absolute inset-0 z-30 flex justify-center rounded-lg bg-background/75 pt-4 backdrop-blur-[1px] supports-backdrop-filter:bg-background/65"
-            aria-busy="true"
-            aria-live="polite"
-          >
-            <span className="sr-only">Loading overview</span>
-            <div className="h-fit w-full max-w-6xl">
-              <WeeklyHeadlineSkeleton />
-            </div>
-          </div>
-        ) : null}
       </div>
     </OverviewRoutePendingContext.Provider>
   )

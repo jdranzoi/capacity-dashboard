@@ -1,6 +1,5 @@
 'use client'
 
-import { TeamPageSkeleton } from '@/components/team/team-page-skeleton'
 import {
   createContext,
   useCallback,
@@ -23,8 +22,8 @@ export function useTeamRoutePending(): TeamRoutePendingValue | null {
 }
 
 /**
- * Mirrors overview pending UX: month changes on `/team` run inside `useTransition` so the list/select
- * shows loading until the RSC payload updates.
+ * Wraps `/team` so filter/month navigations use `useTransition`.
+ * Pair with `TeamRouteSection` per slot for in-place section skeletons while pending.
  */
 export function TeamRoutePendingShell({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -41,20 +40,12 @@ export function TeamRoutePendingShell({ children }: { children: ReactNode }) {
 
   return (
     <TeamRoutePendingContext.Provider value={{ navigateWithTransition, isPending }}>
-      <div className="relative flex min-h-[50vh] flex-col gap-8">
+      <div
+        className="flex min-h-[50vh] flex-col gap-8"
+        aria-busy={isPending}
+        aria-live="polite"
+      >
         {children}
-        {isPending ? (
-          <div
-            className="absolute inset-0 z-30 flex justify-center rounded-lg bg-background/75 pt-4 backdrop-blur-[1px] supports-backdrop-filter:bg-background/65"
-            aria-busy="true"
-            aria-live="polite"
-          >
-            <span className="sr-only">Loading team</span>
-            <div className="h-fit w-full max-w-6xl">
-              <TeamPageSkeleton />
-            </div>
-          </div>
-        ) : null}
       </div>
     </TeamRoutePendingContext.Provider>
   )

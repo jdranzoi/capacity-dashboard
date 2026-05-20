@@ -1,84 +1,50 @@
-import { parse } from 'date-fns'
-import { connection } from 'next/server'
 import { Suspense } from 'react'
 
+import { OverviewChartsBlock } from '@/components/overview/overview-charts-block'
+import { OverviewKpiBlock } from '@/components/overview/overview-kpi-block'
 import { OverviewRoutePendingShell } from '@/components/overview/overview-route-pending-shell'
-
-import { WeeklyHeadlineSection } from '@/components/overview/weekly-headline-section'
-import { WeeklyHeadlineSkeleton } from '@/components/overview/weekly-headline-skeleton'
-import { loadWeeklyOverview } from '@/lib/overview/load-weekly-overview'
+import { OverviewRouteSection } from '@/components/overview/overview-route-section'
 import {
-  loadOverviewMonthOptions,
-  resolveSelectedOverviewMonth,
-} from '@/lib/overview/overview-month-options'
+  OverviewChartsRowSkeleton,
+  OverviewKpiRowSkeleton,
+  OverviewToolbarSkeleton,
+  OverviewWeeklyDetailSkeleton,
+} from '@/components/overview/overview-section-skeletons'
+import { OverviewToolbarBlock } from '@/components/overview/overview-toolbar-block'
+import { OverviewWeeklyDetailBlock } from '@/components/overview/overview-weekly-detail-block'
 
-async function WeeklyData({
-  searchParams,
-}: {
+type OverviewPageProps = {
   searchParams: Promise<{ month?: string }>
-}) {
-  await connection()
-  const { month: monthParam } = await searchParams
-
-  const { options, error: monthsError } = await loadOverviewMonthOptions()
-  if (monthsError) {
-    return (
-      <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-        Could not load month options: {monthsError}
-      </div>
-    )
-  }
-
-  const selected = resolveSelectedOverviewMonth(options, monthParam)
-  if (!selected) {
-    return (
-      <div className="rounded-lg border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-        No historical months in <code className="font-mono text-xs">fact_capacity</code> yet. Run a
-        sync, then refresh.
-      </div>
-    )
-  }
-
-  const referenceDate = parse(selected.monthStartStr, 'yyyy-MM-dd', new Date())
-  const data = await loadWeeklyOverview(referenceDate, undefined, {
-    id: selected.snapshotId,
-    createdAt: selected.syncCreatedAt,
-  })
-
-  if (data.error) {
-    return (
-      <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-        {data.error}
-      </div>
-    )
-  }
-
-  return (
-    <WeeklyHeadlineSection
-      monthLabel={data.monthLabel}
-      asOfDate={data.asOfDate}
-      snapshotId={data.snapshotId}
-      syncCreatedAt={data.syncCreatedAt}
-      mtdUtilizationAvgPct={data.mtdUtilizationAvgPct}
-      weeks={data.weeks}
-      monthPicker={{
-        options,
-        selectedMonthKey: selected.monthKey,
-      }}
-    />
-  )
 }
 
-export default function OverviewPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ month?: string }>
-}) {
+export default function OverviewPage({ searchParams }: OverviewPageProps) {
   return (
     <OverviewRoutePendingShell>
-      <Suspense fallback={<WeeklyHeadlineSkeleton />}>
-        <WeeklyData searchParams={searchParams} />
-      </Suspense>
+      <section className="flex flex-col gap-6">
+        <Suspense fallback={<OverviewToolbarSkeleton />}>
+          <OverviewRouteSection fallback={<OverviewToolbarSkeleton />}>
+            <OverviewToolbarBlock searchParams={searchParams} />
+          </OverviewRouteSection>
+        </Suspense>
+
+        <Suspense fallback={<OverviewKpiRowSkeleton />}>
+          <OverviewRouteSection fallback={<OverviewKpiRowSkeleton />}>
+            <OverviewKpiBlock searchParams={searchParams} />
+          </OverviewRouteSection>
+        </Suspense>
+
+        <Suspense fallback={<OverviewChartsRowSkeleton />}>
+          <OverviewRouteSection fallback={<OverviewChartsRowSkeleton />}>
+            <OverviewChartsBlock searchParams={searchParams} />
+          </OverviewRouteSection>
+        </Suspense>
+
+        <Suspense fallback={<OverviewWeeklyDetailSkeleton />}>
+          <OverviewRouteSection fallback={<OverviewWeeklyDetailSkeleton />}>
+            <OverviewWeeklyDetailBlock searchParams={searchParams} />
+          </OverviewRouteSection>
+        </Suspense>
+      </section>
     </OverviewRoutePendingShell>
   )
 }

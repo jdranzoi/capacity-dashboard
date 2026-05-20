@@ -8,9 +8,9 @@ New data-heavy routes **must** follow the layers and rules in this doc (bundle +
 
 | Route | Phase 1 (data/cache) | Phase 2 (streaming UX) | Notes |
 | --- | --- | --- | --- |
-| `/` (overview) | **Done** — `loadOverviewMonthOptions` + `loadWeeklyOverview` → `getMonthFactBundle`; `connection()` in `WeeklyData` | Pending — still one route `Suspense` + `OverviewRoutePendingShell` | No `Promise.all` split yet (single loader chain; less duplication than `/team`) |
-| `/team` | **Done** — bundle + parallel `team-page-data` | Pending — `TeamRoutePendingShell` full-page overlay | |
-| Layout (`sidebar`, `header`) | Partial — `SyncStatus` already `'use cache'` | Pending — shrink layout `Suspense` | Auth still blocks chrome in layout `Suspense` |
+| `/` (overview) | **Done** | **Done** — per-section `Suspense` + `OverviewRouteSection` | `overview-page-cache.ts` dedupes loaders per request |
+| `/team` | **Done** | **Done** — toolbar / KPIs / analytics / nested staffing `Suspense` | `team-page-cache.ts` |
+| Layout (`sidebar`, `header`) | Partial — `SyncStatus` cached | **Done** — sidebar static; `Header` only in `Suspense` | Middleware handles auth redirect |
 | `/flags`, `/pipeline` | N/A (placeholders) | N/A | Apply this roadmap when real loaders land |
 | `/ask` | Not started | Not started | API route + audit; separate from month-fact bundle |
 | `/login` | Out of scope | Out of scope | Auth only |
@@ -47,7 +47,7 @@ New data-heavy routes **must** follow the layers and rules in this doc (bundle +
 | Phase | Deliverable | Status |
 | --- | --- | --- |
 | **1** | Shared month fact bundle (`use cache` + `React.cache`); cache `loadOverviewMonthOptions`; refactor `loadWeeklyOverview` + team analytics/staffing to use bundle; parallel team loader chain | **Done** |
-| **2** | Per-card / per-section `Suspense` on overview + team; shrink layout `Suspense`; lighten route pending overlays | Pending |
+| **2** | Per-card / per-section `Suspense` on overview + team; shrink layout `Suspense`; lighten route pending overlays | **Done** |
 | **3** | DB month rollup (one row per month + snapshot) replacing full `fact_capacity` scan for month picker | Pending |
 | **4** | `cacheTag` invalidation hook after sync (webhook or manual `revalidateTag`) | Pending |
 
@@ -107,18 +107,20 @@ Keep `useTransition` on month picker for search-only navigation; replace full-pa
 | P1d | Team role + staffing use bundle | Done |
 | P1e | `team-page-data` parallel loads | Done |
 | P1f | Overview `/` uses cached month options + bundle via `loadWeeklyOverview` | Done |
-| P2a | Overview per-card Suspense | Pending |
-| P2b | Team per-section Suspense | Pending |
-| P2c | Layout chrome Suspense shrink | Pending |
+| P2a | Overview per-section Suspense + `OverviewRouteSection` | Done |
+| P2b | Team per-section Suspense + nested staffing slot | Done |
+| P2c | Layout chrome Suspense shrink (header only) | Done |
 | P3 | Month rollup table / RPC | Pending |
 | P4 | Post-sync cache invalidation | Pending |
 
-## Default next step after Phase 1
+## Default next step after Phase 2
 
-**Phase 2a:** Split `app/(dashboard)/page.tsx` into parallel async children with card-level fallbacks; keep cached loaders unchanged.
+**Phase 3:** Add month rollup table / RPC so `loadOverviewMonthOptions` stops scanning all `fact_capacity` rows.
 
 ## References
 
+- `docs/PERFORMANCE_BENCHMARK.md` — how to run benchmarks, baseline tables, Phase 3+ comparison template
+- `lib/dev/perf-log.ts` — dev-only `[perf]` spans on section loaders
 - `CLAUDE.md` — overview weekly metrics, display stats, caching conventions
 - `.agents/skills/next-cache-components/SKILL.md` — `'use cache'`, `cacheLife`, `connection()`
 - `docs/TEAM_DASHBOARD_PLAN.md` — team feature phases (orthogonal to this perf roadmap)
