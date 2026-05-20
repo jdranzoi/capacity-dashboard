@@ -44,76 +44,74 @@ export async function TeamPageData({
     )
   }
 
-  const { data: filterOptions, error: filterOptionsError } = await loadTeamFilterOptions(
-    selected.snapshotId,
-    selected.monthStartStr
-  )
-  if (filterOptionsError || !filterOptions) {
-    return (
-      <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-        {filterOptionsError ?? 'Could not load team filters.'}
-      </div>
-    )
-  }
-
   const supabase = createServiceClientCached()
   const referenceDate = parse(selected.monthStartStr, 'yyyy-MM-dd', new Date())
   const monthEndStr = format(endOfMonth(referenceDate), 'yyyy-MM-dd')
-  const { personIds, error: personFilterError } = await resolveFilteredPersonIds(
-    supabase,
-    selected.snapshotId,
-    selected.monthStartStr,
-    monthEndStr,
-    routeFilters
-  )
-  if (personFilterError) {
+  const snapshot = { id: selected.snapshotId, createdAt: selected.syncCreatedAt }
+
+  const [filterOptionsResult, personIdsResult] = await Promise.all([
+    loadTeamFilterOptions(selected.snapshotId, selected.monthStartStr),
+    resolveFilteredPersonIds(
+      supabase,
+      selected.snapshotId,
+      selected.monthStartStr,
+      monthEndStr,
+      routeFilters
+    ),
+  ])
+
+  if (filterOptionsResult.error || !filterOptionsResult.data) {
     return (
       <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-        {personFilterError}
+        {filterOptionsResult.error ?? 'Could not load team filters.'}
       </div>
     )
   }
 
-  const { data: kpis, error: kpisError } = await loadTeamMonthKpis(
-    selected.monthStartStr,
-    {
-      id: selected.snapshotId,
-      createdAt: selected.syncCreatedAt,
-    },
-    routeFilters,
-    personIds
-  )
-
-  if (kpisError || !kpis) {
+  if (personIdsResult.error) {
     return (
       <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-        {kpisError ?? 'Could not load team KPIs.'}
+        {personIdsResult.error}
       </div>
     )
   }
 
-  const { data: roleAnalytics, error: analyticsError } = await loadTeamRoleAnalytics(supabase, {
-    monthStartStr: selected.monthStartStr,
-    snapshot: { id: selected.snapshotId, createdAt: selected.syncCreatedAt },
-    personIdFilter: personIds,
-  })
-  if (analyticsError) {
+  const personIds = personIdsResult.personIds
+
+  const [kpisResult, roleResult, staffingResult] = await Promise.all([
+    loadTeamMonthKpis(selected.monthStartStr, snapshot, routeFilters, personIds),
+    loadTeamRoleAnalytics(supabase, {
+      monthStartStr: selected.monthStartStr,
+      snapshot,
+      personIdFilter: personIds,
+    }),
+    loadTeamStaffingRows(supabase, {
+      monthStartStr: selected.monthStartStr,
+      snapshot,
+      personIdFilter: personIds,
+    }),
+  ])
+
+  if (kpisResult.error || !kpisResult.data) {
     return (
       <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-        Could not load role analytics: {analyticsError}
+        {kpisResult.error ?? 'Could not load team KPIs.'}
       </div>
     )
   }
 
-  const { data: staffingRows, error: staffingError } = await loadTeamStaffingRows(supabase, {
-    monthStartStr: selected.monthStartStr,
-    snapshot: { id: selected.snapshotId, createdAt: selected.syncCreatedAt },
-    personIdFilter: personIds,
-  })
-  if (staffingError) {
+  if (roleResult.error) {
     return (
       <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-        Could not load staffing grid: {staffingError}
+        Could not load role analytics: {roleResult.error}
+      </div>
+    )
+  }
+
+  if (staffingResult.error) {
+    return (
+      <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        Could not load staffing grid: {staffingResult.error}
       </div>
     )
   }
@@ -122,11 +120,11 @@ export async function TeamPageData({
     <TeamPageShell
       referenceMonthLabel={selected.label}
       monthPicker={{ options, selectedMonthKey: selected.monthKey }}
-      filterOptions={filterOptions}
+      filterOptions={filterOptionsResult.data}
       routeFilters={routeFilters}
-      kpis={kpis}
-      roleAnalyticsRows={roleAnalytics ?? []}
-      staffingRows={staffingRows ?? []}
+      kpis={kpisResult.data}
+      roleAnalyticsRows={roleResult.data ?? []}
+      staffingRows={staffingResult.data ?? []}
     />
   )
 }

@@ -1,4 +1,5 @@
 import { parse } from 'date-fns'
+import { connection } from 'next/server'
 import { Suspense } from 'react'
 
 import { OverviewRoutePendingShell } from '@/components/overview/overview-route-pending-shell'
@@ -16,6 +17,7 @@ async function WeeklyData({
 }: {
   searchParams: Promise<{ month?: string }>
 }) {
+  await connection()
   const { month: monthParam } = await searchParams
 
   const { options, error: monthsError } = await loadOverviewMonthOptions()

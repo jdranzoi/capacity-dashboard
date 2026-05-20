@@ -1,4 +1,3 @@
-import { connection } from 'next/server'
 import { endOfMonth, format, parse } from 'date-fns'
 
 import {
@@ -52,7 +51,6 @@ export async function loadTeamMonthKpis(
   /** Pre-resolved from `resolveFilteredPersonIds` (must match URL filters). */
   personIdFilter: Set<string> | null
 ): Promise<{ data: TeamMonthKpisPayload | null; error: string | null }> {
-  await connection()
   const referenceDate = parse(monthStartStr, 'yyyy-MM-dd', new Date())
   const monthEndStr = format(endOfMonth(referenceDate), 'yyyy-MM-dd')
 

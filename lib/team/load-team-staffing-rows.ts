@@ -1,18 +1,18 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import {
-  endOfMonth,
-  format,
-  min as minDate,
-  parse,
-  parseISO,
-  startOfDay,
-} from 'date-fns'
+import { endOfMonth, format, parse } from 'date-fns'
 
 import {
   billableVersusLoggedEfficiencyPct,
   personLoggedUtilizationPct,
   STANDARD_WORKDAY_HOURS,
 } from '@/lib/domain/workload-metrics'
+import {
+  filterHolidaysThrough,
+  filterRowsByPerson,
+  filterWorklogsThrough,
+  getMonthFactBundle,
+} from '@/lib/data/load-month-fact-bundle'
+import { overviewLogThroughDate } from '@/lib/overview/worklog-through-date'
 import {
   teamEligibleWeekdayDates,
   teamHolidaysByZoneForEligible,
@@ -23,7 +23,6 @@ import { roundDisplayStat } from '@/lib/format/display-stats'
 import type { Database } from '@/lib/supabase/database.types'
 import { fetchMonthRolesForPeople } from '@/lib/team/team-month-role'
 
-const PAGE = 1000
 const DIM_BATCH = 200
 
 export type TeamStaffingProjectRef = {
@@ -46,28 +45,6 @@ export type TeamStaffingRow = {
   ptoHoursMonth: number
   /** Projects with non-PTO logged time in the MTD window (same bound as Logged). */
   projects: TeamStaffingProjectRef[]
-}
-
-type PagedResult<T> = { rows: T[]; error: string | null }
-
-async function pagedQuery<T>(
-  run: (from: number) => Promise<{ data: unknown; error: { message: string } | null }>
-): Promise<PagedResult<T>> {
-  const rows: T[] = []
-  let from = 0
-  for (;;) {
-    const { data, error } = await run(from)
-    if (error) return { rows: [], error: error.message }
-    const batch = (data as T[] | null) ?? []
-    rows.push(...batch)
-    if (batch.length < PAGE) break
-    from += PAGE
-  }
-  return { rows, error: null }
-}
-
-function keepPerson(personIdFilter: Set<string> | null, pid: string): boolean {
-  return personIdFilter == null || personIdFilter.has(pid)
 }
 
 /**
@@ -95,85 +72,38 @@ export async function loadTeamStaffingRows(
   const referenceDate = parse(monthStartStr, 'yyyy-MM-dd', new Date())
   const monthEnd = endOfMonth(referenceDate)
   const monthEndStr = format(monthEnd, 'yyyy-MM-dd')
-  const logThroughStr = format(
-    minDate([monthEnd, startOfDay(parseISO(snapshot.createdAt)), startOfDay(now)]),
-    'yyyy-MM-dd'
-  )
+  const logThroughStr = overviewLogThroughDate(monthEnd, snapshot.createdAt, now)
   const snapshotId = snapshot.id
 
   try {
-    const [capRes, planRes, wlRes, ptoRes, holidayRes] = await Promise.all([
-      pagedQuery<{ person_id: string; net_capacity_hours: number }>(async (from) =>
-        supabase
-          .from('fact_capacity')
-          .select('person_id, net_capacity_hours')
-          .eq('snapshot_id', snapshotId)
-          .eq('month_date', monthStartStr)
-          .order('person_id')
-          .range(from, from + PAGE - 1)
-      ),
-      pagedQuery<{ person_id: string; planned_hours: number | null }>(async (from) =>
-        supabase
-          .from('fact_plans')
-          .select('person_id, planned_hours')
-          .eq('snapshot_id', snapshotId)
-          .eq('month_date', monthStartStr)
-          .eq('is_pto', false)
-          .order('person_id')
-          .range(from, from + PAGE - 1)
-      ),
-      pagedQuery<{
-        person_id: string
-        project_id: string
-        logged_seconds: number
-        billable_seconds: number
-      }>(async (from) =>
-        supabase
-          .from('fact_worklogs')
-          .select('person_id, project_id, logged_seconds, billable_seconds')
-          .eq('is_pto', false)
-          .gte('log_date', monthStartStr)
-          .lte('log_date', logThroughStr)
-          .order('person_id')
-          .range(from, from + PAGE - 1)
-      ),
-      pagedQuery<{ person_id: string; log_date: string; logged_seconds: number }>(async (from) =>
-        supabase
-          .from('fact_worklogs')
-          .select('person_id, log_date, logged_seconds')
-          .eq('is_pto', true)
-          .gte('log_date', monthStartStr)
-          .lte('log_date', monthEndStr)
-          .order('person_id')
-          .range(from, from + PAGE - 1)
-      ),
-      pagedQuery<{ zone_id: string; date: string }>(async (from) =>
-        supabase
-          .from('dim_holiday')
-          .select('zone_id, date')
-          .gte('date', monthStartStr)
-          .lte('date', logThroughStr)
-          .order('date')
-          .range(from, from + PAGE - 1)
-      ),
-    ])
+    const bundleResult = await getMonthFactBundle(snapshotId, monthStartStr, monthEndStr)
+    if (bundleResult.error || !bundleResult.data) {
+      return {
+        data: [],
+        error: bundleResult.error
+          ? `month facts: ${bundleResult.error}`
+          : 'month facts: unexpected empty result',
+      }
+    }
 
-    if (capRes.error) return { data: [], error: `fact_capacity: ${capRes.error}` }
-    if (planRes.error) return { data: [], error: `fact_plans: ${planRes.error}` }
-    if (wlRes.error) return { data: [], error: `fact_worklogs: ${wlRes.error}` }
-    if (ptoRes.error) return { data: [], error: `fact_worklogs (PTO): ${ptoRes.error}` }
-    if (holidayRes.error) return { data: [], error: `dim_holiday: ${holidayRes.error}` }
+    const bundle = bundleResult.data
+    const capRows = filterRowsByPerson(bundle.capacity, personIdFilter)
+    const planRows = filterRowsByPerson(bundle.plans, personIdFilter)
+    const wlRows = filterWorklogsThrough(
+      filterRowsByPerson(bundle.worklogs, personIdFilter),
+      logThroughStr
+    )
+    const ptoRows = filterRowsByPerson(bundle.ptoWorklogs, personIdFilter)
+    const holidayRows = filterHolidaysThrough(bundle.holidays, logThroughStr)
 
     const capByPerson = new Map<string, number>()
-    for (const r of capRes.rows) {
-      if (!keepPerson(personIdFilter, r.person_id)) continue
+    for (const r of capRows) {
       const h = Number(r.net_capacity_hours)
       capByPerson.set(r.person_id, (capByPerson.get(r.person_id) ?? 0) + h)
     }
 
     const plannedByPerson = new Map<string, number>()
-    for (const r of planRes.rows) {
-      if (!keepPerson(personIdFilter, r.person_id)) continue
+    for (const r of planRows) {
       plannedByPerson.set(
         r.person_id,
         (plannedByPerson.get(r.person_id) ?? 0) + Number(r.planned_hours ?? 0)
@@ -184,8 +114,7 @@ export async function loadTeamStaffingRows(
     const billableByPerson = new Map<string, number>()
     const projectHoursByPerson = new Map<string, Map<string, number>>()
 
-    for (const r of wlRes.rows) {
-      if (!keepPerson(personIdFilter, r.person_id)) continue
+    for (const r of wlRows) {
       const pid = r.person_id
       const logH = Number(r.logged_seconds) / 3600
       const billH = Number(r.billable_seconds) / 3600
@@ -201,17 +130,16 @@ export async function loadTeamStaffingRows(
     }
 
     const ptoByPerson = new Map<string, number>()
-    for (const r of ptoRes.rows) {
-      if (!keepPerson(personIdFilter, r.person_id)) continue
+    for (const r of ptoRows) {
       const pid = r.person_id
       const h = Number(r.logged_seconds) / 3600
       ptoByPerson.set(pid, (ptoByPerson.get(pid) ?? 0) + h)
     }
 
     const eligibleWeekdays = teamEligibleWeekdayDates(referenceDate, logThroughStr)
-    const holidaysByZone = teamHolidaysByZoneForEligible(holidayRes.rows, eligibleWeekdays)
+    const holidaysByZone = teamHolidaysByZoneForEligible(holidayRows, eligibleWeekdays)
     const ptoWeekdayByPerson = teamPtoWeekdayDatesThrough(
-      ptoRes.rows.filter((r) => keepPerson(personIdFilter, r.person_id)),
+      ptoRows,
       logThroughStr,
       referenceDate
     )

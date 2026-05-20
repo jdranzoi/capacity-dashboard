@@ -264,8 +264,10 @@ function MtdUtilizationDonut({
   return (
     <Donut
       pct={utilizationAvgPct}
-      label="Utilization (MTD)"
-      primaryCssVar={mtdUtilizationStrokeVar(roundDisplayStat(utilizationAvgPct))}
+      label="Utilization"
+      primaryCssVar={mtdUtilizationStrokeVar(
+        roundDisplayStat(utilizationAvgPct),
+      )}
     />
   );
 }
@@ -324,7 +326,7 @@ function SemiGauge({
 }: {
   pct: number | null;
   title: string;
-  goalLabel: string;
+  goalLabel: string | null;
 }) {
   const p =
     pct === null ? 0 : Math.min(100, Math.max(0, roundDisplayStat(pct)));
@@ -340,9 +342,7 @@ function SemiGauge({
           className="shrink-0"
           role="img"
           aria-label={
-            pct === null
-              ? `${title}: no data`
-              : `${title}: ${p} percent`
+            pct === null ? `${title}: no data` : `${title}: ${p} percent`
           }
         >
           <path
@@ -414,12 +414,12 @@ export function WorkloadGauges({
           <SemiGauge
             title="Productivity (logged / planned)"
             pct={productivityPct}
-            goalLabel="Goal: > 80%"
+            goalLabel={null}
           />
           <SemiGauge
             title="Efficiency (billable / logged)"
             pct={efficiencyPct}
-            goalLabel="Goal: > 90%"
+            goalLabel={null}
           />
         </div>
       </div>

@@ -1,16 +1,19 @@
-import { connection } from 'next/server'
-import { createServiceClientCached } from '@/lib/supabase/server'
+import {
+  filterHolidaysThrough,
+  filterRowsByPerson,
+  filterWorklogsThrough,
+  getMonthFactBundle,
+} from '@/lib/data/load-month-fact-bundle'
 import { getLatestSyncSnapshot } from '@/lib/data/latest-sync-snapshot'
+import { createServiceClientCached } from '@/lib/supabase/server'
+import { overviewLogThroughDate } from '@/lib/overview/worklog-through-date'
 import { buildWeekdayWeightMap } from '@/lib/overview/prorate-to-weeks'
 import {
   addDays,
   endOfMonth,
   format,
   getISODay,
-  min as minDate,
   parse,
-  parseISO,
-  startOfDay,
   startOfMonth,
   startOfWeek,
 } from 'date-fns'
@@ -27,8 +30,6 @@ import {
   weekdayDateStringsMonthThrough,
 } from '@/lib/overview/elapsed-net-weekdays'
 import { formatMonthLabel } from './working-days'
-
-const PAGE = 1000
 
 export type WeeklyHeadline = {
   weekLabel: string
@@ -99,35 +100,6 @@ function weeksOverlappingMonth(monthStart: Date, monthEnd: Date): string[] {
   return keys
 }
 
-/**
- * Inclusive end date for worklogs: month end, last sync, and today (all calendar days, UTC-agnostic).
- */
-function logThroughDate(
-  monthEnd: Date,
-  syncCreatedAt: string,
-  now: Date
-): string {
-  const end = endOfMonth(monthEnd)
-  const t = minDate([end, startOfDay(parseISO(syncCreatedAt)), startOfDay(now)])
-  return format(t, 'yyyy-MM-dd')
-}
-
-type PagedResult<T> = { rows: T[]; error: string | null }
-
-async function pagedQuery<T>(run: (from: number) => Promise<{ data: unknown; error: { message: string } | null }>): Promise<PagedResult<T>> {
-  const rows: T[] = []
-  let from = 0
-  for (;;) {
-    const { data, error } = await run(from)
-    if (error) return { rows: [], error: error.message }
-    const batch = (data as T[] | null) ?? []
-    rows.push(...batch)
-    if (batch.length < PAGE) break
-    from += PAGE
-  }
-  return { rows, error: null }
-}
-
 export async function loadWeeklyOverview(
   referenceDate?: Date,
   now?: Date,
@@ -140,7 +112,6 @@ export async function loadWeeklyOverview(
    */
   personIdFilter?: Set<string> | null
 ): Promise<WeeklyOverviewData> {
-  await connection()
   const _referenceDate = referenceDate ?? new Date()
   const _now = now ?? new Date()
   const monthStart = startOfMonth(_referenceDate)
@@ -173,7 +144,7 @@ export async function loadWeeklyOverview(
       }
     }
 
-    const logThroughStr = logThroughDate(monthEnd, resolved.createdAt, _now)
+    const logThroughStr = overviewLogThroughDate(monthEnd, resolved.createdAt, _now)
     const logThroughD = parse(logThroughStr, 'yyyy-MM-dd', _referenceDate)
     const snapshotId = resolved.id
 
@@ -210,100 +181,27 @@ export async function loadWeeklyOverview(
       }
     }
 
+    const bundleResult = await getMonthFactBundle(snapshotId, monthStartStr, monthEndStr)
+    if (bundleResult.error || !bundleResult.data) {
+      return {
+        ...empty,
+        error: bundleResult.error
+          ? `Could not load month facts: ${bundleResult.error}`
+          : 'Could not load month facts (unexpected).',
+      }
+    }
+
+    const bundle = bundleResult.data
+    const capRows = filterRowsByPerson(bundle.capacity, personIdFilter)
+    const planRows = filterRowsByPerson(bundle.plans, personIdFilter)
+    const wlRows = filterWorklogsThrough(
+      filterRowsByPerson(bundle.worklogs, personIdFilter),
+      logThroughStr
+    )
+    const ptoRows = filterRowsByPerson(bundle.ptoWorklogs, personIdFilter)
+    const holidayRows = filterHolidaysThrough(bundle.holidays, logThroughStr)
+
     const supabase = createServiceClientCached()
-
-    const [capRes, planRes, wlRes, ptoWlRes, holidayRes] = await Promise.all([
-      pagedQuery<{ person_id: string; net_capacity_hours: number }>(async (from) =>
-        supabase
-          .from('fact_capacity')
-          .select('person_id, net_capacity_hours')
-          .eq('snapshot_id', snapshotId)
-          .eq('month_date', monthStartStr)
-          .order('person_id')
-          .range(from, from + PAGE - 1)
-      ),
-      pagedQuery<{ person_id: string; planned_hours: number | null }>(async (from) =>
-        supabase
-          .from('fact_plans')
-          .select('person_id, planned_hours')
-          .eq('snapshot_id', snapshotId)
-          .eq('month_date', monthStartStr)
-          .eq('is_pto', false)
-          .order('person_id')
-          .range(from, from + PAGE - 1)
-      ),
-      pagedQuery<{
-        person_id: string
-        log_date: string
-        billable_seconds: number
-        logged_seconds: number
-      }>(async (from) =>
-        supabase
-          .from('fact_worklogs')
-          .select('person_id, log_date, billable_seconds, logged_seconds')
-          .eq('is_pto', false)
-          .gte('log_date', monthStartStr)
-          .lte('log_date', logThroughStr)
-          .order('log_date', { ascending: true })
-          .range(from, from + PAGE - 1)
-      ),
-      pagedQuery<{
-        person_id: string
-        log_date: string
-        logged_seconds: number
-      }>(async (from) =>
-        supabase
-          .from('fact_worklogs')
-          .select('person_id, log_date, logged_seconds')
-          .eq('is_pto', true)
-          .gte('log_date', monthStartStr)
-          .lte('log_date', monthEndStr)
-          .order('log_date', { ascending: true })
-          .range(from, from + PAGE - 1)
-      ),
-      pagedQuery<{ zone_id: string; date: string }>(async (from) =>
-        supabase
-          .from('dim_holiday')
-          .select('zone_id, date')
-          .gte('date', monthStartStr)
-          .lte('date', logThroughStr)
-          .order('date')
-          .range(from, from + PAGE - 1)
-      ),
-    ])
-
-    if (capRes.error) {
-      return { ...empty, error: `Could not load fact_capacity: ${capRes.error}` }
-    }
-    if (planRes.error) {
-      return { ...empty, error: `Could not load fact_plans: ${planRes.error}` }
-    }
-    if (wlRes.error) {
-      return { ...empty, error: `Could not load worklogs: ${wlRes.error}` }
-    }
-    if (ptoWlRes.error) {
-      return { ...empty, error: `Could not load PTO worklogs: ${ptoWlRes.error}` }
-    }
-    if (holidayRes.error) {
-      return { ...empty, error: `Could not load dim_holiday: ${holidayRes.error}` }
-    }
-
-    const capRows =
-      personIdFilter == null
-        ? capRes.rows
-        : capRes.rows.filter((r) => personIdFilter.has(r.person_id))
-    const planRows =
-      personIdFilter == null
-        ? planRes.rows
-        : planRes.rows.filter((r) => personIdFilter.has(r.person_id))
-    const wlRows =
-      personIdFilter == null
-        ? wlRes.rows
-        : wlRes.rows.filter((r) => personIdFilter.has(r.person_id))
-    const ptoRows =
-      personIdFilter == null
-        ? ptoWlRes.rows
-        : ptoWlRes.rows.filter((r) => personIdFilter.has(r.person_id))
 
     const byPerson = new Map<string, number>()
     for (const r of capRows) {
@@ -319,7 +217,7 @@ export async function loadWeeklyOverview(
       logThroughD
     )
     const holidaysByZone = holidaysByZoneEligibleWeekdays(
-      holidayRes.rows,
+      holidayRows,
       eligibleWeekdaysThroughAsOf
     )
 

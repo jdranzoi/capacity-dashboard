@@ -1,7 +1,8 @@
-import { connection } from 'next/server'
+import { cacheLife, cacheTag } from 'next/cache'
 import { createServiceClientCached } from '@/lib/supabase/server'
 import { endOfMonth, format, parseISO, startOfMonth } from 'date-fns'
 
+import { CACHE_TAG_OVERVIEW_MONTHS } from '@/lib/data/cache-tags'
 import { formatMonthLabel } from '@/lib/overview/working-days'
 
 const PAGE = 1000
@@ -55,7 +56,10 @@ export async function loadOverviewMonthOptions(): Promise<{
   options: OverviewMonthOption[]
   error: string | null
 }> {
-  await connection()
+  'use cache'
+  cacheLife('hours')
+  cacheTag(CACHE_TAG_OVERVIEW_MONTHS)
+
   const supabase = createServiceClientCached()
   const best = new Map<string, { snapshotId: string; createdAt: string }>()
 

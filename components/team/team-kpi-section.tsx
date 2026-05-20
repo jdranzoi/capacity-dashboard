@@ -38,9 +38,7 @@ function KpiCard({
 
 export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
   const { rollupHours: r, asOfDate, projectScopedHours: scoped } = kpis;
-  const mtdNote = asOfDate
-    ? `Non-PTO worklogs through ${asOfDate}`
-    : "Overview worklog bound";
+  const mtdNote = asOfDate ? `Non-PTO worklogs` : "Overview worklog bound";
   const snapshotNote = "Snapshot facts for reference month";
   const plannedHours = scoped?.plannedHours ?? r.plannedHours;
   const loggedHours = scoped?.loggedHoursMtd ?? r.loggedHoursMtd;
@@ -53,10 +51,10 @@ export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
     : mtdNote;
   const utilizationCapacityFootnote = scoped
     ? "Logged on selected project / monthly net capacity (filtered people)."
-    : "Org logged / monthly net capacity (snapshot)."
+    : "Logged / Net capacity.";
   const utilizationPaceFootnote = scoped
     ? "Mean of people: all non-PTO logs through as-of (not limited to selected project). Elapsed weekdays minus zone holidays and weekday PTO through as-of (8h day)."
-    : "Mean of people: logged / (elapsed net weekdays × 8h). Zone holidays and weekday PTO through worklog as-of.";
+    : "Logged / (elapsed Net Weekdays × 8h). Zone holidays and weekday PTO through worklog as-of.";
   const efficiencyFootnote =
     kpis.billableEfficiencyPct === null
       ? "— when logged hours are zero"
@@ -80,6 +78,11 @@ export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
       footnote: plannedFootnote,
     },
     {
+      title: "PTO impact",
+      value: fmtHoursKpi(r.ptoHoursMonth),
+      footnote: "PTO logs",
+    },
+    {
       title: "Logged",
       value: fmtHoursKpi(loggedHours),
       footnote: logBillFootnote,
@@ -88,11 +91,6 @@ export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
       title: "Billable",
       value: fmtHoursKpi(billableHours),
       footnote: logBillFootnote,
-    },
-    {
-      title: "PTO impact",
-      value: fmtHoursKpi(r.ptoHoursMonth),
-      footnote: "PTO logs through calendar month end",
     },
     {
       title: "Capacity fill",
