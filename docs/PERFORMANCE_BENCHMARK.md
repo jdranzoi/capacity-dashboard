@@ -132,12 +132,81 @@ Team remains the slowest route: bootstrap + KPIs + analytics each touch large fa
 3. **Team KPIs + analytics** still expensive on cold month (~10–13 s each wall clock when cache cold) — Phase 3 month rollup + shared bootstrap materialization targets this.
 4. **Per-section `[perf]`** does not yet split bundle fetch vs in-memory rollup — optional finer spans later.
 
+## Results — Phase 3 + 4 (2026-05-20)
+
+**Date:** 2026-05-20  
+**Commit:** `5af8e0b` (Phase 3 `v_dashboard_month_options` + Phase 4 `/api/revalidate`)  
+**Environment:** `pnpm dev`, `localhost:3000`, authenticated browser session  
+**Prerequisite:** migration `016` applied in Supabase (view visible in Table Editor)
+
+### Overview `/` — cold (May 2026, first load after dev start)
+
+| Section | Server `[perf]` (ms) | Route `GET /` total |
+| --- | --- | --- |
+| toolbar | 4873 | **~7.7 s** (proxy ~2.1 s, app ~5.4 s) |
+| kpis | 4871 | (parallel — shared `getOverviewWeeklyData`) |
+| charts | 4870 | |
+| weekly-detail | 4870 | |
+
+**vs Phase 1+2 baseline:** toolbar **6546 → 4873 ms** (~**−26%**). Month-options view removes the paginated `fact_capacity` scan; bundle + rollup still dominate.
+
+### Overview `/` — warm (reload same month)
+
+| Section | Server `[perf]` (ms) | Route `GET /` total |
+| --- | --- | --- |
+| toolbar | 1082 | **~2.8 s** (proxy ~1.6 s, app ~1.2 s) |
+| kpis | 1078 | |
+| charts | 1077 | |
+| weekly-detail | 1076 | |
+
+Comparable to Phase 1+2 warm (~1 s loaders when proxy is fast).
+
+### Overview — month change
+
+| Flow | Section `[perf]` toolbar (ms) | Route total | Notes |
+| --- | --- | --- | --- |
+| `?month=2026-01` cold (new bundle key) | 9981 | **~13.9 s** | First hit for January snapshot |
+| `?month=2026-01` warm (repeat) | 510 | **~1.0 s** | |
+| `?month=2026-04` warm | 539 | **~1.1 s** | Benchmark run (cache hot) |
+| `?month=2026-03` cold | 2824 | **~3.2 s** | |
+| `?month=2025-12` | (loaded OK) | — | Older snapshot `2ed86e75…`; same bundle pattern |
+
+Month picker lists **6 months** (Dec 2025 – May 2026); view read is negligible vs fact bundle.
+
+### Team `/team`
+
+| Flow | toolbar | kpis | analytics | staffing | Route total |
+| --- | --- | --- | --- | --- | --- |
+| Default month (May), cache warm from overview | 4608 | 5127 | 5610 | 1455 | **~8.3 s** |
+| `?month=2026-05` | 2687 | 2982 | 3252 | 813 | **~4.4 s** |
+| `?month=2026-01` cold | 4986 | 8477 | 8942 | 1439 | **~11.2 s** |
+| `?month=2026-01` warm (repeat) | — | — | — | — | **~2.8 s** route only |
+
+**vs Phase 1+2 heavy cold (`/team?month=2026-01`):** toolbar **10209 → ~5000 ms** (~**−50%**) in this session — cache state and prior overview visits affect cold paths; treat as directional, not lab-grade.
+
+### Phase 3+ findings
+
+1. **Month options view:** modest gain on overview cold (~1.7 s off toolbar); no change to warm bundle path.
+2. **Dominant cost unchanged:** `getMonthFactBundle` paginated Supabase reads (~5–10 s app time cold).
+3. **Proxy:** still **0.3–2.1 s** per navigation — separate from loader work.
+4. **Phase 4:** `/api/revalidate` not exercised in this run (manual/sync hook).
+
+### UX checklist — 2026-05-20 (Phase 3+ run)
+
+- [x] Month picker shows 6 options (view-backed)
+- [x] Overview month change without full-page overlay
+- [x] Team sections render; staffing nested under analytics
+- [ ] Hydration warnings in dev console when using browser automation (`data-cursor-ref` mismatch) — dev-only noise, not prod
+
 ## Results — Phase 3+ (template)
+
+**Phase 3 deploy checklist:** apply `capacity-mcp` migration `016_dashboard_month_options_view.sql`, then redeploy dashboard.
 
 Copy the tables above per phase. Compare:
 
-- `overview/toolbar` should drop when month rollup replaces full `fact_capacity` scan.
+- Month picker / toolbar cold path should drop when `loadOverviewMonthOptions` hits `v_dashboard_month_options` (one row per month vs full `fact_capacity` scan).
 - Warm `kpis` / `charts` / `weekly-detail` should stay low (`React.cache` + `use cache`).
+- After sync, `POST /api/revalidate` should refresh month list and month-fact bundles without waiting for `cacheLife` expiry.
 
 ## References
 

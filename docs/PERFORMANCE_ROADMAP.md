@@ -48,8 +48,8 @@ New data-heavy routes **must** follow the layers and rules in this doc (bundle +
 | --- | --- | --- |
 | **1** | Shared month fact bundle (`use cache` + `React.cache`); cache `loadOverviewMonthOptions`; refactor `loadWeeklyOverview` + team analytics/staffing to use bundle; parallel team loader chain | **Done** |
 | **2** | Per-card / per-section `Suspense` on overview + team; shrink layout `Suspense`; lighten route pending overlays | **Done** |
-| **3** | DB month rollup (one row per month + snapshot) replacing full `fact_capacity` scan for month picker | Pending |
-| **4** | `cacheTag` invalidation hook after sync (webhook or manual `revalidateTag`) | Pending |
+| **3** | DB month rollup (`v_dashboard_month_options`) replacing full `fact_capacity` scan for month picker | **Done** |
+| **4** | `cacheTag` invalidation via `POST /api/revalidate` (sync webhook or manual) | **Done** |
 
 ## Phase 1 — detail (data layer)
 
@@ -110,12 +110,41 @@ Keep `useTransition` on month picker for search-only navigation; replace full-pa
 | P2a | Overview per-section Suspense + `OverviewRouteSection` | Done |
 | P2b | Team per-section Suspense + nested staffing slot | Done |
 | P2c | Layout chrome Suspense shrink (header only) | Done |
-| P3 | Month rollup table / RPC | Pending |
-| P4 | Post-sync cache invalidation | Pending |
+| P3 | `v_dashboard_month_options` view + loader | Done |
+| P4 | `POST /api/revalidate` + `invalidateDashboardCache` | Done |
 
-## Default next step after Phase 2
+## Phase 3 — month options view
 
-**Phase 3:** Add month rollup table / RPC so `loadOverviewMonthOptions` stops scanning all `fact_capacity` rows.
+**Migration (capacity-mcp):** `supabase/migrations/016_dashboard_month_options_view.sql`
+
+- View `v_dashboard_month_options`: one row per `fact_capacity.month_date` with the newest `sync_snapshot` for that month (`DISTINCT ON` + `ORDER BY` sync time).
+- **Dashboard:** `loadOverviewMonthOptions` reads the view in a single query (no paginated `fact_capacity` scan).
+
+Apply migration to Supabase before deploying the dashboard change.
+
+## Phase 4 — post-sync cache invalidation
+
+**Endpoint:** `POST /api/revalidate`
+
+| Item | Detail |
+| --- | --- |
+| Auth | `Authorization: Bearer <DASHBOARD_CACHE_REVALIDATE_SECRET>` or header `x-revalidate-secret` |
+| Body (optional) | `{ "snapshotId": "<uuid>" }` — also busts `snapshot-{id}` tag |
+| Tags cleared | `overview-months`, `month-facts`, and optional snapshot tag |
+| Middleware | `/api/revalidate` bypasses Google OAuth (secret-only) |
+
+**Env:** `DASHBOARD_CACHE_REVALIDATE_SECRET` in Vercel (and `.env.local` for local tests).
+
+**Sync hook (capacity-mcp / GitHub Actions):** after `sync-v2` succeeds, call the dashboard URL:
+
+```bash
+curl -sS -X POST "$DASHBOARD_URL/api/revalidate" \
+  -H "Authorization: Bearer $DASHBOARD_CACHE_REVALIDATE_SECRET" \
+  -H "Content-Type: application/json" \
+  -d "{\"snapshotId\":\"$SNAPSHOT_ID\"}"
+```
+
+Omit `snapshotId` to invalidate only global tags (month list + all month-fact entries).
 
 ## References
 

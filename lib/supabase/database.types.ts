@@ -960,7 +960,22 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_dashboard_month_options: {
+        Row: {
+          month_date: string | null
+          snapshot_id: string | null
+          sync_created_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fact_capacity_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "sync_snapshot"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never
