@@ -43,10 +43,6 @@ export type TeamMonthKpisPayload = {
   utilizationPaceAvgPct: number | null
   /** Uses project-scoped billable/logged when `projectScopedHours` is set. */
   billableEfficiencyPct: number | null
-  /**
-   * People with `fact_capacity` for the month (same scope as rollups, including URL filters).
-   */
-  headcountTotal: number
 }
 
 export async function loadTeamMonthKpis(
@@ -138,7 +134,6 @@ export async function loadTeamMonthKpis(
       utilizationOrgPct,
       utilizationPaceAvgPct,
       billableEfficiencyPct,
-      headcountTotal: overview.capacityHeadcount,
     },
     error: null,
   }

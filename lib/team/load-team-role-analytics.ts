@@ -22,6 +22,7 @@ import {
 } from '@/lib/team/team-elapsed-pace-context'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import type { Database } from '@/lib/supabase/database.types'
+import { fetchMonthRolesForPeople } from '@/lib/team/team-month-role'
 
 const PAGE = 1000
 const DIM_BATCH = 200
@@ -63,8 +64,8 @@ function keepPerson(personIdFilter: Set<string> | null, pid: string): boolean {
 }
 
 /**
- * Role-level aggregates for `/team` analytics (D1–D3). Same snapshot/month and worklog
- * upper bound as `loadWeeklyOverview`; respects optional person filter.
+ * Role-level aggregates for `/team` analytics (D1–D3). Roster from `fact_capacity`;
+ * grouping by month role from stamped `role_id` on bench → plans → worklogs.
  */
 export async function loadTeamRoleAnalytics(
   supabase: SupabaseClient<Database>,
@@ -187,17 +188,23 @@ export async function loadTeamRoleAnalytics(
       return { data: [], error: null }
     }
 
-    const personRoleId = new Map<string, string | null>()
+    const { roleByPerson, error: roleMapErr } = await fetchMonthRolesForPeople(supabase, {
+      snapshotId,
+      monthStartStr,
+      monthEndStr,
+      personIds: capacityPersonIds,
+    })
+    if (roleMapErr) return { data: [], error: roleMapErr }
+
     const personZoneId = new Map<string, string | null>()
     for (let i = 0; i < capacityPersonIds.length; i += DIM_BATCH) {
       const slice = capacityPersonIds.slice(i, i + DIM_BATCH)
       const { data: people, error: pErr } = await supabase
         .from('dim_person')
-        .select('id, role_id, zone_id')
+        .select('id, zone_id')
         .in('id', slice)
       if (pErr) return { data: [], error: pErr.message }
       for (const row of people ?? []) {
-        personRoleId.set(row.id, row.role_id)
         personZoneId.set(row.id, row.zone_id)
       }
     }
@@ -236,7 +243,7 @@ export async function loadTeamRoleAnalytics(
     }
 
     for (const pid of capacityPersonIds) {
-      const rid = personRoleId.get(pid) ?? null
+      const rid = roleByPerson.get(pid) ?? null
       bump(rid, pid)
       const elapsed = teamPersonElapsedNetWeekdays({
         personId: pid,

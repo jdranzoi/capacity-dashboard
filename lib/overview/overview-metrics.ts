@@ -3,53 +3,46 @@ import type { WeeklyHeadline } from '@/lib/overview/load-weekly-overview'
 
 export const OVERVIEW_METRIC_ROWS = [
   {
-    key: 'netCapacityHours' as const,
-    label: 'Net capacity',
+    key: "netCapacityHours" as const,
+    label: "Net capacity",
     worklog: false,
-    cssVar: '--overview-metric-net' as const,
+    cssVar: "--overview-metric-net" as const,
   },
   {
-    key: 'plannedHours' as const,
-    label: 'Planned',
+    key: "plannedHours" as const,
+    label: "Planned",
     worklog: false,
-    cssVar: '--overview-metric-planned' as const,
+    cssVar: "--overview-metric-planned" as const,
   },
   {
-    key: 'availabilityHours' as const,
-    label: 'Availability',
-    worklog: false,
-    cssVar: '--overview-metric-availability' as const,
-  },
-  {
-    key: 'ptoHours' as const,
-    label: 'PTO',
+    key: "ptoHours" as const,
+    label: "PTO",
     worklog: true,
-    cssVar: '--overview-metric-pto' as const,
+    cssVar: "--overview-metric-pto" as const,
   },
   {
-    key: 'billableHours' as const,
-    label: 'Billable',
+    key: "loggedHours" as const,
+    label: "Logged",
     worklog: true,
-    cssVar: '--overview-metric-billable' as const,
+    cssVar: "--overview-metric-logged" as const,
   },
   {
-    key: 'loggedHours' as const,
-    label: 'Logged',
+    key: "billableHours" as const,
+    label: "Billable",
     worklog: true,
-    cssVar: '--overview-metric-logged' as const,
+    cssVar: "--overview-metric-billable" as const,
   },
-] as const
+] as const;
 
 export type OverviewMetricKey = (typeof OVERVIEW_METRIC_ROWS)[number]['key']
 
 /** Bars in the weekly evolution chart (logged is drawn as a line). */
 export const OVERVIEW_CHART_BAR_KEYS = [
-  'netCapacityHours',
-  'plannedHours',
-  'availabilityHours',
-  'ptoHours',
-  'billableHours',
-] as const satisfies readonly OverviewMetricKey[]
+  "netCapacityHours",
+  "plannedHours",
+  "ptoHours",
+  "billableHours",
+] as const satisfies readonly OverviewMetricKey[];
 
 export function sumMetricTotals(
   weeks: WeeklyHeadline[],

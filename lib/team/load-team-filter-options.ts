@@ -1,6 +1,7 @@
 import { endOfMonth, format, parse } from 'date-fns'
 
 import { createServiceClientCached } from '@/lib/supabase/server'
+import { fetchMonthRolesForPeople } from '@/lib/team/team-month-role'
 
 const PAGE = 1000
 
@@ -56,20 +57,31 @@ export async function loadTeamFilterOptions(
     if (capErr) return { data: null, error: capErr }
 
     const capacityPersonIds = new Set(capRows.map((r) => r.person_id))
-    const roleIds = new Set<string>()
-    const zoneIds = new Set<string>()
-
     const personList = Array.from(capacityPersonIds)
+
+    const { roleByPerson, error: roleMapErr } = await fetchMonthRolesForPeople(supabase, {
+      snapshotId,
+      monthStartStr,
+      monthEndStr,
+      personIds: personList,
+    })
+    if (roleMapErr) return { data: null, error: roleMapErr }
+
+    const roleIds = new Set<string>()
+    for (const rid of roleByPerson.values()) {
+      if (rid) roleIds.add(rid)
+    }
+
+    const zoneIds = new Set<string>()
     const BATCH = 200
     for (let i = 0; i < personList.length; i += BATCH) {
       const slice = personList.slice(i, i + BATCH)
       const { data: people, error: pErr } = await supabase
         .from('dim_person')
-        .select('role_id, zone_id')
+        .select('zone_id')
         .in('id', slice)
       if (pErr) return { data: null, error: pErr.message }
       for (const row of people ?? []) {
-        if (row.role_id) roleIds.add(row.role_id)
         if (row.zone_id) zoneIds.add(row.zone_id)
       }
     }

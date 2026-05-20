@@ -159,7 +159,7 @@ function HeadcountByRoleHorizontalChart({
 }) {
   const chartRows = [...rows]
     .filter((r) => r.headcount > 0)
-    .sort((a, b) => b.headcount - a.headcount)
+    .sort((a, b) => a.roleLabel.localeCompare(b.roleLabel, 'en', { sensitivity: 'base' }))
 
   if (chartRows.length === 0) {
     return (
@@ -249,9 +249,9 @@ export function TeamAnalyticsGrid({
       >
         <p className="text-sm font-medium text-foreground">Utilization by role</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Logged ÷ net capacity per role (same MTD cap as overview).{' '}
-          <span className="text-foreground/80">Headcount by role</span> sits beside this card. Bar
-          length is absolute % (100% fills the track; values over 100% fill completely).
+          Planning roster grouped by month role (from worklogs, set at month start). Pace and
+          capacity-fill use the same MTD cap as overview.{' '}
+          <span className="text-foreground/80">Headcount by role</span> sits beside this card.
         </p>
         <UtilizationByRoleTable rows={rows} />
       </div>
@@ -263,8 +263,9 @@ export function TeamAnalyticsGrid({
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-foreground">Headcount by role</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              People who have capacity rows in the current Team-filtered set, grouped by role.
-              Values in parentheses are each role&apos;s rounded share of <span className="text-foreground/80">Total</span>.
+              People with capacity rows for the month, grouped by month role (worklog stamp).
+              Parentheses: share of <span className="text-foreground/80">Total</span>. Roster
+              members with 0 logged still count in headcount.
             </p>
           </div>
           <output

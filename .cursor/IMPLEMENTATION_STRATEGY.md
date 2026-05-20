@@ -68,7 +68,7 @@ Goal: align the existing shell and data access with the architecture before buil
 
 **Stage 1 exit criteria:** Overview loads from **v2**; sync indicator reads from the **agreed** sync table; types reflect **v2**; utilization helpers are **C-005-ready** with v2 field names; no new code depends on v1 snapshot tables.
 
-**Stage 1 completed (in-repo):** Overview uses v2 with paged reads. **`/` weekly cards** (`load-weekly-overview.ts`, `prorate-to-weeks.ts`, `weekly-headline-section`): net capacity, planned (excluding `fact_plans.is_pto`), availability from `fact_bench`, PTO and billable/logged from `fact_worklogs` — snapshot facts at latest `sync_snapshot` + `month_date` prorated to ISO weeks by **Mon–Fri**; worklogs capped by `min(month end, sync day, today)`. Details: `CLAUDE.md` section *Overview page (`/`) — weekly metrics*. `SyncStatus` uses `sync_snapshot.created_at`; `getLatestSyncSnapshot` in `lib/data/latest-sync-snapshot.ts`; C-005 comments and `working-days` helpers; dashboard layout server auth guard. Recharts: still Stage 2. Regenerate `database.types` with `pnpm db:types` when the schema drifts.
+**Stage 1 completed (in-repo):** Overview uses v2 with paged reads. **`/` weekly cards** (`load-weekly-overview.ts`, `prorate-to-weeks.ts`, `weekly-headline-section`): net capacity, planned (excluding `fact_plans.is_pto`), PTO and billable/logged from `fact_worklogs` — snapshot facts at latest `sync_snapshot` + `month_date` prorated to ISO weeks by **Mon–Fri**; worklogs capped by `min(month end, sync day, today)`. Details: `CLAUDE.md` section *Overview page (`/`) — weekly metrics*. `SyncStatus` uses `sync_snapshot.created_at`; `getLatestSyncSnapshot` in `lib/data/latest-sync-snapshot.ts`; C-005 comments and `working-days` helpers; dashboard layout server auth guard. Recharts: still Stage 2. Regenerate `database.types` with `pnpm db:types` when the schema drifts.
 
 ---
 
@@ -96,7 +96,6 @@ Shared building blocks to introduce early in Stage 2 (used across routes):
 |--------|---------|-----------------|
 | Net capacity | `fact_capacity` | Org sum of `net_capacity_hours` (by person, + across `source`), prorated Mon–Fri. |
 | Planned | `fact_plans` | `is_pto = false` only, sum `planned_hours`, same proration. |
-| Availability | `fact_bench` | Sum `availability_hours`, same proration. |
 | PTO | `fact_worklogs` | `is_pto` rows, `logged_seconds` → hours by ISO week, worklog date cap. |
 | Billable / Logged | `fact_worklogs` | Non-PTO, seconds → hours, same week buckets. |
 
@@ -161,7 +160,7 @@ Shared building blocks to introduce early in Stage 2 (used across routes):
 **v2 tables (depends on product definition of "flag")**
 
 - If flags are **ingested as facts:** likely a dedicated table or `fact_fragmentation` / metadata — **confirm in C-003** after schema review. `fact_fragmentation` holds pre-computed fragmentation flags; risk tickets might live in another v2 table when available.
-- **`dim_project`:** project names/keys.
+- **`dim_project`:** project names/keys; `project_type` from Jira category via ingestion (**D-011** in `capacity/doc/DECISIONS.md`).
 - **`dim_person`:** owner or assignee if modeled.
 
 **KPIs**
@@ -185,7 +184,7 @@ Shared building blocks to introduce early in Stage 2 (used across routes):
 
 **v2 tables**
 
-- Pipeline rows may map to **`dim_project`** (type, `loe_estimate_hours`) and **`fact_plans`** for monthly planned hours at **latest** `snapshot_id`.
+- Pipeline rows may map to **`dim_project`** (`project_type` from Jira category, `loe_estimate_hours`) and **`fact_plans`** for monthly planned hours at **latest** `snapshot_id`.
 - **`fact_project_actuals`:** cross-check logged vs plan for "impact" stories.
 
 **KPIs**

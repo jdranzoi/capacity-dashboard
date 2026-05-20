@@ -46,13 +46,15 @@ Do not write new dashboard queries against v1 tables.
 | Table | Purpose |
 |---|---|
 | `dim_person` | Team members; carries `role_id FK → dim_role`, `zone_id FK → dim_zone` |
-| `dim_project` | Project registry with type (`build`, `support`, `internal`) |
+| `dim_project` | Project registry; `project_type` is `build` \| `support` \| `internal`, upserted each sync from Jira `projectCategory.name` (**D-011**). Dashboard reads this column — never infer type from `project_key`. |
 | `dim_role` | Controlled role vocabulary: `(id, key, label)` — keys: `fsd`, `fed`, `qa`, `pm`, `tl`, `ux`, `em` |
 | `dim_zone` | Holiday zones: `(id, key, label)` |
 | `dim_holiday` | Company-observed holidays with `zone_id FK → dim_zone` |
 | `dim_date` | Date spine for calendar joins |
 
 **D-021 (formal model):** No denormalized text copies of FK-target values (e.g. dropped `dim_person.role` / `zone` / `team`, `dim_project.client`). Join `dim_role`, `dim_zone`, etc. See `capacity/doc/DECISIONS.md`.
+
+**D-011 (project type):** `dim_project.project_type` and stamped `project_type` on facts come from Jira `projectCategory.name` on each `sync-v2` run (`categoryToType` → upsert `dim_project` → `classifyProject` reads `projectTypeByKey`). PTO is still `project_key = 'HR'`. Do not classify from project key in dashboard loaders.
 
 #### Sync anchor
 
@@ -84,7 +86,7 @@ Write access: `audit_log` only (one row per `/api/chat` call).
 | Fragmentation | `fact_fragmentation`, `fact_plans`, `dim_person`, `dim_project` | role, month, source |
 | Same-period YoY | any fact table | `month_date` range spanning multiple years |
 | Utilization trend (intra-month) | `fact_project_actuals` filtered by `snapshot_id` | project, month |
-| Overview (weekly cards on `/`) | `sync_snapshot`, `fact_capacity`, `fact_plans`, `fact_bench`, `fact_worklogs` | `month_date`, `snapshot_id`, worklog `log_date` (see *Overview page (`/`) — weekly metrics*) |
+| Overview (weekly cards on `/`) | `sync_snapshot`, `fact_capacity`, `fact_plans`, `fact_worklogs` | `month_date`, `snapshot_id`, worklog `log_date` (see *Overview page (`/`) — weekly metrics*) |
 
 **Latest snapshot pattern:** For current-state views, always resolve the latest `snapshot_id` from
 `sync_snapshot` first (ordered by `created_at DESC`, limit 1), then join fact tables on that ID.
@@ -100,7 +102,6 @@ The overview shows one card per **ISO week** (Monday start) that overlaps the **
 |-----|-------------|--------|
 | Net capacity | `fact_capacity` | Latest `sync_snapshot` row; filter `month_date` to the month; sum `net_capacity_hours` by `person_id` (add across `source` if multiple rows per person). **Prorate** the org total to the week: Mon–Fri count in (week `∩` month) / Mon–Fri count in full month. |
 | Planned | `fact_plans` | Same `snapshot_id` and `month_date`. **Exclude** PTO plan lines: `is_pto = false`. Sum `planned_hours` org-wide, same proration as net capacity. |
-| Availability (bench) | `fact_bench` | Same `snapshot_id` and `month_date`. Sum `availability_hours` (treat null as 0), same proration. Cross-checks month-level `net - planned` from ingestion. |
 | PTO | `fact_worklogs` | Rows with `is_pto = true`: sum `logged_seconds` to hours, bucket by `log_date` to the same ISO week. **Upper bound:** calendar **end** of reference month — not the MTD worklog cap (so future-dated PTO rows in `fact_worklogs` count toward their week). Rows still require ingestion. |
 | Billable / Logged | `fact_worklogs` | Non-`is_pto` rows: `billable_seconds` / `logged_seconds` to hours. Uses the MTD/sync worklog date cap below. |
 
@@ -143,7 +144,7 @@ All routes require authentication. No public pages. Session is validated via `@s
 
 | Route | Content |
 |---|---|
-| `/` | Utilization overview: weekly cards (net capacity, planned, availability, PTO, billable, logged) — see *Overview page (`/`) — weekly metrics*; 8-week trend, headline bench/utilization TBD |
+| `/` | Utilization overview: weekly cards (net capacity, planned, PTO, billable, logged) — see *Overview page (`/`) — weekly metrics*; 8-week trend, headline bench/utilization TBD |
 | `/team` | Individual utilization table, role breakdown |
 | `/flags` | Open risk flags, severity, age |
 | `/pipeline` | Deal list with capacity impact estimate |

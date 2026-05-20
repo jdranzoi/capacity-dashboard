@@ -3,7 +3,7 @@
 Passive consumption interface for leadership and account management at **Mira Commerce**.
 Built with Next.js, deployed to Vercel, authenticated via Supabase Auth (Google SSO).
 
-**Status: Phase 3 — in development.** The app shell, auth, and the overview’s **weekly metrics** (net capacity, planned, availability, PTO, billable, logged — v2 + proration) are in place. Remaining: other routes, 8-week chart, `/api/chat` proxy, etc. **How those numbers are defined:** [CLAUDE.md](CLAUDE.md) (*Overview page — weekly metrics*). Build order: [.cursor/IMPLEMENTATION_STRATEGY.md](.cursor/IMPLEMENTATION_STRATEGY.md).
+**Status: Phase 3 — in development.** The app shell, auth, and the overview’s **weekly metrics** (net capacity, planned, PTO, billable, logged — v2 + proration) are in place. Remaining: other routes, 8-week chart, `/api/chat` proxy, etc. **How those numbers are defined:** [CLAUDE.md](CLAUDE.md) (*Overview page — weekly metrics*). Build order: [.cursor/IMPLEMENTATION_STRATEGY.md](.cursor/IMPLEMENTATION_STRATEGY.md).
 
 ---
 

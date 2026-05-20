@@ -94,9 +94,11 @@ export type Database = {
       dim_person: {
         Row: {
           created_at: string | null
+          deactivated_at: string | null
           hire_date: string | null
           id: string
           is_active: boolean
+          jira_account_id: string | null
           name: string
           role_id: string | null
           updated_at: string | null
@@ -104,9 +106,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          deactivated_at?: string | null
           hire_date?: string | null
           id?: string
           is_active?: boolean
+          jira_account_id?: string | null
           name: string
           role_id?: string | null
           updated_at?: string | null
@@ -114,9 +118,11 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          deactivated_at?: string | null
           hire_date?: string | null
           id?: string
           is_active?: boolean
+          jira_account_id?: string | null
           name?: string
           role_id?: string | null
           updated_at?: string | null
@@ -135,6 +141,45 @@ export type Database = {
             columns: ["zone_id"]
             isOneToOne: false
             referencedRelation: "dim_zone"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dim_person_month_role: {
+        Row: {
+          created_at: string
+          month_date: string
+          person_id: string
+          role_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          month_date: string
+          person_id: string
+          role_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          month_date?: string
+          person_id?: string
+          role_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dim_person_month_role_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "dim_person"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dim_person_month_role_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "dim_role"
             referencedColumns: ["id"]
           },
         ]
@@ -301,6 +346,7 @@ export type Database = {
           person_id: string
           pto_days: number
           pto_hours: number
+          role_id: string | null
           snapshot_id: string
           total_working_days: number
           zone_id: string | null
@@ -315,6 +361,7 @@ export type Database = {
           person_id: string
           pto_days?: number
           pto_hours?: number
+          role_id?: string | null
           snapshot_id: string
           total_working_days: number
           zone_id?: string | null
@@ -329,6 +376,7 @@ export type Database = {
           person_id?: string
           pto_days?: number
           pto_hours?: number
+          role_id?: string | null
           snapshot_id?: string
           total_working_days?: number
           zone_id?: string | null
@@ -339,6 +387,13 @@ export type Database = {
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "dim_person"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_capacity_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "dim_role"
             referencedColumns: ["id"]
           },
           {

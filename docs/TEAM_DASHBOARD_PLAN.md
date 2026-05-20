@@ -18,8 +18,8 @@ Charts and cards consume DTOs shaped in loaders using domain functions.
 | --- | --- | --- |
 | Period (month) | `fact_capacity.month_date` / month spine; same pattern as overview (`?month=`) | Reuse or extract `loadOverviewMonthOptions`. |
 | “Current operations” vs “future planning” | Not a first-class schema toggle | Phase 2+: UI-only mode or disabled until product definition. |
-| Filters: role, project, region | `dim_role`, `dim_zone`, `dim_project` + plans/worklogs joins | URL query params; filter in loader. No `team` / `client` text columns — see **D-021** (`capacity/doc/DECISIONS.md`). |
-| KPI cards: net capacity, planned, logged, billable, utilization, billable efficiency, open capacity, PTO | `fact_capacity`, `fact_plans` (`is_pto`), `fact_worklogs`, `fact_bench` | Org-level or filtered rollups; PTO from worklogs with `is_pto = true`. |
+| Filters: role, project, region | `dim_role`, `dim_zone`, `dim_project` + plans/worklogs joins | URL query params; filter in loader. `dim_project.project_type` comes from Jira category at sync (**D-011**). No `team` / `client` text columns — see **D-021** (`capacity/doc/DECISIONS.md`). |
+| KPI cards: net capacity, planned, logged, billable, utilization, billable efficiency, PTO | `fact_capacity`, `fact_plans` (`is_pto`), `fact_worklogs` | Org-level or filtered rollups; PTO from worklogs with `is_pto = true`. |
 | Utilization (multiple surfaces) | Capacity + worklogs + working-day math (overview-aligned) | Reuse `personLoggedUtilizationPct` / C-005 per surface definition. |
 | Skills / demand | **`dim_person` has no skills column**; `dim_project.tech_stack` is project-level | (A) Derive from assigned projects via `fact_plans`, or (B) defer section until a skill dimension exists. |
 | Employment type | **Not in current `dim_person` types** | Placeholder column or hide until ingestion adds field. |
@@ -66,7 +66,16 @@ Suggested components (create incrementally):
 | **4** | Filters (query params) on aggregates + downstream sections | Person scope via `resolveFilteredPersonIds` → `loadWeeklyOverview`. With `?project=`, **Planned / Logged / Billable** (+ utilization & efficiency) use **project-scoped** sums (`load-project-scoped-hours.ts`, same snapshot/month, overview `asOfDate` cap). |
 | **5** | SLOT-D1–D3: role / group aggregates | Group-by in loader; Recharts consistent with overview. |
 | **6** | SLOT-D4 skills or explicit placeholder | **On hold** — product wants historical / longitudinal tracking; revisit after data model review (not current-performance-only). |
-| **7** | SLOT-E: staffing grid by person | Loader: `dim_person` + per-person rollups; TanStack Table + pagination (`components/team/team-staffing-grid.tsx`, `lib/team/load-team-staffing-rows.ts`). |
+| **7** | SLOT-E: staffing grid by person | Loader: `fact_capacity` roster + per-person rollups; TanStack Table + pagination (`components/team/team-staffing-grid.tsx`, `lib/team/load-team-staffing-rows.ts`). |
+
+## Month role and roster (team views)
+
+| Rule | Implementation |
+| --- | --- |
+| **Who is in scope** | `fact_capacity` for selected `month_date` + latest `snapshot_id` (planning roster). Zero-log roster members still appear in the staffing grid. |
+| **Role for grouping / filters** | Stamped `role_id` on snapshot facts (**D-022**): read `fact_bench` → `fact_plans` → `fact_worklogs` via `lib/team/team-month-role.ts` (no `dim_person_month_role` / live `dim_person`). `fact_capacity` has no `role_id`. |
+| **Headcount** | Distinct roster people per month role (not log-only population). |
+| **capacity-mcp** | `ensureMonthRoles()` on sync; facts read `monthRoleMap`; admin can re-stamp a `(person, month)`. |
 
 ## Progress tracker
 

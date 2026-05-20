@@ -31,8 +31,7 @@ function buildKpiSubline(
   key: OverviewMetricKey
 ): ReactNode {
   const net = totals.netCapacityHours
-  const plan = totals.plannedHours
-  const avail = totals.availabilityHours
+  const plan = totals.plannedHours;
   const pto = totals.ptoHours
   const bill = totals.billableHours
   const log = totals.loggedHours
@@ -40,40 +39,33 @@ function buildKpiSubline(
   const muted = 'text-[0.7rem] leading-snug text-muted-foreground'
 
   switch (key) {
-    case 'netCapacityHours':
+    case "netCapacityHours":
       if (plan <= 0) {
-        return <p className={muted}>vs Plan —</p>
+        return <p className={muted}>vs Plan —</p>;
       }
-      return (
-        <p className={muted}>vs Plan {fmtHoursKpi(plan)}</p>
-      )
-    case 'plannedHours':
+      return <p className={muted}>vs Plan {fmtHoursKpi(plan)}</p>;
+    case "plannedHours":
       if (net <= 0) {
-        return <p className={muted}>vs Cap —</p>
+        return <p className={muted}>vs Cap —</p>;
       }
-      return <p className={muted}>vs Cap {fmtHoursKpi(net)}</p>
-    case 'availabilityHours':
+      return <p className={muted}>vs Cap {fmtHoursKpi(net)}</p>;
+    case "ptoHours":
       if (net <= 0) {
-        return <p className={muted}>vs Cap —</p>
+        return <p className={muted}>vs Cap —</p>;
       }
-      return <p className={muted}>vs Cap {fmtHoursKpi(net)}</p>
-    case 'ptoHours':
-      if (avail <= 0) {
-        return <p className={muted}>vs Avail —</p>
-      }
-      return <p className={muted}>vs Avail {fmtHoursKpi(avail)}</p>
-    case 'billableHours':
+      return <p className={muted}>vs Cap {fmtHoursKpi(net)}</p>;
+    case "loggedHours":
       if (plan <= 0) {
-        return <p className={muted}>vs Planned —</p>
+        return <p className={muted}>vs Planned —</p>;
       }
-      return <p className={muted}>vs Planned {fmtHoursKpi(plan)}</p>
-    case 'loggedHours':
+      return <p className={muted}>vs Planned {fmtHoursKpi(plan)}</p>;
+    case "billableHours":
       if (plan <= 0) {
-        return <p className={muted}>vs Planned —</p>
+        return <p className={muted}>vs Planned —</p>;
       }
-      return <p className={muted}>vs Planned {fmtHoursKpi(plan)}</p>
+      return <p className={muted}>vs Planned {fmtHoursKpi(plan)}</p>;
     default:
-      return null
+      return null;
   }
 }
 
@@ -211,7 +203,7 @@ export function WeeklyHeadlineSection({
         </div>
       </header>
 
-      <div className="grid gap-3 sm:grid-cols-2 sm:items-stretch xl:grid-cols-6">
+      <div className="grid gap-3 sm:grid-cols-2 sm:items-stretch xl:grid-cols-5">
         {OVERVIEW_METRIC_ROWS.map((row) => (
           <div
             key={row.key}
@@ -473,19 +465,17 @@ export function WeeklyHeadlineSection({
 
 function definitionBlurb(key: OverviewMetricKey): string {
   switch (key) {
-    case 'netCapacityHours':
-      return 'Zone-adjusted capacity from the latest snapshot, prorated by Mon–Fri overlap with each ISO week in the month.'
-    case 'plannedHours':
-      return 'Planned hours from the latest snapshot, excluding PTO plan lines; same proration as net capacity.'
-    case 'availabilityHours':
-      return 'Bench availability from the latest snapshot (ingested net capacity minus planned); same proration as capacity rows.'
-    case 'ptoHours':
-      return 'Hours logged as PTO in the reference month (by worklog date through calendar month end).'
-    case 'billableHours':
-      return 'Billable hours from worklogs in scope for the MTD worklog cap (month end, last sync, and today).'
-    case 'loggedHours':
-      return 'Total logged hours from non-PTO worklogs under the same MTD cap as billable.'
+    case "netCapacityHours":
+      return "Zone-adjusted capacity from the latest snapshot, prorated by Mon–Fri overlap with each ISO week in the month.";
+    case "plannedHours":
+      return "Planned hours from the latest snapshot, excluding PTO plan lines; same proration as net capacity.";
+    case "ptoHours":
+      return "Hours logged as PTO in the reference month (by worklog date through calendar month end).";
+    case "loggedHours":
+      return "Total logged hours from non-PTO worklogs under the same MTD cap as billable.";
+    case "billableHours":
+      return "Billable hours from worklogs in scope for the MTD worklog cap (month end, last sync, and today).";
     default:
-      return ''
+      return "";
   }
 }

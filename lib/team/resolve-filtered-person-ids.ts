@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/database.types'
 import type { TeamRouteFilters } from '@/lib/team/team-route-filters'
 import { teamRouteFiltersActive } from '@/lib/team/team-route-filters'
+import { fetchMonthRolesForPeople, personMatchesMonthRole } from '@/lib/team/team-month-role'
 
 const PAGE = 1000
 
@@ -87,7 +88,23 @@ export async function resolveFilteredPersonIds(
     zoneId = data.id
   }
 
-  if (filters.roleKey || filters.zoneKey) {
+  if (filters.roleKey) {
+    const list = Array.from(working)
+    const { roleByPerson, error: roleErr } = await fetchMonthRolesForPeople(supabase, {
+      snapshotId,
+      monthStartStr,
+      monthEndStr,
+      personIds: list,
+    })
+    if (roleErr) return { personIds: null, error: roleErr }
+    const next = new Set<string>()
+    for (const id of list) {
+      if (roleId && personMatchesMonthRole(roleByPerson, id, roleId)) next.add(id)
+    }
+    working = next
+  }
+
+  if (filters.zoneKey) {
     const list = Array.from(working)
     const next = new Set<string>()
     const BATCH = 200
@@ -95,11 +112,10 @@ export async function resolveFilteredPersonIds(
       const slice = list.slice(i, i + BATCH)
       const { data, error } = await supabase
         .from('dim_person')
-        .select('id, role_id, zone_id')
+        .select('id, zone_id')
         .in('id', slice)
       if (error) return { personIds: null, error: error.message }
       for (const row of data ?? []) {
-        if (roleId && row.role_id !== roleId) continue
         if (zoneId && row.zone_id !== zoneId) continue
         next.add(row.id)
       }

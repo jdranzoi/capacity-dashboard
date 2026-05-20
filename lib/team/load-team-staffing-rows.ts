@@ -21,6 +21,7 @@ import {
 } from '@/lib/team/team-elapsed-pace-context'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import type { Database } from '@/lib/supabase/database.types'
+import { fetchMonthRolesForPeople } from '@/lib/team/team-month-role'
 
 const PAGE = 1000
 const DIM_BATCH = 200
@@ -73,6 +74,7 @@ function keepPerson(personIdFilter: Set<string> | null, pid: string): boolean {
  * Person-level staffing rows for `/team` (SLOT-E). Same snapshot month, worklog MTD cap,
  * and optional person filter as `loadTeamRoleAnalytics` / `loadWeeklyOverview`.
  * Row utilization is **pace**: `personLoggedUtilizationPct` with zone holidays and weekday PTO through as-of.
+ * Role label from stamped `role_id` on bench → plans → worklogs (D-022).
  */
 export async function loadTeamStaffingRows(
   supabase: SupabaseClient<Database>,
@@ -250,20 +252,24 @@ export async function loadTeamStaffingRows(
       roleMeta.set(row.id, { label: row.label })
     }
 
-    const personMeta = new Map<string, { name: string; roleId: string | null; zoneId: string | null }>()
+    const { roleByPerson, error: roleMapErr } = await fetchMonthRolesForPeople(supabase, {
+      snapshotId,
+      monthStartStr,
+      monthEndStr,
+      personIds: capacityPersonIds,
+    })
+    if (roleMapErr) return { data: [], error: roleMapErr }
+
+    const personMeta = new Map<string, { name: string; zoneId: string | null }>()
     for (let i = 0; i < capacityPersonIds.length; i += DIM_BATCH) {
       const slice = capacityPersonIds.slice(i, i + DIM_BATCH)
       const { data: people, error: pErr } = await supabase
         .from('dim_person')
-        .select('id, name, role_id, zone_id')
+        .select('id, name, zone_id')
         .in('id', slice)
       if (pErr) return { data: [], error: pErr.message }
       for (const row of people ?? []) {
-        personMeta.set(row.id, {
-          name: row.name,
-          roleId: row.role_id,
-          zoneId: row.zone_id,
-        })
+        personMeta.set(row.id, { name: row.name, zoneId: row.zone_id })
       }
     }
 
@@ -273,8 +279,8 @@ export async function loadTeamStaffingRows(
       const meta = personMeta.get(pid)
       const personName =
         meta?.name != null && meta.name.trim() !== '' ? meta.name.trim() : '—'
-      const roleId = meta?.roleId ?? null
-      const roleLabel = roleId ? (roleMeta.get(roleId)?.label ?? '—') : '—'
+      const monthRoleId = roleByPerson.get(pid) ?? null
+      const roleLabel = monthRoleId ? (roleMeta.get(monthRoleId)?.label ?? '—') : 'Unassigned'
 
       const netRaw = capByPerson.get(pid) ?? 0
       const plannedRaw = plannedByPerson.get(pid) ?? 0

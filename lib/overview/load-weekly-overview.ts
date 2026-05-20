@@ -37,8 +37,6 @@ export type WeeklyHeadline = {
   netCapacityHours: number
   /** Prorated from `fact_plans` (is_pto = false), latest sync. */
   plannedHours: number
-  /** Remaining capacity (bench): prorated from `fact_bench.availability_hours`, latest sync. */
-  availabilityHours: number
   /** From `fact_worklogs` where is_pto = true; sums through calendar month end (not the MTD worklog cap). */
   ptoHours: number
   billableHours: number
@@ -50,8 +48,6 @@ export type OrgMonthRollupHours = {
   netCapacityHours: number
   /** Non-PTO `fact_plans` hours for org. */
   plannedHours: number
-  /** `fact_bench.availability_hours` org sum. */
-  availabilityHours: number
   /** Non-PTO worklogs summed through overview MTD cap (`asOf`). */
   loggedHoursMtd: number
   /** Billable slice of non-PTO worklogs through same cap. */
@@ -69,7 +65,7 @@ export type WeeklyOverviewData = {
   syncCreatedAt: string | null
   /**
    * Org-level sums for headline KPIs — same ingestion rules as overview weekly cards
-   * (capacity/planned/bench = full month snapshot facts; logged/billable = MTD `asOfDate`;
+   * (capacity/planned = full month snapshot facts; logged/billable = MTD `asOfDate`;
    * PTO through calendar month end).
    */
   orgMonthRollupHours: OrgMonthRollupHours | null
@@ -189,7 +185,6 @@ export async function loadWeeklyOverview(
           weekStart: wk,
           netCapacityHours: 0,
           plannedHours: 0,
-          availabilityHours: 0,
           ptoHours: 0,
           billableHours: 0,
           loggedHours: 0,
@@ -198,7 +193,6 @@ export async function loadWeeklyOverview(
       const zeros: OrgMonthRollupHours = {
         netCapacityHours: 0,
         plannedHours: 0,
-        availabilityHours: 0,
         loggedHoursMtd: 0,
         billableHoursMtd: 0,
         ptoHoursMonth: 0,
@@ -218,7 +212,7 @@ export async function loadWeeklyOverview(
 
     const supabase = createServiceClientCached()
 
-    const [capRes, planRes, benchRes, wlRes, ptoWlRes, holidayRes] = await Promise.all([
+    const [capRes, planRes, wlRes, ptoWlRes, holidayRes] = await Promise.all([
       pagedQuery<{ person_id: string; net_capacity_hours: number }>(async (from) =>
         supabase
           .from('fact_capacity')
@@ -236,14 +230,6 @@ export async function loadWeeklyOverview(
           .eq('month_date', monthStartStr)
           .eq('is_pto', false)
           .order('person_id')
-          .range(from, from + PAGE - 1)
-      ),
-      pagedQuery<{ person_id: string; availability_hours: number | null }>(async (from) =>
-        supabase
-          .from('fact_bench')
-          .select('person_id, availability_hours')
-          .eq('snapshot_id', snapshotId)
-          .eq('month_date', monthStartStr)
           .range(from, from + PAGE - 1)
       ),
       pagedQuery<{
@@ -292,9 +278,6 @@ export async function loadWeeklyOverview(
     if (planRes.error) {
       return { ...empty, error: `Could not load fact_plans: ${planRes.error}` }
     }
-    if (benchRes.error) {
-      return { ...empty, error: `Could not load fact_bench: ${benchRes.error}` }
-    }
     if (wlRes.error) {
       return { ...empty, error: `Could not load worklogs: ${wlRes.error}` }
     }
@@ -313,10 +296,6 @@ export async function loadWeeklyOverview(
       personIdFilter == null
         ? planRes.rows
         : planRes.rows.filter((r) => personIdFilter.has(r.person_id))
-    const benchRows =
-      personIdFilter == null
-        ? benchRes.rows
-        : benchRes.rows.filter((r) => personIdFilter.has(r.person_id))
     const wlRows =
       personIdFilter == null
         ? wlRes.rows
@@ -334,11 +313,6 @@ export async function loadWeeklyOverview(
     const totalNetCapacity = Array.from(byPerson.values()).reduce((a, b) => a + b, 0)
 
     const totalPlanned = planRows.reduce((s, r) => s + Number(r.planned_hours ?? 0), 0)
-
-    const totalAvailability = benchRows.reduce(
-      (s, r) => s + Number(r.availability_hours ?? 0),
-      0
-    )
 
     const eligibleWeekdaysThroughAsOf = weekdayDateStringsMonthThrough(
       _referenceDate,
@@ -422,7 +396,6 @@ export async function loadWeeklyOverview(
     const orgMonthRollupHours: OrgMonthRollupHours = {
       netCapacityHours: roundDisplayStat(totalNetCapacity),
       plannedHours: roundDisplayStat(totalPlanned),
-      availabilityHours: roundDisplayStat(totalAvailability),
       loggedHoursMtd: roundDisplayStat(loggedHoursOrgTotal),
       billableHoursMtd: roundDisplayStat(billableHoursOrgTotal),
       ptoHoursMonth: roundDisplayStat(ptoHoursOrgTotal),
@@ -455,7 +428,6 @@ export async function loadWeeklyOverview(
         weekStart: wk,
         netCapacityHours: roundDisplayStat(totalNetCapacity * w),
         plannedHours: roundDisplayStat(totalPlanned * w),
-        availabilityHours: roundDisplayStat(totalAvailability * w),
         ptoHours: roundDisplayStat(byWeekPto.get(wk) ?? 0),
         billableHours: roundDisplayStat(b.billable),
         loggedHours: roundDisplayStat(b.logged),

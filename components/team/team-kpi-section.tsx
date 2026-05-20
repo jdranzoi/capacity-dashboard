@@ -1,5 +1,5 @@
 import type { TeamMonthKpisPayload } from "@/lib/team/load-team-month-kpis";
-import { fmtHeadcountKpi, fmtHoursKpi, fmtPct } from "@/lib/overview/overview-metrics";
+import { fmtHoursKpi, fmtPct } from "@/lib/overview/overview-metrics";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
@@ -37,8 +37,7 @@ function KpiCard({
 }
 
 export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
-  const { rollupHours: r, asOfDate, headcountTotal, projectScopedHours: scoped } =
-    kpis;
+  const { rollupHours: r, asOfDate, projectScopedHours: scoped } = kpis;
   const mtdNote = asOfDate
     ? `Non-PTO worklogs through ${asOfDate}`
     : "Overview worklog bound";
@@ -91,6 +90,11 @@ export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
       footnote: logBillFootnote,
     },
     {
+      title: "PTO impact",
+      value: fmtHoursKpi(r.ptoHoursMonth),
+      footnote: "PTO logs through calendar month end",
+    },
+    {
       title: "Capacity fill",
       value: fmtPct(kpis.utilizationOrgPct ?? null),
       footnote: utilizationCapacityFootnote,
@@ -104,21 +108,6 @@ export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
       title: "Billable efficiency",
       value: fmtPct(kpis.billableEfficiencyPct ?? null),
       footnote: efficiencyFootnote,
-    },
-    {
-      title: "Open capacity",
-      value: fmtHoursKpi(r.availabilityHours),
-      footnote: `${snapshotNote}`,
-    },
-    {
-      title: "PTO impact",
-      value: fmtHoursKpi(r.ptoHoursMonth),
-      footnote: "PTO logs through calendar month end",
-    },
-    {
-      title: "Headcount (total)",
-      value: fmtHeadcountKpi(headcountTotal),
-      footnote: `${snapshotNote}`,
     },
   ];
 
