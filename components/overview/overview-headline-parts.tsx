@@ -20,6 +20,10 @@ import {
   type OverviewMetricKey,
 } from '@/lib/overview/overview-metrics'
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
+import {
+  KPI_METRICS_GRID_CLASS,
+  KpiMetricCard,
+} from "@/components/dashboard/kpi-metric-card";
 import { cn } from '@/lib/utils'
 import { addDays, format, parseISO } from 'date-fns'
 import { Download } from 'lucide-react'
@@ -54,22 +58,6 @@ function buildKpiSubline(
   }
 }
 
-function FutureSlot({ label, className }: { label: string; className?: string }) {
-  return (
-    <div
-      className={cn(
-        'flex h-full min-h-0 flex-col rounded-xl border border-dashed border-border bg-muted/10 p-4 text-xs text-muted-foreground',
-        className
-      )}
-    >
-      <span className="shrink-0 font-medium tracking-tight text-foreground/85">{label}</span>
-      <span className="mt-2 flex-1 text-[0.7rem] leading-snug">
-        Reserved for a future release.
-      </span>
-    </div>
-  )
-}
-
 export function OverviewPageTitle() {
   return (
     <div>
@@ -100,7 +88,6 @@ export function OverviewToolbarPanel({
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-        <FutureSlot label="Compare with" className="min-w-[200px] flex-1 py-2.5 lg:flex-none" />
         <Button
           type="button"
           variant="outline"
@@ -114,29 +101,7 @@ export function OverviewToolbarPanel({
         </Button>
       </div>
     </div>
-  )
-}
-
-export function OverviewSubtitle({
-  monthLabel,
-  snapshotId,
-}: {
-  monthLabel: string
-  snapshotId: string | null
-}) {
-  return (
-    <p className="mt-1 text-sm text-muted-foreground">
-      <span>Weekly view — {monthLabel}</span>
-      {snapshotId ? (
-        <>
-          <span className="mx-2 text-border">·</span>
-          <span className="font-mono text-xs text-muted-foreground/95">
-            Snapshot {snapshotId}
-          </span>
-        </>
-      ) : null}
-    </p>
-  )
+  );
 }
 
 export function OverviewKpiCards({ weeks }: { weeks: WeeklyHeadline[] }) {
@@ -145,24 +110,18 @@ export function OverviewKpiCards({ weeks }: { weeks: WeeklyHeadline[] }) {
   ) as Record<OverviewMetricKey, number>
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 sm:items-stretch xl:grid-cols-5">
+    <div className={KPI_METRICS_GRID_CLASS}>
       {OVERVIEW_METRIC_ROWS.map((row) => (
-        <div
+        <KpiMetricCard
           key={row.key}
-          className="flex h-full min-h-0 flex-col rounded-xl bg-card p-3 text-card-foreground ring-1 ring-foreground/10"
-        >
-          <p className="text-xs font-medium text-muted-foreground">{row.label} (MTD)</p>
-          <p
-            className="mt-1 text-lg font-semibold tabular-nums tracking-tight"
-            style={{ color: `var(${row.cssVar})` }}
-          >
-            {fmtHoursKpi(totals[row.key])}
-          </p>
-          {buildKpiSubline(totals, row.key)}
-        </div>
+          label={`${row.label} (MTD)`}
+          value={fmtHoursKpi(totals[row.key])}
+          valueColorVar={row.cssVar}
+          subline={buildKpiSubline(totals, row.key)}
+        />
       ))}
     </div>
-  )
+  );
 }
 
 export function OverviewChartsRow({
@@ -186,11 +145,11 @@ export function OverviewChartsRow({
   )
 
   return (
-    <div className="grid gap-4 lg:grid-cols-12 lg:items-stretch lg:min-h-[min(28rem,52vh)]">
-      <div className="h-full min-h-0 lg:col-span-4">
+    <div className="grid gap-4 lg:grid-cols-3 lg:items-stretch lg:min-h-[min(28rem,52vh)]">
+      <div className="h-full min-h-0">
         <WeeklyEvolutionChart weeks={weeks} className="h-full" />
       </div>
-      <div className="h-full min-h-0 lg:col-span-3">
+      <div className="h-full min-h-0">
         <CapacityUsageDonuts
           net={totals.netCapacityHours}
           planned={totals.plannedHours}
@@ -199,7 +158,7 @@ export function OverviewChartsRow({
           className="h-full"
         />
       </div>
-      <div className="flex h-full min-h-0 lg:col-span-3">
+      <div className="flex h-full min-h-0">
         <WorkloadGauges
           planned={totals.plannedHours}
           billable={totals.billableHours}
@@ -208,11 +167,8 @@ export function OverviewChartsRow({
           className="h-full w-full"
         />
       </div>
-      <div className="h-full min-h-0 lg:col-span-2">
-        <FutureSlot label="Filters" className="h-full min-h-[12rem] lg:min-h-0" />
-      </div>
     </div>
-  )
+  );
 }
 
 function definitionBlurb(key: OverviewMetricKey): string {

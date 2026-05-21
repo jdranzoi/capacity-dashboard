@@ -13,8 +13,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Capacity Dashboard — Mira Commerce',
-  description: 'Engineering capacity management for Mira Commerce',
+  title: "Workforce Intelligence — Mira Commerce",
+  description: "Engineering management for Mira Commerce",
 };
 
 export default function RootLayout({

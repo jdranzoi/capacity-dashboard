@@ -7,9 +7,9 @@ export function TeamStaticHeader({ referenceMonthLabel }: { referenceMonthLabel?
       data-slot="team-header"
     >
       <div className="space-y-1">
-        <h1 className="text-xl font-semibold tracking-tight">Team</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Teams</h1>
         <p className="text-sm text-muted-foreground">
-          Workforce utilization and staffing
+          Team utilization and staffing
           {referenceMonthLabel ? ` — ${referenceMonthLabel}` : ''}
         </p>
       </div>

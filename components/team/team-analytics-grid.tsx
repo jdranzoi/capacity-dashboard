@@ -4,16 +4,6 @@ import { fmtHeadcountKpi, fmtHoursKpi, fmtPct } from '@/lib/overview/overview-me
 import type { TeamRoleAnalyticsRow } from '@/lib/team/load-team-role-analytics'
 import { utilizationLoggedVsCapacityBarStyles, utilizationLoggedVsCapacityCellStyle } from '@/lib/team/team-utilization-tone'
 
-const SEGMENT_OPACITIES = [0.22, 0.34, 0.46, 0.58, 0.7] as const
-
-function segmentStyle(i: number): { opacity: number } {
-  return { opacity: SEGMENT_OPACITIES[i % SEGMENT_OPACITIES.length] }
-}
-
-function roundPct(n: number): number {
-  return Math.round(n)
-}
-
 function UtilizationByRoleTable({ rows }: { rows: TeamRoleAnalyticsRow[] }) {
   if (rows.length === 0) {
     return (
@@ -92,54 +82,6 @@ function UtilizationByRoleTable({ rows }: { rows: TeamRoleAnalyticsRow[] }) {
           ))}
         </tbody>
       </table>
-    </div>
-  )
-}
-
-function CapacityShareBar({ rows }: { rows: TeamRoleAnalyticsRow[] }) {
-  const total = rows.reduce((s, r) => s + r.netCapacityHours, 0)
-  if (total <= 0) {
-    return (
-      <p className="mt-3 text-xs text-muted-foreground">No net capacity in scope to chart.</p>
-    )
-  }
-
-  return (
-    <div className="mt-3 space-y-3">
-      <div
-        className="flex h-8 w-full overflow-hidden rounded-lg ring-1 ring-foreground/10"
-        role="img"
-        aria-label="Net capacity share by role"
-      >
-        {rows.map((r, i) => {
-          const pct = (r.netCapacityHours / total) * 100
-          if (pct <= 0) return null
-          return (
-            <div
-              key={r.roleId ?? `seg-${r.roleKey}`}
-              title={`${r.roleLabel}: ${fmtHoursKpi(r.netCapacityHours)} (${roundPct(pct)}%)`}
-              className="h-full min-w-px bg-foreground"
-              style={{ ...segmentStyle(i), width: `${pct}%` }}
-            />
-          )
-        })}
-      </div>
-      <ul className="grid gap-1.5 text-[10px] text-muted-foreground sm:grid-cols-2">
-        {rows.map((r, i) => {
-          const pct = total > 0 ? (r.netCapacityHours / total) * 100 : 0
-          return (
-            <li key={r.roleId ?? `leg-${r.roleKey}`} className="flex items-center gap-2">
-              <span
-                className="h-2.5 w-2.5 shrink-0 rounded-sm bg-foreground"
-                style={segmentStyle(i)}
-              />
-              <span className="min-w-0 truncate">
-                {r.roleLabel} — {fmtHoursKpi(r.netCapacityHours)} ({roundPct(pct)}%)
-              </span>
-            </li>
-          )
-        })}
-      </ul>
     </div>
   )
 }
@@ -236,7 +178,7 @@ export function TeamAnalyticsGrid({
   staffingSlot,
 }: {
   rows: TeamRoleAnalyticsRow[]
-  /** Full-width staffing table between utilization/headcount row and capacity distribution. */
+  /** Full-width staffing grid below utilization and headcount cards. */
   staffingSlot?: ReactNode
 }) {
   const headcountTotalInScope = rows.reduce((s, r) => s + r.headcount, 0)
@@ -250,8 +192,7 @@ export function TeamAnalyticsGrid({
         <p className="text-sm font-medium text-foreground">Utilization by role</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Planning roster grouped by month role (from worklogs, set at month start). Pace and
-          capacity-fill use the same MTD cap as overview.{' '}
-          <span className="text-foreground/80">Headcount by role</span> sits beside this card.
+          capacity-fill use the same MTD cap as overview.
         </p>
         <UtilizationByRoleTable rows={rows} />
       </div>
@@ -297,26 +238,6 @@ export function TeamAnalyticsGrid({
           {staffingSlot}
         </div>
       ) : null}
-      <div
-        className="flex min-h-72 flex-col rounded-xl border border-border bg-card/20 p-4 ring-1 ring-foreground/5 lg:col-span-2"
-        data-slot="team-analytics-d3"
-      >
-        <p className="text-sm font-medium text-foreground">Capacity distribution</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Share of net capacity hours by role (snapshot month).
-        </p>
-        <CapacityShareBar rows={rows} />
-      </div>
-      <div
-        className="flex min-h-48 flex-col rounded-xl border border-border bg-card/20 p-4 ring-1 ring-foreground/5 lg:col-span-2"
-        data-slot="team-analytics-d4-placeholder"
-      >
-        <p className="text-sm font-medium text-foreground">Skills metrics</p>
-        <p className="mt-3 text-xs text-muted-foreground">
-          Phase 6 on hold pending historical tracking semantics and schema decisions — no skills dimension on{' '}
-          <span className="font-mono text-[11px]">dim_person</span> today.
-        </p>
-      </div>
     </div>
   )
 }

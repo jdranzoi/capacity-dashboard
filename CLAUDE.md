@@ -1,5 +1,7 @@
 # capacity-dashboard — Project Instructions
 
+**Product name:** Workforce Intelligence (Engineering Operations Intelligence Platform).
+
 ## What this repo is
 
 Passive consumption interface for leadership and account management.
@@ -140,15 +142,53 @@ Use `app_metadata` (not `user_metadata`) — it is immutable by the authenticate
 
 All routes require authentication. No public pages. Session is validated via `@supabase/ssr` middleware.
 
-## Core views (Phase 3)
+## Platform roadmap and resume point
+
+**Before building or extending a section, read:**
+
+| Doc | Purpose |
+|---|---|
+| [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) | **Resume here** — current phase, next subplan, route/code mapping |
+| [docs/PLAN_MASTER.md](docs/PLAN_MASTER.md) | Master plan SP-0–SP-7: scope, data availability, implementation steps |
+| [docs/NAVIGATION_FUNCTIONAL.md](docs/NAVIGATION_FUNCTIONAL.md) | IA spec: Level 1/2 nav, mental model, role access, Phase 2 items |
+
+**Implementation order:** SP-0 (navigation) is the hard dependency for all Phase 1 sections. Do not add new top-level routes outside the target structure without updating these docs.
+
+**Next milestone:** SP-1 / SP-3 / SP-4 — extend Overview; split People vs Teams content (SP-0 navigation is done).
+
+## Navigation (target) vs routes (today)
+
+Each Level 1 section answers one question (see `NAVIGATION_FUNCTIONAL.md`).
+
+| Section | Question | Target route | Phase |
+|---|---|---|---|
+| Overview | How healthy is the org? | `/` | 1 |
+| Capacity | Can we absorb work? | `/capacity` | 1 |
+| People | Who is overloaded? | `/people` | 1 |
+| Teams | Which teams are healthy? | `/teams` | 1 |
+| Projects | Which deliveries are at risk? | `/projects` | 1 |
+| Insights | What requires intervention today? | — | 2 (deactivated; `/flags` is proto) |
+| Reports | What does the trend look like historically? | — | 2 (deactivated) |
+
+**Ask** (`/ask`) is a transversal utility — not a domain. It sits at the bottom of the sidebar, separated from Level 1 items. Calls `/api/chat` (C-004).
+
+**Pipeline (Zoho CRM):** pre-sales data is out of scope for Phase 1; when integrated it becomes part of Projects (see `NAVIGATION_FUNCTIONAL.md`).
+
+### Routes in code (post–SP-0)
 
 | Route | Content |
 |---|---|
-| `/` | Utilization overview: weekly cards (net capacity, planned, PTO, billable, logged) — see *Overview page (`/`) — weekly metrics*; 8-week trend, headline bench/utilization TBD |
-| `/team` | Individual utilization table, role breakdown |
-| `/flags` | Open risk flags, severity, age |
-| `/pipeline` | Deal list with capacity impact estimate |
-| `/ask` | Agent query interface (calls `/api/chat`, returns agent response) |
+| `/` | Overview — weekly cards, KPIs, charts (*Overview page — weekly metrics*) |
+| `/capacity` | Capacity section; Level 2 nav; sub-routes are shells → redirects to `/capacity/overview` |
+| `/people` | People section; Level 2 shells → redirects to `/people/directory` |
+| `/teams` | Teams utilization dashboard (migrated from `/team`) |
+| `/teams/*` | Other Teams sub-sections — placeholders until SP-4 |
+| `/projects` | Projects section; Level 2 shells → redirects to `/projects/portfolio` |
+| `/ask` | Agent query interface (sidebar utility) |
+| `/team` | Redirect → `/teams` |
+| `/flags`, `/pipeline` | Redirect → `/` (legacy; SP-6 / Zoho future) |
+
+**Navigation config:** `lib/navigation/section-nav-config.ts` · **Sidebar assembly:** `lib/navigation/sidebar-nav-config.ts` · Level 2 items live in the left sidebar under group headers (Capacity, People, Teams, Projects).
 
 ## Frontend design system
 
@@ -190,7 +230,8 @@ The sidebar uses a CSS-variable-driven width transition. State is managed in a R
 - `components/layout/sidebar-context.tsx` — `SidebarProvider` (`'use client'`) + `useSidebar()` hook; persists to `localStorage`
 - `components/layout/sidebar.tsx` — reads `useSidebar()`; width driven by `--sidebar-w` / `--sidebar-w-collapsed` vars; labels fade out when collapsed; toggle button lives at sidebar bottom
 - `app/(dashboard)/layout.tsx` — wraps children in `SidebarProvider`; provider is the only client boundary in the layout shell
-- CSS vars: `--sidebar-w: 220px`, `--sidebar-w-collapsed: 52px`, transition `180ms cubic-bezier(0.4,0,0.2,1)`
+- CSS vars: `--sidebar-w: 240px`, `--sidebar-w-collapsed: 52px`, transition `180ms cubic-bezier(0.4,0,0.2,1)`
+- **Vercel-style nav:** Level 1 root list with chevrons; Level 2 drill-in when inside a domain (`resolveActiveSidebarGroup`). Back control returns to root nav (Overview).
 
 The `Header` and all page content remain Server Components — they are passed as `{children}` props through the client provider, not rendered inside it.
 
@@ -226,7 +267,7 @@ Internal formulas may use floating-point until the display boundary; contracts s
 - Use `data-slot` attributes on compound component parts so parent selectors can target them.
 - `@container` queries for card-internal responsive layouts (already established in `components/ui/card.tsx`).
 - Skeleton states use `components/ui/skeleton.tsx` — do not add new loading primitives.
-- New page-level data components go in `components/<route-name>/` mirroring the app route (e.g. `components/team/`).
+- New page-level data components go in `components/<section>/` mirroring the app route (e.g. `components/overview/`, `components/people/`, `components/teams/`). During SP-0 migration, `components/team/` remains until People/Teams split is done.
 
 ## Security rules (non-negotiable)
 

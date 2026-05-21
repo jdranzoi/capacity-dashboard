@@ -1,8 +1,12 @@
 # capacity-dashboard — implementation strategy
 
+> **Superseded for navigation and Phase 1 sequencing** by [docs/PLAN_MASTER.md](../docs/PLAN_MASTER.md) and [docs/PROJECT_STATUS.md](../docs/PROJECT_STATUS.md). Use this file for Stage 1 v2 migration history and per-route data notes; use the master plan for what to build next.
+
 This document turns `CLAUDE.md` into an ordered plan. It is split into two stages: **refactor in place** first, then **feature-complete each route** with v2 data, UI, and contracts.
 
 **Authoritative rules:** `CLAUDE.md` (D-009, D-018, D-019), `capacity/doc/CONTRACTS.md` (C-003, C-004, C-005), `capacity/doc/DECISIONS.md`.
+
+**Current next step:** SP-0 navigation ([PLAN_MASTER.md § SP-0](../docs/PLAN_MASTER.md#sp-0--navigation-architecture)).
 
 ---
 

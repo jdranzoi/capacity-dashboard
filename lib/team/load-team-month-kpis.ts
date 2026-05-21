@@ -1,6 +1,11 @@
 import { endOfMonth, format, parse } from 'date-fns'
 
 import {
+  filterRowsByPerson,
+  filterWorklogsThrough,
+  getMonthFactBundle,
+} from '@/lib/data/load-month-fact-bundle'
+import {
   billableVersusLoggedEfficiencyPct,
   overviewWeeklyLoggedUtilizationPct,
 } from '@/lib/domain/workload-metrics'
@@ -13,6 +18,10 @@ import {
   loadProjectScopedHours,
   type ProjectScopedHours,
 } from '@/lib/team/load-project-scoped-hours'
+import {
+  loadProjectTypeById,
+  sumLoggedHoursByProjectType,
+} from '@/lib/team/sum-logged-hours-by-project-type'
 import type { TeamRouteFilters } from '@/lib/team/team-route-filters'
 
 export type { ProjectScopedHours }
@@ -42,6 +51,10 @@ export type TeamMonthKpisPayload = {
   utilizationPaceAvgPct: number | null
   /** Uses project-scoped billable/logged when `projectScopedHours` is set. */
   billableEfficiencyPct: number | null
+  /** Non-PTO logged hours on `internal` projects (MTD worklog cap). */
+  internalLoggedHoursMtd: number
+  /** Non-PTO logged hours on `build` + `support` projects (MTD worklog cap). */
+  commercialLoggedHoursMtd: number
 }
 
 export async function loadTeamMonthKpis(
@@ -75,7 +88,10 @@ export async function loadTeamMonthKpis(
     }
   }
 
+  const logThroughStr = overview.asOfDate ?? monthEndStr
   let projectScopedHours: ProjectScopedHours | null = null
+  let filteredProjectId: string | null = null
+
   if (routeFilters.projectKey) {
     const { data: projRow, error: projErr } = await supabase
       .from('dim_project')
@@ -85,8 +101,8 @@ export async function loadTeamMonthKpis(
     if (projErr) {
       return { data: null, error: projErr.message }
     }
-    const logThroughStr = overview.asOfDate ?? monthEndStr
     if (projRow?.id) {
+      filteredProjectId = projRow.id
       const scoped = await loadProjectScopedHours(supabase, {
         snapshotId: snapshot.id,
         monthStartStr,
@@ -106,6 +122,38 @@ export async function loadTeamMonthKpis(
       }
     }
   }
+
+  const bundleResult = await getMonthFactBundle(snapshot.id, monthStartStr, monthEndStr)
+  if (bundleResult.error || !bundleResult.data) {
+    return {
+      data: null,
+      error: bundleResult.error
+        ? `Could not load month facts: ${bundleResult.error}`
+        : 'Could not load month facts (unexpected).',
+    }
+  }
+
+  let wlRows = filterWorklogsThrough(
+    filterRowsByPerson(bundleResult.data.worklogs, personIdFilter),
+    logThroughStr
+  )
+  if (filteredProjectId) {
+    wlRows = wlRows.filter((r) => r.project_id === filteredProjectId)
+  }
+
+  const projectIds = wlRows.map((r) => r.project_id)
+  const { data: projectTypeById, error: typeErr } = await loadProjectTypeById(
+    supabase,
+    projectIds
+  )
+  if (typeErr) {
+    return { data: null, error: typeErr }
+  }
+
+  const { internalLoggedHoursMtd, commercialLoggedHoursMtd } = sumLoggedHoursByProjectType(
+    wlRows,
+    projectTypeById
+  )
 
   const loggedForUtil = projectScopedHours?.loggedHoursMtd ?? rollupHours.loggedHoursMtd
   const billableForEff = projectScopedHours?.billableHoursMtd ?? rollupHours.billableHoursMtd
@@ -132,6 +180,8 @@ export async function loadTeamMonthKpis(
       utilizationOrgPct,
       utilizationPaceAvgPct,
       billableEfficiencyPct,
+      internalLoggedHoursMtd,
+      commercialLoggedHoursMtd,
     },
     error: null,
   }

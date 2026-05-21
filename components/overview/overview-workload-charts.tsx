@@ -302,7 +302,7 @@ export function CapacityUsageDonuts({
         <div className="flex w-full max-w-sm flex-col gap-8">
           <Donut
             pct={planVsCap}
-            label="Plan / capacity"
+            label="Capacity Fill"
             primaryCssVar="--overview-metric-planned"
           />
           <MtdUtilizationDonut utilizationAvgPct={mtdUtilizationAvgPct} />

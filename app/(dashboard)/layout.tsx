@@ -3,12 +3,14 @@ import { Header } from '@/components/layout/header'
 import { HeaderSkeleton } from '@/components/layout/header-skeleton'
 import { Sidebar } from '@/components/layout/sidebar'
 import { SidebarEdgeToggle } from '@/components/layout/sidebar-edge-toggle'
+import { NavigationSearchProvider } from '@/components/layout/navigation-search-context'
 import { SidebarProvider } from '@/components/layout/sidebar-context'
 import { ThemeProvider } from '@/components/layout/theme-provider'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
+      <NavigationSearchProvider>
       <SidebarProvider>
         <div className="relative flex h-screen overflow-hidden">
           <Sidebar />
@@ -21,6 +23,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </div>
       </SidebarProvider>
+      </NavigationSearchProvider>
     </ThemeProvider>
   )
 }

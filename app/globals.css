@@ -107,7 +107,7 @@
   --team-headcount-bar: oklch(0.48 0.15 252);
   --team-headcount-bar-label: oklch(0.99 0 0);
   /* sidebar geometry */
-  --sidebar-w: 220px;
+  --sidebar-w: 240px;
   --sidebar-w-collapsed: 52px;
 }
 

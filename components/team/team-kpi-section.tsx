@@ -1,113 +1,105 @@
-import type { TeamMonthKpisPayload } from "@/lib/team/load-team-month-kpis";
-import { fmtHoursKpi, fmtPct } from "@/lib/overview/overview-metrics";
-import { cn } from "@/lib/utils";
-import type { ReactNode } from "react";
+import {
+  KPI_METRICS_GRID_CLASS,
+  KpiMetricCard,
+  KpiMetricSubline,
+} from '@/components/dashboard/kpi-metric-card'
+import type { TeamMonthKpisPayload } from '@/lib/team/load-team-month-kpis'
+import { fmtHoursKpi, fmtPct } from '@/lib/overview/overview-metrics'
+import type { ReactNode } from 'react'
 
-function KpiCard({
-  title,
-  value,
-  footnote,
-  className,
-}: {
-  title: string;
-  value: ReactNode;
-  footnote?: string | null;
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "min-w-36 shrink-0 grow basis-0 rounded-xl border border-border bg-card/30 p-3 ring-1 ring-foreground/5",
-        className,
-      )}
-    >
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-        {title}
-      </p>
-      <div className="mt-2 text-2xl font-semibold tabular-nums tracking-tight">
-        {value}
-      </div>
-      {footnote ? (
-        <p className="mt-2 text-[10px] leading-snug text-muted-foreground">
-          {footnote}
-        </p>
-      ) : null}
-    </div>
-  );
+type TeamKpiItem = {
+  label: string
+  value: ReactNode
+  subline: ReactNode
+  valueColorVar?: string
 }
 
 export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
-  const { rollupHours: r, asOfDate, projectScopedHours: scoped } = kpis;
-  const mtdNote = asOfDate ? `Non-PTO worklogs` : "Overview worklog bound";
-  const snapshotNote = "Snapshot facts for reference month";
-  const plannedHours = scoped?.plannedHours ?? r.plannedHours;
-  const loggedHours = scoped?.loggedHoursMtd ?? r.loggedHoursMtd;
-  const billableHours = scoped?.billableHoursMtd ?? r.billableHoursMtd;
+  const { rollupHours: r, asOfDate, projectScopedHours: scoped } = kpis
+  const mtdNote = asOfDate ? 'Non-PTO worklogs' : 'Overview worklog bound'
+  const snapshotNote = 'Snapshot facts for reference month'
+  const plannedHours = scoped?.plannedHours ?? r.plannedHours
+  const loggedHours = scoped?.loggedHoursMtd ?? r.loggedHoursMtd
+  const billableHours = scoped?.billableHoursMtd ?? r.billableHoursMtd
   const plannedFootnote = scoped
     ? `${snapshotNote} Selected project only (non-PTO plans).`
-    : snapshotNote;
-  const logBillFootnote = scoped
-    ? `${mtdNote} Selected project only.`
-    : mtdNote;
+    : snapshotNote
+  const logBillFootnote = scoped ? `${mtdNote} Selected project only.` : mtdNote
+  const typeFootnote = scoped
+    ? `${mtdNote} Selected project only (by project type).`
+    : 'Non-PTO worklogs by project type (internal vs build + support).'
   const utilizationCapacityFootnote = scoped
-    ? "Logged on selected project / monthly net capacity (filtered people)."
-    : "Logged / Net capacity.";
+    ? 'Logged on selected project / monthly net capacity (filtered people).'
+    : 'Logged / Net capacity.'
   const utilizationPaceFootnote = scoped
-    ? "Mean of people: all non-PTO logs through as-of (not limited to selected project). Elapsed weekdays minus zone holidays and weekday PTO through as-of (8h day)."
-    : "Logged / (elapsed Net Weekdays × 8h). Zone holidays and weekday PTO through worklog as-of.";
+    ? 'Mean of people: all non-PTO logs through as-of (not limited to selected project).'
+    : 'Logged / (elapsed Net Weekdays × 8h). Zone holidays and weekday PTO through worklog as-of.'
   const efficiencyFootnote =
     kpis.billableEfficiencyPct === null
-      ? "— when logged hours are zero"
+      ? '— when logged hours are zero'
       : scoped
         ? `${mtdNote} Selected project only.`
-        : mtdNote;
+        : mtdNote
 
-  const items: {
-    title: string;
-    value: ReactNode;
-    footnote: string;
-  }[] = [
+  const items: TeamKpiItem[] = [
     {
-      title: "Net capacity",
+      label: 'Net capacity (MTD)',
       value: fmtHoursKpi(r.netCapacityHours),
-      footnote: snapshotNote,
+      valueColorVar: '--overview-metric-net',
+      subline: <KpiMetricSubline>{snapshotNote}</KpiMetricSubline>,
     },
     {
-      title: "Planned",
+      label: 'Planned (MTD)',
       value: fmtHoursKpi(plannedHours),
-      footnote: plannedFootnote,
+      valueColorVar: '--overview-metric-planned',
+      subline: <KpiMetricSubline>{plannedFootnote}</KpiMetricSubline>,
     },
     {
-      title: "PTO impact",
+      label: 'PTO (MTD)',
       value: fmtHoursKpi(r.ptoHoursMonth),
-      footnote: "PTO logs",
+      valueColorVar: '--overview-metric-pto',
+      subline: <KpiMetricSubline>PTO worklogs</KpiMetricSubline>,
     },
     {
-      title: "Logged",
+      label: 'Logged (MTD)',
       value: fmtHoursKpi(loggedHours),
-      footnote: logBillFootnote,
+      valueColorVar: '--overview-metric-logged',
+      subline: <KpiMetricSubline>{logBillFootnote}</KpiMetricSubline>,
     },
     {
-      title: "Billable",
+      label: 'Billable (MTD)',
       value: fmtHoursKpi(billableHours),
-      footnote: logBillFootnote,
+      valueColorVar: '--overview-metric-billable',
+      subline: <KpiMetricSubline>{logBillFootnote}</KpiMetricSubline>,
     },
     {
-      title: "Capacity fill",
+      label: 'Internal hours (MTD)',
+      value: fmtHoursKpi(kpis.internalLoggedHoursMtd),
+      valueColorVar: '--overview-metric-logged',
+      subline: <KpiMetricSubline>{typeFootnote}</KpiMetricSubline>,
+    },
+    {
+      label: 'Commercial hours (MTD)',
+      value: fmtHoursKpi(kpis.commercialLoggedHoursMtd),
+      valueColorVar: '--overview-metric-billable',
+      subline: <KpiMetricSubline>{typeFootnote}</KpiMetricSubline>,
+    },
+    {
+      label: 'Capacity fill',
       value: fmtPct(kpis.utilizationOrgPct ?? null),
-      footnote: utilizationCapacityFootnote,
+      subline: <KpiMetricSubline>{utilizationCapacityFootnote}</KpiMetricSubline>,
     },
     {
-      title: "Utilization",
+      label: 'Utilization',
       value: fmtPct(kpis.utilizationPaceAvgPct ?? null),
-      footnote: utilizationPaceFootnote,
+      subline: <KpiMetricSubline>{utilizationPaceFootnote}</KpiMetricSubline>,
     },
     {
-      title: "Billable efficiency",
+      label: 'Billable efficiency',
       value: fmtPct(kpis.billableEfficiencyPct ?? null),
-      footnote: efficiencyFootnote,
+      subline: <KpiMetricSubline>{efficiencyFootnote}</KpiMetricSubline>,
     },
-  ];
+  ]
 
   return (
     <section data-slot="team-kpis" aria-labelledby="team-kpis-heading">
@@ -117,16 +109,17 @@ export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
       >
         Current operations
       </h2>
-      <div className="flex flex-nowrap gap-3 overflow-x-auto pb-1 [scrollbar-gutter:stable]">
+      <div className={KPI_METRICS_GRID_CLASS}>
         {items.map((item) => (
-          <KpiCard
-            key={item.title}
-            title={item.title}
+          <KpiMetricCard
+            key={item.label}
+            label={item.label}
             value={item.value}
-            footnote={item.footnote}
+            valueColorVar={item.valueColorVar}
+            subline={item.subline}
           />
         ))}
       </div>
     </section>
-  );
+  )
 }

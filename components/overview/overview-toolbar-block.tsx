@@ -2,10 +2,9 @@ import { connection } from 'next/server'
 
 import {
   OverviewPageTitle,
-  OverviewSubtitle,
   OverviewToolbarPanel,
   overviewRangeLabel,
-} from '@/components/overview/overview-headline-parts'
+} from "@/components/overview/overview-headline-parts";
 import {
   OverviewDataError,
   OverviewEmptyMonths,
@@ -48,7 +47,6 @@ export async function OverviewToolbarBlock({
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div>
           <OverviewPageTitle />
-          <OverviewSubtitle monthLabel={data.monthLabel} snapshotId={data.snapshotId} />
         </div>
       </div>
       <OverviewToolbarPanel
@@ -56,6 +54,6 @@ export async function OverviewToolbarBlock({
         monthPicker={{ options, selectedMonthKey: selected.monthKey }}
       />
     </header>
-  )
+  );
   })
 }

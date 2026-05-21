@@ -69,22 +69,6 @@ function buildKpiSubline(
   }
 }
 
-function FutureSlot({ label, className }: { label: string; className?: string }) {
-  return (
-    <div
-      className={cn(
-        'flex h-full min-h-0 flex-col rounded-xl border border-dashed border-border bg-muted/10 p-4 text-xs text-muted-foreground',
-        className
-      )}
-    >
-      <span className="shrink-0 font-medium tracking-tight text-foreground/85">{label}</span>
-      <span className="mt-2 flex-1 text-[0.7rem] leading-snug">
-        Reserved for a future release.
-      </span>
-    </div>
-  )
-}
-
 export function WeeklyHeadlineSection({
   monthLabel,
   asOfDate,
@@ -184,10 +168,6 @@ export function WeeklyHeadlineSection({
             </p>
           )}
           <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-            <FutureSlot
-              label="Compare with"
-              className="min-w-[200px] flex-1 py-2.5 lg:flex-none"
-            />
             <Button
               type="button"
               variant="outline"
@@ -223,11 +203,11 @@ export function WeeklyHeadlineSection({
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-12 lg:items-stretch lg:min-h-[min(28rem,52vh)]">
-        <div className="h-full min-h-0 lg:col-span-4">
+      <div className="grid gap-4 lg:grid-cols-3 lg:items-stretch lg:min-h-[min(28rem,52vh)]">
+        <div className="h-full min-h-0">
           <WeeklyEvolutionChart weeks={weeks} className="h-full" />
         </div>
-        <div className="h-full min-h-0 lg:col-span-3">
+        <div className="h-full min-h-0">
           <CapacityUsageDonuts
             net={totals.netCapacityHours}
             planned={totals.plannedHours}
@@ -236,19 +216,13 @@ export function WeeklyHeadlineSection({
             className="h-full"
           />
         </div>
-        <div className="flex h-full min-h-0 lg:col-span-3">
+        <div className="flex h-full min-h-0">
           <WorkloadGauges
             planned={totals.plannedHours}
             billable={totals.billableHours}
             productivityPct={productivityPct}
             efficiencyPct={efficiencyPct}
             className="h-full w-full"
-          />
-        </div>
-        <div className="h-full min-h-0 lg:col-span-2">
-          <FutureSlot
-            label="Filters"
-            className="h-full min-h-[12rem] lg:min-h-0"
           />
         </div>
       </div>
