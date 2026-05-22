@@ -2,7 +2,6 @@ import { cn } from '@/lib/utils'
 import { dashboardSurfaceClass } from '@/lib/ui/dashboard-surface'
 import type { CSSProperties, ReactNode } from 'react'
 
-/** Shared KPI row grid — matches overview `OverviewKpiCards` (5 columns on xl). */
 export const KPI_METRICS_GRID_CLASS =
   'grid gap-3 sm:grid-cols-2 sm:items-stretch xl:grid-cols-5'
 
@@ -13,23 +12,22 @@ export function KpiMetricCard({
   valueColorVar,
   className,
 }: {
-  label: string
-  value: ReactNode
-  subline?: ReactNode
-  /** e.g. `--overview-metric-net` — applied as `color: var(...)`. */
-  valueColorVar?: string
-  className?: string
+  label: string;
+  value: ReactNode;
+  subline?: ReactNode;
+  valueColorVar?: string;
+  className?: string;
 }) {
   const valueStyle: CSSProperties | undefined = valueColorVar
     ? { color: `var(${valueColorVar})` }
-    : undefined
+    : undefined;
 
   return (
     <div
       className={cn(
-        'flex h-full min-h-0 flex-col',
-        dashboardSurfaceClass('p-3'),
-        className
+        "flex h-full min-h-0 flex-col",
+        dashboardSurfaceClass("p-3"),
+        className,
       )}
     >
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
@@ -41,7 +39,7 @@ export function KpiMetricCard({
       </p>
       {subline}
     </div>
-  )
+  );
 }
 
 export function KpiMetricSubline({ children }: { children: ReactNode }) {

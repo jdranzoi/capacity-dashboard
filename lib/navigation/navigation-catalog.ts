@@ -92,14 +92,7 @@ export const NAV_DOMAINS: NavigationDomainConfig[] = [
         'Capacity',
         'Planning',
         '/capacity/planning',
-        'Future planned allocations. Planned utilization, role allocation, future staffing, monthly planning.'
-      ),
-      domainItem(
-        'Capacity',
-        'Forecast',
-        '/capacity/forecast',
-        'Predictive capacity trends. Future utilization, delivery pressure, saturation forecasting, hiring projections.',
-        'coming-soon'
+        'Planned commitments and capacity outlook. Planned utilization by role and project, monthly planning horizon, coverage gaps.'
       ),
       domainItem(
         'Capacity',

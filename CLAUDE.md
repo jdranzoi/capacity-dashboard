@@ -271,6 +271,32 @@ Internal formulas may use floating-point until the display boundary; contracts s
 - **Entity data tables** must be sortable and filterable per column via TanStack Table + shared `components/ui/data-table/*` (see `.cursor/rules/data-tables.mdc`). Exempt fixed pivot matrices (e.g. Overview weekly detail metrics × weeks).
 - New page-level data components go in `components/<section>/` mirroring the app route (e.g. `components/overview/`, `components/people/`, `components/teams/`). During SP-0 migration, `components/team/` remains until People/Teams split is done.
 
+## Code organisation
+
+### `components/`
+
+| Folder | What lives here |
+|---|---|
+| `components/ui/` | Reusable UI primitives — no business logic, no Supabase calls (e.g. `kpi-metric-card`, `skeleton`, `data-table/*`, `charts`) |
+| `components/layout/` | Layout-level shells: sidebar, header, providers |
+| `components/<section>/` | Section-specific data components mirroring the app route (`overview/`, `capacity/`, `teams/`, `people/`, `projects/`) |
+| `components/<section>/_shared/` | Components shared across sub-routes within a section (e.g. `capacity/_shared/role-analytics-table.tsx`) |
+
+Do not create `components/dashboard/` or any other catch-all folder — reusable UI primitives belong in `components/ui/`. Section-specific components belong in `components/<section>/`.
+
+### `lib/`
+
+The `lib/` tree has four tiers. **Do not mix tiers** — a Supabase loader does not belong in `lib/domain/`; a pure formula does not belong in a section folder.
+
+| Tier | Folder(s) | Rules |
+|---|---|---|
+| **Pure formulas** | `lib/domain/` | No I/O. Cross-section business rules, KPI formulas, KPI contracts. Used by loaders, components, and tests alike. |
+| **Section data layer** | `lib/capacity/`, `lib/overview/`, `lib/teams/` | Supabase loaders and route-scoped aggregations. Mirrored sub-folder structure matches `app/(dashboard)/`. |
+| **Cross-cutting data** | `lib/workforce/`, `lib/data/` | Roster/person logic and shared data infrastructure (snapshot resolution, paged queries, cache tags) used by multiple sections. |
+| **Infrastructure** | `lib/table/`, `lib/format/`, `lib/ui/`, `lib/navigation/`, `lib/supabase/`, `lib/cache/` | No business logic. Framework glue, formatting utilities, navigation config, Supabase client setup. |
+
+**KPI contracts** (e.g. `capacity-kpi-contract.ts`) belong in `lib/domain/` — they are cross-section definitions, not section-specific. Do not place them in a section folder.
+
 ## Security rules (non-negotiable)
 
 - `ANTHROPIC_API_KEY` in Vercel env vars only — never in client bundle

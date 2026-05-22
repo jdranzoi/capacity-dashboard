@@ -228,41 +228,42 @@ Logged, billable, PTO, efficiency, operational saturation — org and by role.
 
 ---
 
-### SP-2.4 — Planning (`/capacity/planning`)
+### SP-2.4 — Planning & Horizon (`/capacity/planning`)
 
 **Question:** Where is capacity committed (now and ahead)?
 
+**SP-2.7 (Forecast) merged into this track.** `/capacity/forecast` redirects here.
+
 #### Metrics
 
-Total planned hours, planned utilization %, roles staffed, projects with plans, plan vs logged gap (when month is current).
+Net capacity, planned hours, planned utilization %, projects with plans, unallocated capacity gap.
 
 #### Charts / tables
 
 | Surface | Type |
 | --- | --- |
-| Planned by role | Horizontal bar |
-| Planned by project | Bar (top N, color by `project_type`) |
-| Plan timeline | Multi-month bar (optional v2 — current + next 2 months) |
+| Planned by role | Horizontal bar (net capacity track + planned bar) |
+| Planned by project | Bar (top 10, color by `project_type`) |
+| Capacity horizon | Multi-month grouped bar (net cap + planned, last 6 months) |
+| Monthly breakdown | Table: month · net cap · planned · coverage % · gap · bench |
 
-#### Loader
+#### Loaders
 
-`lib/capacity/planning/load-capacity-planning.ts` — `fact_plans` at **project grain** joined to `dim_person`, `dim_project`, `dim_role`; denominator from `fact_capacity`.
-
-#### Open product decisions
-
-- [ ] Planning horizon: single month vs current + next 2 months (default TBD)
-- [ ] Planned util. denominator: `net_capacity_hours` vs net minus PTO
+- `lib/capacity/planning/load-capacity-planning.ts` — `fact_plans` at project grain joined to `dim_project`, `dim_role`, `fact_capacity`.
+- `lib/capacity/planning/load-capacity-horizon.ts` — last 6 months from `v_dashboard_month_options`, parallel aggregate queries per month.
 
 #### Components
 
-`components/capacity/planning/capacity-planning-kpi-block.tsx`, `capacity-planning-role-chart.tsx`, `capacity-planning-project-chart.tsx`
+`components/capacity/planning/capacity-planning-kpi-block.tsx`, `capacity-planning-charts-block.tsx` (role + project charts), `capacity-planning-horizon-block.tsx` (timeline + table), `capacity-planning-page.tsx`
 
 #### Checklist
 
-- [ ] **SP-2.4.1** Project-grain plan loader
-- [ ] **SP-2.4.2** KPI row
-- [ ] **SP-2.4.3** Role + project charts
-- [ ] **SP-2.4.4** Wire route
+- [x] **SP-2.4.1** Project-grain plan loader
+- [x] **SP-2.4.2** Multi-month horizon loader
+- [x] **SP-2.4.3** KPI row
+- [x] **SP-2.4.4** Role + project charts
+- [x] **SP-2.4.5** Horizon timeline chart + monthly breakdown table
+- [x] **SP-2.4.6** Wire route; `/capacity/forecast` → redirect
 
 ---
 
@@ -352,21 +353,15 @@ Bench headcount, bench hours, bench rate %, average availability per person.
 
 ---
 
-### SP-2.7 — Forecast & Scenarios
+### SP-2.7 — Scenarios
 
-**Forecast** (`/capacity/forecast`): coming-soon shell in Phase 1. Optional **lite trends** (not predictive): 6-month series of net capacity, planned, logged, bench from historical months via `v_dashboard_month_options`.
+**Forecast merged into SP-2.4 Planning.** `/capacity/forecast` redirects to `/capacity/planning`.
 
 **Scenarios** (`/capacity/scenarios`): stub only — no simulation engine in v2.
 
-#### Forecast loader (optional Phase 1b)
-
-`lib/capacity/forecast/load-capacity-trend-series.ts` — multi-month aggregates; each month resolves its own snapshot.
-
 #### Checklist
 
-- [x] **SP-2.7.1** Forecast coming-soon page
 - [x] **SP-2.7.2** Scenarios coming-soon page
-- [ ] **SP-2.7.3** *(optional)* 6-month trend charts
 
 ---
 
@@ -395,10 +390,10 @@ Update the row for the track you ship. Do not mark other tracks.
 | Foundation | SP-2.0 | Shared filters, month context, `_shared` UI | **Done** |
 | Overview | SP-2.2 | `/capacity/overview` — KPIs, charts, role summary | **Done** |
 | Operations | SP-2.3 | `/capacity/operations` — role breakdown, saturation | Not started |
-| Planning | SP-2.4 | `/capacity/planning` — project-grain plans | Not started |
+| Planning & Horizon | SP-2.4 | `/capacity/planning` — project-grain plans + multi-month horizon | **Done** |
 | Allocations | SP-2.5 | `/capacity/allocations` — allocation grid | Not started |
 | Bench | SP-2.6 | `/capacity/bench` — bench table + role chart | Not started |
-| Forecast | SP-2.7 | `/capacity/forecast` — stub (+ optional trends) | Stub done |
+| Forecast | SP-2.7 | Merged into SP-2.4 Planning. `/capacity/forecast` → redirect | **Done** |
 | Scenarios | SP-2.7 | `/capacity/scenarios` — stub | Stub done |
 
 **Route shells:** SP-0 created placeholder pages under `app/(dashboard)/capacity/*`. Each track replaces its placeholder when its checklist is complete.

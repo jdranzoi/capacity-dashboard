@@ -1,5 +1,5 @@
-import { CapacityComingSoon } from '@/components/capacity/_shared/capacity-coming-soon'
+import { redirect } from 'next/navigation'
 
-export default function Page() {
-  return <CapacityComingSoon href="/capacity/forecast" />
+export default function CapacityForecastPage() {
+  redirect('/capacity/planning')
 }
