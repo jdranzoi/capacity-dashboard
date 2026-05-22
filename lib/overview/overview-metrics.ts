@@ -1,4 +1,4 @@
-import { roundDisplayStat } from '@/lib/format/display-stats'
+import { fmtPct as _fmtPct, roundDisplayStat } from '@/lib/format/display-stats'
 import type { WeeklyHeadline } from '@/lib/overview/load-weekly-overview'
 
 export const OVERVIEW_METRIC_ROWS = [
@@ -69,8 +69,5 @@ export function fmtHeadcountKpi(n: number): string {
   return i.toLocaleString('en-US', { maximumFractionDigits: 0 })
 }
 
-export function fmtPct(n: number | null): string {
-  if (n === null || Number.isNaN(n)) return '—'
-  const i = roundDisplayStat(n)
-  return `${i.toLocaleString('en-US', { maximumFractionDigits: 0 })}%`
-}
+/** @deprecated Import from `lib/format/display-stats` directly. Re-exported for backward compatibility. */
+export const fmtPct = _fmtPct

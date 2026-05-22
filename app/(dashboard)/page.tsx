@@ -8,10 +8,8 @@ import {
   OverviewChartsRowSkeleton,
   OverviewKpiRowSkeleton,
   OverviewToolbarSkeleton,
-  OverviewWeeklyDetailSkeleton,
 } from '@/components/overview/overview-section-skeletons'
 import { OverviewToolbarBlock } from '@/components/overview/overview-toolbar-block'
-import { OverviewWeeklyDetailBlock } from '@/components/overview/overview-weekly-detail-block'
 
 type OverviewPageProps = {
   searchParams: Promise<{ month?: string }>
@@ -39,11 +37,6 @@ export default function OverviewPage({ searchParams }: OverviewPageProps) {
           </OverviewRouteSection>
         </Suspense>
 
-        <Suspense fallback={<OverviewWeeklyDetailSkeleton />}>
-          <OverviewRouteSection fallback={<OverviewWeeklyDetailSkeleton />}>
-            <OverviewWeeklyDetailBlock searchParams={searchParams} />
-          </OverviewRouteSection>
-        </Suspense>
       </section>
     </OverviewRoutePendingShell>
   )

@@ -1,6 +1,6 @@
 import { connection } from 'next/server'
 
-import { OverviewChartsRow } from '@/components/overview/overview-headline-parts'
+import { OverviewChartsAndDetailRow } from '@/components/overview/overview-headline-parts'
 import {
   OverviewDataError,
   OverviewEmptyMonths,
@@ -38,7 +38,7 @@ export async function OverviewChartsBlock({
   }
 
   return (
-    <OverviewChartsRow weeks={data.weeks} utilizationPct={data.utilizationPct} />
+    <OverviewChartsAndDetailRow weeks={data.weeks} asOfDate={data.asOfDate} />
   )
   })
 }

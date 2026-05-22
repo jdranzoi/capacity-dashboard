@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { UtilizationByRoleTable } from '@/components/capacity/utilization/utilization-by-role-table'
+import { RoleAnalyticsTable } from '@/components/capacity/_shared/role-analytics-table'
 import {
   DataSectionPanel,
   DataSectionPanelHeader,
@@ -118,7 +118,7 @@ export function UtilizationAnalyticsGrid({
             </>
           }
         />
-        <UtilizationByRoleTable rows={rows} />
+        <RoleAnalyticsTable rows={rows} wrapperClassName="mt-3" />
       </DataSectionPanel>
 
       <DataSectionPanel className="min-h-72" dataSlot="team-analytics-headcount">

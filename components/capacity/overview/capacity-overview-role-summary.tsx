@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-import { CapacityOverviewRoleTable } from '@/components/capacity/overview/capacity-overview-role-table'
+import { RoleAnalyticsTable } from '@/components/capacity/_shared/role-analytics-table'
 import { dashboardSurfaceClass } from '@/lib/ui/dashboard-surface'
 import type { RoleAnalyticsRow } from '@/lib/capacity/shared/load-role-analytics'
 
@@ -21,7 +21,7 @@ export function CapacityOverviewRoleSummary({
         Capacity fill, utilization, and planned share per role. Sort and filter per column.
       </p>
       <div className="mt-3 min-h-0 flex-1 overflow-hidden">
-        <CapacityOverviewRoleTable rows={rows} />
+        <RoleAnalyticsTable rows={rows} wrapperClassName="h-full" />
       </div>
     </section>
   )

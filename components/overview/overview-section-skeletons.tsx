@@ -42,20 +42,9 @@ export function OverviewKpiRowSkeleton() {
 
 export function OverviewChartsRowSkeleton() {
   return (
-    <div className="grid gap-4 lg:grid-cols-12 lg:items-stretch lg:min-h-[min(28rem,52vh)]">
-      <Skeleton className="h-72 rounded-xl lg:col-span-4" />
-      <Skeleton className="h-72 rounded-xl lg:col-span-3" />
-      <Skeleton className="h-72 rounded-xl lg:col-span-3" />
+    <div className="grid gap-4 lg:grid-cols-3 lg:items-stretch lg:min-h-[min(28rem,52vh)]">
+      <Skeleton className="h-72 rounded-xl" />
       <Skeleton className="h-72 rounded-xl lg:col-span-2" />
-    </div>
-  )
-}
-
-export function OverviewWeeklyDetailSkeleton() {
-  return (
-    <div className="grid gap-4 lg:grid-cols-12 lg:items-stretch lg:min-h-[min(32rem,58vh)]">
-      <Skeleton className="h-80 rounded-xl lg:col-span-7" />
-      <Skeleton className="h-80 rounded-xl lg:col-span-5" />
     </div>
   )
 }
@@ -67,7 +56,6 @@ export function WeeklyHeadlineSkeleton() {
       <OverviewToolbarSkeleton />
       <OverviewKpiRowSkeleton />
       <OverviewChartsRowSkeleton />
-      <OverviewWeeklyDetailSkeleton />
     </div>
   )
 }
