@@ -8,17 +8,21 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  type Column,
   type ColumnFiltersState,
-  type FilterFn,
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table'
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { roundDisplayStat } from '@/lib/format/display-stats'
+import { ColumnFilterInput } from '@/components/ui/data-table/column-filter-input'
+import { SortableHeader } from '@/components/ui/data-table/sortable-header'
 import { fmtHoursKpi, fmtPct } from '@/lib/overview/overview-metrics'
+import {
+  filterNumberContains,
+  filterPctContains,
+  filterTextIncludesCi,
+} from '@/lib/table/table-filter-fns'
+import { compareNullableNumber } from '@/lib/table/table-sort-utils'
 import type { TeamStaffingRow } from '@/lib/team/load-team-staffing-rows'
 import { utilizationLoggedVsCapacityCellStyle } from '@/lib/team/team-utilization-tone'
 import { cn } from '@/lib/utils'
@@ -59,87 +63,7 @@ const FILTER_ARIA_LABEL: Record<string, string> = {
  * Client-side column filters only refine the `rows` payload (already scoped by URL/global
  * loaders). Changing month/filters on the page replaces `rows`; column filters apply on top.
  */
-const filterTextIncludesCi: FilterFn<TeamStaffingRow> = (row, columnId, filterValue) => {
-  const q = String(filterValue ?? '').trim().toLowerCase()
-  if (!q) return true
-  const v = row.getValue(columnId)
-  return String(v ?? '').toLowerCase().includes(q)
-}
-
-const filterHoursContains: FilterFn<TeamStaffingRow> = (row, columnId, filterValue) => {
-  const q = String(filterValue ?? '').trim().toLowerCase()
-  if (!q) return true
-  const n = row.getValue(columnId) as number
-  return String(n).includes(q)
-}
-
-const filterPctContains: FilterFn<TeamStaffingRow> = (row, columnId, filterValue) => {
-  const q = String(filterValue ?? '').trim().toLowerCase().replace(/%/g, '').trim()
-  if (!q) return true
-  const v = row.getValue(columnId) as number | null
-  if (v == null) return false
-  const rounded = String(roundDisplayStat(v))
-  return rounded.includes(q) || fmtPct(v).toLowerCase().includes(q)
-}
-
 const columnHelper = createColumnHelper<TeamStaffingRow>()
-
-function compareNullableNumber(a: number | null, b: number | null): number {
-  if (a == null && b == null) return 0
-  if (a == null) return 1
-  if (b == null) return -1
-  return a - b
-}
-
-function SortableHeader({
-  column,
-  align = 'left',
-  title,
-  children,
-}: {
-  column: Column<TeamStaffingRow, unknown>
-  align?: 'left' | 'right'
-  title?: string
-  children: React.ReactNode
-}) {
-  const sorted = column.getIsSorted()
-  const Icon = sorted === 'desc' ? ArrowDown : sorted === 'asc' ? ArrowUp : ArrowUpDown
-  return (
-    <button
-      type="button"
-      title={title}
-      className={cn(
-        '-mx-1 -my-0.5 inline-flex min-w-0 max-w-full items-center gap-1 rounded px-1 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground',
-        align === 'right' && 'ms-auto flex w-full justify-end text-right'
-      )}
-      onClick={column.getToggleSortingHandler()}
-    >
-      <span className="truncate">{children}</span>
-      <Icon
-        className={cn('size-3 shrink-0 opacity-40', sorted && 'opacity-90')}
-        aria-hidden
-      />
-    </button>
-  )
-}
-
-function ColumnFilterCell({ column }: { column: Column<TeamStaffingRow, unknown> }) {
-  if (!column.getCanFilter()) {
-    return <span className="block h-7 min-h-7" aria-hidden />
-  }
-  const val = (column.getFilterValue() as string) ?? ''
-  const aria = FILTER_ARIA_LABEL[column.id] ?? `Filter column ${column.id}`
-  return (
-    <input
-      type="search"
-      value={val}
-      onChange={(e) => column.setFilterValue(e.target.value || undefined)}
-      className="h-7 w-full min-w-0 rounded-md border border-border bg-background px-2 text-xs text-foreground placeholder:text-muted-foreground"
-      placeholder="Filter…"
-      aria-label={aria}
-    />
-  )
-}
 
 export function TeamStaffingGrid({
   rows,
@@ -181,7 +105,7 @@ export function TeamStaffingGrid({
       }),
       columnHelper.accessor('netCapacityHours', {
         enableColumnFilter: true,
-        filterFn: filterHoursContains,
+        filterFn: filterNumberContains,
         header: ({ column }) => (
           <SortableHeader column={column} align="right">
             Net capacity
@@ -193,7 +117,7 @@ export function TeamStaffingGrid({
       }),
       columnHelper.accessor('plannedHours', {
         enableColumnFilter: true,
-        filterFn: filterHoursContains,
+        filterFn: filterNumberContains,
         header: ({ column }) => (
           <SortableHeader column={column} align="right">
             Planned
@@ -205,7 +129,7 @@ export function TeamStaffingGrid({
       }),
       columnHelper.accessor('ptoHoursMonth', {
         enableColumnFilter: true,
-        filterFn: filterHoursContains,
+        filterFn: filterNumberContains,
         header: ({ column }) => (
           <SortableHeader column={column} align="right">
             PTO
@@ -217,7 +141,7 @@ export function TeamStaffingGrid({
       }),
       columnHelper.accessor('loggedHoursMtd', {
         enableColumnFilter: true,
-        filterFn: filterHoursContains,
+        filterFn: filterNumberContains,
         header: ({ column }) => (
           <SortableHeader column={column} align="right">
             Logged
@@ -421,7 +345,10 @@ export function TeamStaffingGrid({
                     className={cn('overflow-hidden pb-2 pr-3 pt-1 align-middle', right && 'text-right')}
                   >
                     <div className={cn(right && 'flex justify-end')}>
-                      <ColumnFilterCell column={column} />
+                      <ColumnFilterInput
+                        column={column}
+                        ariaLabel={FILTER_ARIA_LABEL[id] ?? `Filter column ${id}`}
+                      />
                     </div>
                   </th>
                 )

@@ -1,89 +1,11 @@
 import type { ReactNode } from 'react'
 
-import { fmtHeadcountKpi, fmtHoursKpi, fmtPct } from '@/lib/overview/overview-metrics'
+import { TeamUtilizationByRoleTable } from '@/components/team/team-utilization-by-role-table'
+import { fmtHeadcountKpi, fmtPct } from '@/lib/overview/overview-metrics'
 import type { TeamRoleAnalyticsRow } from '@/lib/team/load-team-role-analytics'
-import { utilizationLoggedVsCapacityBarStyles, utilizationLoggedVsCapacityCellStyle } from '@/lib/team/team-utilization-tone'
 
 function UtilizationByRoleTable({ rows }: { rows: TeamRoleAnalyticsRow[] }) {
-  if (rows.length === 0) {
-    return (
-      <p className="mt-3 text-xs text-muted-foreground">
-        No capacity rows in scope for this month.
-      </p>
-    )
-  }
-
-  return (
-    <div className="mt-3 overflow-x-auto">
-      <table className="w-full min-w-xl border-collapse text-sm">
-        <thead>
-          <tr className="border-b border-border text-left text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            <th scope="col" className="py-2 pr-3">
-              Role
-            </th>
-            <th scope="col" className="py-2 pr-3 text-right tabular-nums">
-              Net cap
-            </th>
-            <th scope="col" className="py-2 pr-3 text-right tabular-nums">
-              Planned
-            </th>
-            <th scope="col" className="py-2 pr-3 text-right tabular-nums">
-              Logged
-            </th>
-            <th
-              scope="col"
-              className="py-2 pr-3 text-right tabular-nums"
-              title="Mean per-person pace: logged MTD / (elapsed net weekdays × 8h)"
-            >
-              Util
-            </th>
-            <th scope="col" className="py-2 pl-2">
-              <span className="sr-only">Utilization bar</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr
-              key={r.roleId ?? `unassigned-${r.roleKey}`}
-              className="border-b border-border/60 last:border-b-0"
-            >
-              <td className="py-2 pr-3 font-medium text-foreground">{r.roleLabel}</td>
-              <td className="py-2 pr-3 text-right tabular-nums">{fmtHoursKpi(r.netCapacityHours)}</td>
-              <td className="py-2 pr-3 text-right tabular-nums">{fmtHoursKpi(r.plannedHours)}</td>
-              <td className="py-2 pr-3 text-right tabular-nums">{fmtHoursKpi(r.loggedHoursMtd)}</td>
-              <td className="py-2 pr-3 text-right tabular-nums">
-                <span
-                  className="inline-block min-w-14 rounded-md px-2 py-0.5 ring-1 ring-foreground/8"
-                  style={utilizationLoggedVsCapacityCellStyle(r.utilizationPct)}
-                >
-                  {fmtPct(r.utilizationPct)}
-                </span>
-              </td>
-              <td className="py-2 pl-2">
-                <div
-                  className="h-2 w-full min-w-16 rounded-full bg-muted/50"
-                  title={
-                    [r.utilizationPct != null ? `${r.utilizationPct}% pace (mean per person)` : null,
-                      r.utilizationCapacityFillPct != null
-                        ? `${r.utilizationCapacityFillPct}% capacity fill`
-                        : null]
-                      .filter(Boolean)
-                      .join('. ') || undefined
-                  }
-                >
-                  <div
-                    className="h-2 min-w-0 rounded-full"
-                    style={utilizationLoggedVsCapacityBarStyles(r.utilizationPct)}
-                  />
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
+  return <TeamUtilizationByRoleTable rows={rows} />
 }
 
 function headcountAxisDomainMax(maxHc: number): number {
@@ -192,7 +114,7 @@ export function TeamAnalyticsGrid({
         <p className="text-sm font-medium text-foreground">Utilization by role</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Planning roster grouped by month role (from worklogs, set at month start). Pace and
-          capacity-fill use the same MTD cap as overview.
+          capacity-fill use the same MTD cap as overview. Sort and filter per column.
         </p>
         <UtilizationByRoleTable rows={rows} />
       </div>

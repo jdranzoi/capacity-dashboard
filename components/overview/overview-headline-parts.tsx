@@ -7,9 +7,10 @@ import { OverviewMonthPicker } from '@/components/overview/overview-month-picker
 import { Button } from '@/components/ui/button'
 import {
   billableVersusLoggedEfficiencyPct,
+  capacityFillPct,
   loggedVersusPlannedProductivityPct,
-  overviewWeeklyLoggedUtilizationPct,
 } from '@/lib/domain/workload-metrics'
+import { CAPACITY_FILL_KPI } from '@/lib/overview/capacity-kpi-contract'
 import type { WeeklyHeadline } from '@/lib/overview/load-weekly-overview'
 import {
   fmtHoursCell,
@@ -126,10 +127,10 @@ export function OverviewKpiCards({ weeks }: { weeks: WeeklyHeadline[] }) {
 
 export function OverviewChartsRow({
   weeks,
-  mtdUtilizationAvgPct,
+  utilizationPct,
 }: {
   weeks: WeeklyHeadline[]
-  mtdUtilizationAvgPct: number | null
+  utilizationPct: number | null
 }) {
   const totals = Object.fromEntries(
     OVERVIEW_METRIC_ROWS.map(({ key }) => [key, sumMetricTotals(weeks, key)])
@@ -151,10 +152,10 @@ export function OverviewChartsRow({
       </div>
       <div className="h-full min-h-0">
         <CapacityUsageDonuts
+          logged={totals.loggedHours}
           net={totals.netCapacityHours}
           planned={totals.plannedHours}
-          pto={totals.ptoHours}
-          mtdUtilizationAvgPct={mtdUtilizationAvgPct}
+          utilizationPct={utilizationPct}
           className="h-full"
         />
       </div>
@@ -270,14 +271,14 @@ export function OverviewWeeklyDetailPanel({
                   )
                 })}
                 <tr className="border-t border-border bg-muted/15">
-                  <td className="px-4 py-2.5 font-medium text-foreground">Utilization</td>
+                  <td className="px-4 py-2.5 font-medium text-foreground">{CAPACITY_FILL_KPI.label}</td>
                   {weeks.map((w) => (
                     <td
-                      key={`util-${w.weekStart}`}
+                      key={`fill-${w.weekStart}`}
                       className="px-4 py-2.5 text-right tabular-nums text-muted-foreground"
                     >
                       {fmtPct(
-                        overviewWeeklyLoggedUtilizationPct(
+                        capacityFillPct(
                           w.loggedHours,
                           w.netCapacityHours
                         )
@@ -286,7 +287,7 @@ export function OverviewWeeklyDetailPanel({
                   ))}
                   <td className="border-l border-border px-4 py-2.5 text-right tabular-nums text-muted-foreground">
                     {fmtPct(
-                      overviewWeeklyLoggedUtilizationPct(
+                      capacityFillPct(
                         totals.loggedHours,
                         totals.netCapacityHours
                       )

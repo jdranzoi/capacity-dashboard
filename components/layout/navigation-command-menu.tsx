@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Search } from 'lucide-react'
 
 import { useNavigationSearch } from '@/components/layout/navigation-search-context'
-import { isSidebarNavItemDisabled } from '@/lib/navigation/sidebar-nav-config'
+import { isSidebarNavItemVisible } from '@/lib/navigation/sidebar-nav-config'
 import {
   searchNavigation,
   type NavigationSearchEntry,
@@ -22,7 +22,7 @@ function NavigationSearchResult({
   onSelect: () => void
 }) {
   const Icon = entry.icon
-  const disabled = isSidebarNavItemDisabled(entry.status)
+  const disabled = !isSidebarNavItemVisible(entry.href, entry.status)
 
   return (
     <button
@@ -106,7 +106,7 @@ export function NavigationCommandDialog({
 
   const navigate = useCallback(
     (entry: NavigationSearchEntry) => {
-      if (isSidebarNavItemDisabled(entry.status)) return
+      if (!isSidebarNavItemVisible(entry.href, entry.status)) return
       router.push(entry.href)
       close()
     },

@@ -38,7 +38,7 @@ export async function OverviewChartsBlock({
   }
 
   return (
-    <OverviewChartsRow weeks={data.weeks} mtdUtilizationAvgPct={data.mtdUtilizationAvgPct} />
+    <OverviewChartsRow weeks={data.weeks} utilizationPct={data.utilizationPct} />
   )
   })
 }

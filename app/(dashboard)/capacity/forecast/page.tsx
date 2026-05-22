@@ -1,5 +1,5 @@
-import { SectionRoutePlaceholder } from '@/components/layout/section-route-placeholder'
+import { CapacityComingSoon } from '@/components/capacity/_shared/capacity-coming-soon'
 
 export default function Page() {
-  return <SectionRoutePlaceholder href="/capacity/forecast" />
+  return <CapacityComingSoon href="/capacity/forecast" />
 }

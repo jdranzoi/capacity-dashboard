@@ -21,16 +21,16 @@
 
 ## Subplan index
 
-| #    | Subplan                 | Depends on | Phase |
-| ---- | ----------------------- | ---------- | ----- |
-| SP-0 | Navigation architecture | —          | 1     |
-| SP-1 | Overview                | SP-0       | 1     |
-| SP-2 | Capacity                | SP-0       | 1     |
-| SP-3 | People                  | SP-0       | 1     |
-| SP-4 | Teams                   | SP-0       | 1     |
-| SP-5 | Projects                | SP-0       | 1     |
-| SP-6 | Insights                | SP-1–5     | 2     |
-| SP-7 | Reports                 | SP-1–5     | 2     |
+| #    | Subplan                 | Depends on | Phase | Detail plan |
+| ---- | ----------------------- | ---------- | ----- | ----------- |
+| SP-0 | Navigation architecture | —          | 1     | — |
+| SP-1 | Overview                | SP-0       | 1     | § SP-1 below (**deferred**) |
+| SP-2 | Capacity                | SP-0       | 1     | **[SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md)** |
+| SP-3 | People                  | SP-0       | 1     | § SP-3 below |
+| SP-4 | Teams                   | SP-0       | 1     | [TEAM_DASHBOARD_PLAN.md](./TEAM_DASHBOARD_PLAN.md) |
+| SP-5 | Projects                | SP-0       | 1     | § SP-5 below |
+| SP-6 | Insights                | SP-1–5     | 2     | § SP-6 below |
+| SP-7 | Reports                 | SP-1–5     | 2     | § SP-7 below |
 
 ---
 
@@ -177,40 +177,48 @@ All Overview data comes from Supabase v2 tables already queried by existing load
 
 > Answers: "Can we absorb work?"
 
+**Detailed plan (isolated sub-section tracks):** [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md)
+
+Each Level 2 route under `/capacity/*` has its own loader folder, component folder, and checklist. Changes in one track must not require edits in another. Shared shell only: `lib/capacity/shared/*`, `components/capacity/_shared/*`.
+
 ### Current state — partial
 
-The existing Overview page surfaces capacity metrics (net capacity, planned, bench, utilization) at the org level. No dedicated `/capacity` route or Capacity-specific components exist yet.
+Route shells exist (`app/(dashboard)/capacity/*` → placeholders). Overview page still surfaces org-level capacity metrics; no Capacity-specific loaders or components yet.
 
-**Relevant existing lib files:**
+**Relevant existing lib files (read-only reuse):**
 
 | File                                   | Reusable for Capacity             |
 | -------------------------------------- | --------------------------------- |
-| `lib/data/load-month-fact-bundle.ts`   | Loads capacity, plans, bench data |
+| `lib/data/load-month-fact-bundle.ts`   | Person-grain month facts          |
 | `lib/data/latest-sync-snapshot.ts`     | Snapshot resolution               |
 | `lib/domain/workload-metrics.ts`       | Capacity KPI formulas             |
 | `lib/overview/load-weekly-overview.ts` | Org-level capacity aggregates     |
+| `lib/team/load-team-role-analytics.ts` | Role breakdown pattern (Operations) |
 
-### Level 2 sections and data availability
+### Level 2 tracks (see [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md))
 
-| Sub-section | Data available                               | Notes                                   |
-| ----------- | -------------------------------------------- | --------------------------------------- |
-| Overview    | ✅ `fact_capacity`, `fact_bench`             | KPI summary                             |
-| Operations  | ✅ `fact_worklogs`, `fact_capacity`          | Current month operational usage         |
-| Planning    | ✅ `fact_plans`                              | Planned allocations per person/project  |
-| Forecast    | ❌ No predictive data                        | Requires derived trends or ML — phase 2 |
-| Allocations | ✅ `fact_plans`, `dim_person`, `dim_project` | People-to-project mapping               |
-| Bench       | ✅ `fact_bench`                              | Idle capacity analysis                  |
-| Scenarios   | ❌ No simulation engine                      | Phase 2                                 |
+| Track | Route | Data | Plan section |
+| ----- | ----- | ---- | ------------ |
+| Foundation | — | Shared month context | [SP-2.0](./SP2_CAPACITY_PLAN.md#shared-foundation-sp-20) |
+| Overview | `/capacity/overview` | ✅ `fact_capacity`, `fact_bench` | [SP-2.2](./SP2_CAPACITY_PLAN.md#sp-22--overview-capacityoverview) |
+| Operations | `/capacity/operations` | ✅ `fact_worklogs`, `fact_capacity` | [SP-2.3](./SP2_CAPACITY_PLAN.md#sp-23--operations-capacityoperations) |
+| Planning | `/capacity/planning` | ✅ `fact_plans` (project grain) | [SP-2.4](./SP2_CAPACITY_PLAN.md#sp-24--planning-capacityplanning) |
+| Allocations | `/capacity/allocations` | ✅ `fact_plans`, dims | [SP-2.5](./SP2_CAPACITY_PLAN.md#sp-25--allocations-capacityallocations) |
+| Bench | `/capacity/bench` | ✅ `fact_bench` | [SP-2.6](./SP2_CAPACITY_PLAN.md#sp-26--bench-capacitybench) |
+| Forecast | `/capacity/forecast` | 🟡 Historical trends only | [SP-2.7](./SP2_CAPACITY_PLAN.md#sp-27--forecast--scenarios) |
+| Scenarios | `/capacity/scenarios` | ❌ No simulation engine | [SP-2.7](./SP2_CAPACITY_PLAN.md#sp-27--forecast--scenarios) |
 
-### Implementation steps
+### Implementation steps (summary — detail in [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md))
 
-- [ ] **SP-2.1** Create `/capacity` route shell and layout with Level 2 nav
-- [ ] **SP-2.2** Capacity Overview sub-page: org-level KPIs (net capacity, utilization, bench rate, planned vs actual)
-- [ ] **SP-2.3** Operations sub-page: current month breakdown by role (utilization, logged, billable, PTO)
-- [ ] **SP-2.4** Planning sub-page: planned hours table by person/project for selected month
-- [ ] **SP-2.5** Allocations sub-page: people-to-project allocation grid
-- [ ] **SP-2.6** Bench sub-page: unallocated capacity by person and role
-- [ ] **SP-2.7** Mark Forecast and Scenarios as coming soon (stub pages)
+- [x] **SP-2.0** Shared foundation — filters, month context, `_shared` UI shell
+- [x] **SP-2.2** Overview sub-page
+- [ ] **SP-2.3** Operations sub-page
+- [ ] **SP-2.4** Planning sub-page
+- [ ] **SP-2.5** Allocations sub-page
+- [ ] **SP-2.6** Bench sub-page
+- [ ] **SP-2.7** Forecast + Scenarios stubs (optional lite trend charts)
+
+**SP-1 deferred** until Capacity widgets exist for selective reuse on Overview.
 
 ---
 
@@ -459,13 +467,13 @@ Summary of what exists today and where it lands in the target architecture.
 
 ```
 SP-0  Navigation architecture
-  └── SP-1  Overview (extend existing, lowest cost)
+  └── SP-2  Capacity (active — [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md))
   └── SP-3  People (migrate existing team components)
   └── SP-4  Teams (migrate existing team components)
-  └── SP-2  Capacity (new, highest data coverage)
+  └── SP-1  Overview (deferred — reuse Capacity widgets when ready)
   └── SP-5  Projects (new, partial data)
         └── SP-6  Insights [phase 2]
         └── SP-7  Reports [phase 2]
 ```
 
-SP-0 is the hard dependency for everything. After SP-0, SP-1, SP-3, and SP-4 can proceed in parallel because most of their components already exist — they primarily need migration and route restructuring. SP-2 and SP-5 require new loaders and components.
+SP-0 is the hard dependency for everything. **SP-2** is the active milestone (isolated sub-section tracks). SP-3 and SP-4 can proceed in parallel with SP-2. SP-1 is deferred until Capacity components are available for reuse.

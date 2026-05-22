@@ -3,6 +3,10 @@ import {
   KpiMetricCard,
   KpiMetricSubline,
 } from '@/components/dashboard/kpi-metric-card'
+import {
+  CAPACITY_FILL_KPI,
+  UTILIZATION_KPI,
+} from '@/lib/overview/capacity-kpi-contract'
 import type { TeamMonthKpisPayload } from '@/lib/team/load-team-month-kpis'
 import { fmtHoursKpi, fmtPct } from '@/lib/overview/overview-metrics'
 import type { ReactNode } from 'react'
@@ -30,10 +34,10 @@ export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
     : 'Non-PTO worklogs by project type (internal vs build + support).'
   const utilizationCapacityFootnote = scoped
     ? 'Logged on selected project / monthly net capacity (filtered people).'
-    : 'Logged / Net capacity.'
+    : CAPACITY_FILL_KPI.formulaFootnote
   const utilizationPaceFootnote = scoped
     ? 'Mean of people: all non-PTO logs through as-of (not limited to selected project).'
-    : 'Logged / (elapsed Net Weekdays × 8h). Zone holidays and weekday PTO through worklog as-of.'
+    : UTILIZATION_KPI.formulaFootnote
   const efficiencyFootnote =
     kpis.billableEfficiencyPct === null
       ? '— when logged hours are zero'
@@ -85,13 +89,13 @@ export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
       subline: <KpiMetricSubline>{typeFootnote}</KpiMetricSubline>,
     },
     {
-      label: 'Capacity fill',
-      value: fmtPct(kpis.utilizationOrgPct ?? null),
+      label: CAPACITY_FILL_KPI.label,
+      value: fmtPct(kpis.capacityFillPct ?? null),
       subline: <KpiMetricSubline>{utilizationCapacityFootnote}</KpiMetricSubline>,
     },
     {
-      label: 'Utilization',
-      value: fmtPct(kpis.utilizationPaceAvgPct ?? null),
+      label: UTILIZATION_KPI.label,
+      value: fmtPct(kpis.utilizationPct ?? null),
       subline: <KpiMetricSubline>{utilizationPaceFootnote}</KpiMetricSubline>,
     },
     {

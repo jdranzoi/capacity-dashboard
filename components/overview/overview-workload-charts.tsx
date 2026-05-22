@@ -1,5 +1,10 @@
-import { hoursSharePercentage } from "@/lib/domain/workload-metrics";
+import { capacityFillPct, hoursSharePercentage } from "@/lib/domain/workload-metrics";
 import { roundDisplayStat } from "@/lib/format/display-stats";
+import {
+  CAPACITY_FILL_KPI,
+  PLANNED_KPI,
+  UTILIZATION_KPI,
+} from "@/lib/overview/capacity-kpi-contract";
 import type { WeeklyHeadline } from "@/lib/overview/load-weekly-overview";
 import {
   fmtPct,
@@ -228,19 +233,19 @@ function Donut({
   );
 }
 
-function mtdUtilizationStrokeVar(pct: number): string {
+function utilizationStrokeVar(pct: number): string {
   if (pct >= 65) return "--overview-utilization-good";
   if (pct >= 50) return "--overview-utilization-warn";
   if (pct >= 35) return "--overview-utilization-caution";
   return "--overview-utilization-critical";
 }
 
-function MtdUtilizationDonut({
-  utilizationAvgPct,
+function UtilizationDonut({
+  utilizationPct,
 }: {
-  utilizationAvgPct: number | null;
+  utilizationPct: number | null;
 }) {
-  if (utilizationAvgPct == null) {
+  if (utilizationPct == null) {
     return (
       <div className="flex w-full max-w-sm flex-row items-center gap-3">
         <div
@@ -254,7 +259,7 @@ function MtdUtilizationDonut({
             —
           </p>
           <p className="text-[0.7rem] leading-tight text-muted-foreground">
-            Utilization (MTD)
+            {UTILIZATION_KPI.label}
           </p>
         </div>
       </div>
@@ -263,30 +268,30 @@ function MtdUtilizationDonut({
 
   return (
     <Donut
-      pct={utilizationAvgPct}
-      label="Utilization"
-      primaryCssVar={mtdUtilizationStrokeVar(
-        roundDisplayStat(utilizationAvgPct),
+      pct={utilizationPct}
+      label={UTILIZATION_KPI.label}
+      primaryCssVar={utilizationStrokeVar(
+        roundDisplayStat(utilizationPct),
       )}
     />
   );
 }
 
 export function CapacityUsageDonuts({
+  logged,
   net,
   planned,
-  pto,
-  mtdUtilizationAvgPct,
+  utilizationPct,
   className,
 }: {
+  logged: number;
   net: number;
   planned: number;
-  pto: number;
-  mtdUtilizationAvgPct: number | null;
+  utilizationPct: number | null;
   className?: string;
 }) {
-  const planVsCap = hoursSharePercentage(planned, net);
-  const ptoVsCap = hoursSharePercentage(pto, net);
+  const capacityFill = capacityFillPct(logged, net) ?? 0;
+  const plannedShare = hoursSharePercentage(planned, net);
 
   return (
     <div
@@ -301,15 +306,15 @@ export function CapacityUsageDonuts({
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center py-1">
         <div className="flex w-full max-w-sm flex-col gap-8">
           <Donut
-            pct={planVsCap}
-            label="Capacity Fill"
-            primaryCssVar="--overview-metric-planned"
+            pct={capacityFill}
+            label={CAPACITY_FILL_KPI.label}
+            primaryCssVar="--overview-metric-logged"
           />
-          <MtdUtilizationDonut utilizationAvgPct={mtdUtilizationAvgPct} />
+          <UtilizationDonut utilizationPct={utilizationPct} />
           <Donut
-            pct={ptoVsCap}
-            label="PTO / capacity"
-            primaryCssVar="--overview-metric-pto"
+            pct={plannedShare}
+            label={PLANNED_KPI.label}
+            primaryCssVar="--overview-metric-planned"
           />
         </div>
       </div>

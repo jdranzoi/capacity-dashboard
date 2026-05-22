@@ -1,6 +1,14 @@
 /**
- * Central definitions for overview workload KPIs (logged utilization, productivity, efficiency,
- * capacity-share donuts, weekly logged-vs-capacity table roll-up).
+ * Central definitions for workload KPIs (capacity fill, utilization pace, planned share,
+ * productivity, efficiency, weekly table roll-ups).
+ *
+ * **Standard org percentage KPIs** (see `lib/overview/capacity-kpi-contract.ts` for labels):
+ *
+ * | KPI | Formula | Primary function |
+ * |-----|---------|------------------|
+ * | Capacity fill | logged / net capacity | {@link capacityFillPct} |
+ * | Utilization | mean per-person logged / (elapsed net weekdays × 8h) | {@link personLoggedUtilizationPct}, {@link meanPersonLoggedUtilizationPct} |
+ * | Planned | planned / net capacity | {@link plannedPct} |
  *
  * UI layers must not embed these formulas — import from here so period / role / person rollups
  * stay consistent when definitions change.
@@ -94,10 +102,10 @@ export function billableVersusLoggedEfficiencyPct(
 }
 
 /**
- * Weekly-detail table utilization (org roll-up): **logged** vs prorated org net capacity for an ISO week.
+ * **Capacity fill** (org roll-up): logged vs prorated org net capacity for an ISO week or month.
  *
- * Billable is **not** utilization here — use {@link billableVersusLoggedEfficiencyPct} for billable vs logged.
- * Denominator is org net capacity for that week from snapshot facts × Mon–Fri overlap weights (`prorate-to-weeks`).
+ * Billable is **not** capacity fill — use {@link billableVersusLoggedEfficiencyPct} for billable vs logged.
+ * Denominator is org net capacity from snapshot facts (weekly cells use Mon–Fri overlap weights in `prorate-to-weeks`).
  *
  * MTD column must use summed logged / summed net capacity — not the average of weekly percentages.
  *
@@ -107,10 +115,45 @@ export function billableVersusLoggedEfficiencyPct(
  *
  * @see CLAUDE.md — Overview weekly metrics
  */
-export function overviewWeeklyLoggedUtilizationPct(
+export function capacityFillPct(
   loggedHours: number,
   netCapacityHours: number
 ): number | null {
   if (loggedHours <= 0 || netCapacityHours <= 0) return null
   return roundDisplayStat((loggedHours / netCapacityHours) * 100)
+}
+
+/** @deprecated Use {@link capacityFillPct}. */
+export function overviewWeeklyLoggedUtilizationPct(
+  loggedHours: number,
+  netCapacityHours: number
+): number | null {
+  return capacityFillPct(loggedHours, netCapacityHours)
+}
+
+/**
+ * **Planned** (org roll-up): planned hours vs monthly net capacity (%). Null when net capacity ≤ 0.
+ */
+export function plannedPct(plannedHours: number, netCapacityHours: number): number | null {
+  if (netCapacityHours <= 0 || plannedHours < 0) return null
+  return roundDisplayStat((plannedHours / netCapacityHours) * 100)
+}
+
+/** @deprecated Use {@link plannedPct}. */
+export function plannedUtilizationPct(
+  plannedHours: number,
+  netCapacityHours: number
+): number | null {
+  return plannedPct(plannedHours, netCapacityHours)
+}
+
+/**
+ * Bench / open hours as a share of net capacity (%). Null when net capacity ≤ 0.
+ */
+export function benchRateHoursPct(
+  benchHours: number,
+  netCapacityHours: number
+): number | null {
+  if (netCapacityHours <= 0 || benchHours < 0) return null
+  return roundDisplayStat((benchHours / netCapacityHours) * 100)
 }

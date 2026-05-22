@@ -114,9 +114,9 @@ The overview shows one card per **ISO week** (Monday start) that overlaps the **
 | Per week | `(logged_hours_week / net_capacity_hours_week) * 100`. Values rounded to the **nearest integer** for display (`roundDisplayStat` / shared formatters). When logged or net capacity for that cell is zero or negative, the UI shows an em dash (consistent with zero logged hours as empty). |
 | MTD total column | `(sum of logged_hours across weeks shown) / (sum of net_capacity_hours across those weeks) * 100` — ratio of **summed** hours, not the average of weekly percentages. |
 
-**Not C-005:** formal billable utilization for contracts remains `timeAdjustedUtilization` / `fullMonthUtilization` in `lib/domain/utilization.ts`. The weekly table row is dashboard logged-vs-capacity at org roll-up. Implementation: `overviewWeeklyLoggedUtilizationPct` in `lib/domain/workload-metrics.ts`.
+**Capacity fill** (weekly detail table row and org KPI): logged vs prorated net capacity at org roll-up. Implementation: `capacityFillPct` in `lib/domain/workload-metrics.ts`.
 
-The **Utilization (MTD)** donut uses the same **logged** basis per person: **`personLoggedUtilizationPct`** (`(logged_hours / elapsed_net_weekdays / 8) * 100`) where **`elapsed_net_weekdays`** subtracts zone **`dim_holiday`** weekdays through `asOf` and weekday **PTO**, then **`meanPersonLoggedUtilizationPct`** (`loadWeeklyOverview` → `mtdUtilizationAvgPct`). The donut **averages people**; the table row **aggregates hours first** — they can still differ when capacity weights differ from elapsed×8 per person.
+The **Utilization** donut uses per-person pace: **`personLoggedUtilizationPct`** (`(logged_hours / elapsed_net_weekdays / 8) * 100`) where **`elapsed_net_weekdays`** subtracts zone **`dim_holiday`** weekdays through `asOf` and weekday **PTO**, then **`meanPersonLoggedUtilizationPct`** (`loadWeeklyOverview` → `utilizationPct`). Capacity fill **aggregates hours first**; Utilization **averages people** — they can differ when capacity weights differ from elapsed×8 per person.
 
 **Worklog `log_date` cap (billable + logged only):** `min(calendar end of month, start-of-day of last sync `sync_snapshot.created_at`, start of today)` so MTD and sync freshness stay consistent. Snapshot facts are **full-month** v2 values; they are not clipped to that day cap. **PTO** worklogs use the calendar-month end bound only (no today/sync clamp).
 
@@ -150,11 +150,12 @@ All routes require authentication. No public pages. Session is validated via `@s
 |---|---|
 | [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) | **Resume here** — current phase, next subplan, route/code mapping |
 | [docs/PLAN_MASTER.md](docs/PLAN_MASTER.md) | Master plan SP-0–SP-7: scope, data availability, implementation steps |
+| [docs/SP2_CAPACITY_PLAN.md](docs/SP2_CAPACITY_PLAN.md) | **Active** — Capacity sub-section tracks (isolated loaders/components per route) |
 | [docs/NAVIGATION_FUNCTIONAL.md](docs/NAVIGATION_FUNCTIONAL.md) | IA spec: Level 1/2 nav, mental model, role access, Phase 2 items |
 
 **Implementation order:** SP-0 (navigation) is the hard dependency for all Phase 1 sections. Do not add new top-level routes outside the target structure without updating these docs.
 
-**Next milestone:** SP-1 / SP-3 / SP-4 — extend Overview; split People vs Teams content (SP-0 navigation is done).
+**Next milestone:** SP-2 Capacity — [SP2_CAPACITY_PLAN.md](docs/SP2_CAPACITY_PLAN.md) (start SP-2.0 Foundation). SP-1 Overview deferred.
 
 ## Navigation (target) vs routes (today)
 
@@ -267,6 +268,7 @@ Internal formulas may use floating-point until the display boundary; contracts s
 - Use `data-slot` attributes on compound component parts so parent selectors can target them.
 - `@container` queries for card-internal responsive layouts (already established in `components/ui/card.tsx`).
 - Skeleton states use `components/ui/skeleton.tsx` — do not add new loading primitives.
+- **Entity data tables** must be sortable and filterable per column via TanStack Table + shared `components/ui/data-table/*` (see `.cursor/rules/data-tables.mdc`). Exempt fixed pivot matrices (e.g. Overview weekly detail metrics × weeks).
 - New page-level data components go in `components/<section>/` mirroring the app route (e.g. `components/overview/`, `components/people/`, `components/teams/`). During SP-0 migration, `components/team/` remains until People/Teams split is done.
 
 ## Security rules (non-negotiable)

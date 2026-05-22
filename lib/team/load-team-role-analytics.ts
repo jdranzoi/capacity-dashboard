@@ -2,8 +2,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { endOfMonth, format, parse } from 'date-fns'
 
 import {
+  capacityFillPct,
   meanPersonLoggedUtilizationPct,
-  overviewWeeklyLoggedUtilizationPct,
   personLoggedUtilizationPct,
   STANDARD_WORKDAY_HOURS,
 } from '@/lib/domain/workload-metrics'
@@ -36,8 +36,8 @@ export type TeamRoleAnalyticsRow = {
   loggedHoursMtd: number
   /** Mean of per-person pace: logged MTD ÷ (elapsed net weekdays × 8h); same eligibility as overview donut. */
   utilizationPct: number | null
-  /** Rolled-up hours ratio: sum logged MTD / sum monthly net capacity. */
-  utilizationCapacityFillPct: number | null
+  /** Rolled-up hours ratio: sum logged MTD / sum monthly net capacity (**Capacity fill**). */
+  capacityFillPct: number | null
 }
 
 function keepPerson(personIdFilter: Set<string> | null, pid: string): boolean {
@@ -217,7 +217,7 @@ export async function loadTeamRoleAnalytics(
         paceSamples.length > 0
           ? roundDisplayStat(meanPersonLoggedUtilizationPct(paceSamples)!)
           : null
-      const utilizationCapacityFillPct = overviewWeeklyLoggedUtilizationPct(
+      const capacityFillPctValue = capacityFillPct(
         loggedRounded,
         netRounded
       )
@@ -232,7 +232,7 @@ export async function loadTeamRoleAnalytics(
           plannedHours: roundDisplayStat(agg.plannedHours),
           loggedHoursMtd: loggedRounded,
           utilizationPct: utilizationPacePct,
-          utilizationCapacityFillPct,
+          capacityFillPct: capacityFillPctValue,
         },
       })
     }

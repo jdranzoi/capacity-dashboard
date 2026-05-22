@@ -78,6 +78,12 @@ export const NAV_DOMAINS: NavigationDomainConfig[] = [
       domainItem('Capacity', 'Overview', '/capacity/overview', 'High-level KPIs and summary.'),
       domainItem(
         'Capacity',
+        'Utilization',
+        '/capacity/utilization',
+        'Role and person operational usage. Capacity fill, billable %, logged trends, PTO impact, saturation analysis.'
+      ),
+      domainItem(
+        'Capacity',
         'Operations',
         '/capacity/operations',
         'Current month operational usage. Utilization, logged, billable, PTO, operational saturation.'

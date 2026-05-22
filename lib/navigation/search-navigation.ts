@@ -4,6 +4,7 @@ import {
   NAV_OVERVIEW,
   type NavigationCatalogItem,
 } from '@/lib/navigation/navigation-catalog'
+import { isSidebarNavItemVisible } from '@/lib/navigation/sidebar-nav-config'
 
 export type NavigationSearchEntry = NavigationCatalogItem & {
   searchText: string
@@ -89,6 +90,10 @@ function scoreNavigationEntry(entry: NavigationSearchEntry, tokens: string[]): n
 }
 
 export function searchNavigation(query: string, limit = 8): NavigationSearchEntry[] {
+  const visibleIndex = NAV_SEARCH_INDEX.filter((entry) =>
+    isSidebarNavItemVisible(entry.href, entry.status)
+  )
+
   const tokens = query
     .trim()
     .toLowerCase()
@@ -96,10 +101,10 @@ export function searchNavigation(query: string, limit = 8): NavigationSearchEntr
     .filter(Boolean)
 
   if (tokens.length === 0) {
-    return NAV_SEARCH_INDEX.slice(0, limit)
+    return visibleIndex.slice(0, limit)
   }
 
-  const scored = NAV_SEARCH_INDEX.map((entry) => ({
+  const scored = visibleIndex.map((entry) => ({
     entry,
     score: scoreNavigationEntry(entry, tokens),
   }))

@@ -8,11 +8,12 @@ import { NavigationSearchTrigger } from '@/components/layout/navigation-command-
 import { useSidebar } from '@/components/layout/sidebar-context'
 import { isSectionNavItemActive } from '@/lib/navigation/section-nav-config'
 import {
-  isSidebarNavItemDisabled,
+  isSidebarNavItemVisible,
   resolveActiveSidebarGroup,
   SIDEBAR_NAV_GROUPS,
   SIDEBAR_OVERVIEW,
   SIDEBAR_UTILITY,
+  visibleSidebarGroups,
   type SidebarNavGroup,
   type SidebarNavItem,
 } from '@/lib/navigation/sidebar-nav-config'
@@ -115,7 +116,7 @@ function SidebarRootNav({ collapsed }: { collapsed: boolean }) {
         collapsed={collapsed}
       />
 
-      {SIDEBAR_NAV_GROUPS.map((group) => (
+      {visibleSidebarGroups(SIDEBAR_NAV_GROUPS).map((group) => (
         <SidebarNavLink
           key={group.id}
           href={group.defaultHref}
@@ -143,21 +144,18 @@ function SidebarSectionSubLink({
 }) {
   const pathname = usePathname()
   const active = isSectionNavItemActive(pathname, item.href)
-  const disabled = isSidebarNavItemDisabled(item.status)
 
   return (
     <Link
       href={item.href}
       aria-current={active ? 'page' : undefined}
-      aria-disabled={disabled}
       title={collapsed ? `${item.label} — ${item.description}` : undefined}
       className={cn(
         'flex flex-col rounded-md px-2 py-1.5 transition-colors duration-150',
         collapsed && 'items-center px-0',
         active
           ? 'bg-sidebar-accent text-foreground'
-          : 'text-muted-foreground hover:bg-sidebar-accent hover:text-foreground',
-        disabled && 'pointer-events-none opacity-45'
+          : 'text-muted-foreground hover:bg-sidebar-accent hover:text-foreground'
       )}
     >
       <span
@@ -195,25 +193,26 @@ function SidebarSectionNav({
         )}
         data-slot="sidebar-section-header"
       >
-        <Link
-          href="/"
-          aria-label="Back to main navigation"
-          title="Back"
-          className={cn(
-            'flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground'
-          )}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Link>
         {!collapsed ? (
-          <span className="truncate text-sm font-semibold text-foreground">{group.label}</span>
+          <Link
+            href="/"
+            aria-label="Back to main navigation"
+            title="Back to main navigation"
+            className={cn(
+              'flex min-w-0 flex-1 items-center gap-1 rounded-md px-1 py-1 text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground'
+            )}
+          >
+            <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
+            <span className="truncate text-sm font-semibold text-foreground">{group.label}</span>
+          </Link>
         ) : (
           <Link
-            href={group.defaultHref}
-            title={group.label}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+            href="/"
+            aria-label="Back to main navigation"
+            title="Back to main navigation"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground"
           >
-            <group.icon className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" />
           </Link>
         )}
       </div>

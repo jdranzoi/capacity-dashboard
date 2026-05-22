@@ -31,10 +31,10 @@ export function getSectionNavConfig(sectionId: SectionId): SectionNavConfig {
   return SECTION_NAV_CONFIG[sectionId]
 }
 
-/** Exact match for section index routes (e.g. `/teams` must not match `/teams/overview`). */
+/** Exact match for section index routes that share a path prefix with siblings. */
 export function isSectionNavItemActive(pathname: string, href: string): boolean {
-  if (href === '/teams') {
-    return pathname === '/teams'
+  if (href === '/teams' || href === '/capacity/utilization') {
+    return pathname === href
   }
   return pathname === href || pathname.startsWith(`${href}/`)
 }

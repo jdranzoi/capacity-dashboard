@@ -7,9 +7,13 @@ import { OverviewMonthPicker } from '@/components/overview/overview-month-picker
 import { Button } from '@/components/ui/button'
 import {
   billableVersusLoggedEfficiencyPct,
+  capacityFillPct,
   loggedVersusPlannedProductivityPct,
-  overviewWeeklyLoggedUtilizationPct,
 } from "@/lib/domain/workload-metrics";
+import {
+  CAPACITY_FILL_KPI,
+  UTILIZATION_KPI,
+} from "@/lib/overview/capacity-kpi-contract";
 import type { WeeklyHeadline } from '@/lib/overview/load-weekly-overview'
 import {
   fmtHoursCell,
@@ -74,7 +78,7 @@ export function WeeklyHeadlineSection({
   asOfDate,
   snapshotId,
   syncCreatedAt,
-  mtdUtilizationAvgPct,
+  utilizationPct,
   weeks,
   monthPicker,
 }: {
@@ -82,7 +86,7 @@ export function WeeklyHeadlineSection({
   asOfDate: string | null
   snapshotId: string | null
   syncCreatedAt: string | null
-  mtdUtilizationAvgPct: number | null
+  utilizationPct: number | null
   weeks: WeeklyHeadline[]
   /** When set, replaces the static week-range chip with a month dropdown + range hint. */
   monthPicker?: {
@@ -209,10 +213,10 @@ export function WeeklyHeadlineSection({
         </div>
         <div className="h-full min-h-0">
           <CapacityUsageDonuts
+            logged={totals.loggedHours}
             net={totals.netCapacityHours}
             planned={totals.plannedHours}
-            pto={totals.ptoHours}
-            mtdUtilizationAvgPct={mtdUtilizationAvgPct}
+            utilizationPct={utilizationPct}
             className="h-full"
           />
         </div>
@@ -293,15 +297,15 @@ export function WeeklyHeadlineSection({
                   })}
                   <tr className="border-t border-border bg-muted/15">
                     <td className="px-4 py-2.5 font-medium text-foreground">
-                      Utilization
+                      {CAPACITY_FILL_KPI.label}
                     </td>
                     {weeks.map((w) => (
                       <td
-                        key={`util-${w.weekStart}`}
+                        key={`fill-${w.weekStart}`}
                         className="px-4 py-2.5 text-right tabular-nums text-muted-foreground"
                       >
                         {fmtPct(
-                          overviewWeeklyLoggedUtilizationPct(
+                          capacityFillPct(
                             w.loggedHours,
                             w.netCapacityHours,
                           ),
@@ -310,7 +314,7 @@ export function WeeklyHeadlineSection({
                     ))}
                     <td className="border-l border-border px-4 py-2.5 text-right tabular-nums text-muted-foreground">
                       {fmtPct(
-                        overviewWeeklyLoggedUtilizationPct(
+                        capacityFillPct(
                           totals.loggedHours,
                           totals.netCapacityHours,
                         ),
@@ -349,77 +353,40 @@ export function WeeklyHeadlineSection({
                 <div className="min-w-0 flex-1 space-y-1.5 text-[0.7rem] leading-snug text-muted-foreground">
                   <p>
                     <span className="font-medium text-foreground/90">
-                      Utilization
+                      {CAPACITY_FILL_KPI.label}
                     </span>
                     {" — "}
-                    How much of available capacity people actually spent on
-                    work, based on{" "}
-                    <span className="text-foreground/85">
-                      logged hours only
-                    </span>
-                    . Billable hours measure{" "}
-                    <em className="not-italic text-foreground/85">
-                      billing efficiency
-                    </em>{" "}
-                    (billable vs logged), not utilization—you cannot “raise
-                    utilization” by billing more if time is already fully
-                    logged.
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground/85">
-                      Weekly columns:
-                    </span>{" "}
-                    organization net capacity used that ISO week —{" "}
+                    Org roll-up of logged hours vs net capacity. Weekly columns:{" "}
                     <span className="font-mono text-[0.65rem] text-foreground/80">
                       (logged hours that week ÷ net capacity that week) × 100
                     </span>
-                    .
+                    . MTD total uses summed hours, not the average of weekly percentages.
                   </p>
                   <p>
-                    <span className="font-medium text-foreground/85">
-                      Weekly table · MTD total column:
-                    </span>{" "}
-                    same formula as the weekly cells, but applied to hour
-                    totals:{" "}
+                    <span className="font-medium text-foreground/90">
+                      {UTILIZATION_KPI.label}
+                    </span>
+                    {" — "}
+                    Mean per-person pace in Capacity usage:{" "}
                     <span className="font-mono text-[0.65rem] text-foreground/80">
-                      (sum of logged hours in all week columns ÷ sum of net
-                      capacity in all week columns) × 100
+                      (logged hours ÷ (eligible net weekdays × 8h)) × 100
                     </span>
-                    . That is <span className="text-foreground/85">not</span>{" "}
-                    the average of the weekly percentages.
+                    , averaged across people with capacity. Eligible weekdays are Mon–Fri through
+                    the worklog as-of date, minus zone holidays and weekday PTO.
                   </p>
                   <p>
                     <span className="font-medium text-foreground/85">
-                      Why MTD total can look low early on:
+                      Why MTD capacity fill can look low early on:
                     </span>{" "}
-                    Logged and billable hours stop at the “through” date in the
-                    table header; empty weeks show “—” because nothing is booked
-                    yet. Net capacity still appears for every ISO week that
-                    overlaps the month—the denominator includes those future
-                    slices—while the numerator only includes hours logged so
-                    far. Until more weeks accumulate time, this ratio stays
-                    below a busy single week. Example shape: if logged exists
-                    only in the first two columns but capacity sums five
-                    columns, you divide roughly “two weeks of effort” by “five
-                    weeks’ worth of scheduled capacity.”
+                    Logged hours stop at the “through” date in the table header while net capacity
+                    still includes every ISO week overlapping the month.
                   </p>
                   <p>
-                    <span className="font-medium text-foreground/85">
-                      Utilization (MTD) in Capacity usage:
-                    </span>{" "}
-                    average utilization across people with capacity this month.
-                    Each person is{" "}
-                    <span className="font-mono text-[0.65rem] text-foreground/80">
-                      (their logged hours ÷ (eligible weekdays × 8h)) × 100
-                    </span>
-                    , where eligible weekdays are Mon–Fri from the start of the
-                    month through “today,” minus regional company holidays that
-                    already occurred for their location and minus weekdays taken
-                    as PTO.{" "}
-                    <span className="italic text-muted-foreground/95">
-                      Example: 25 h logged with 5 eligible days → 25 ÷ (5 × 8) ×
-                      100 = 62.5%.
-                    </span>
+                    Billable hours measure{" "}
+                    <em className="not-italic text-foreground/85">
+                      billing efficiency
+                    </em>{" "}
+                    (billable vs logged), not capacity fill or utilization pace.
                   </p>
                 </div>
               </li>

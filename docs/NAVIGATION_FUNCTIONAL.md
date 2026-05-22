@@ -82,6 +82,8 @@ Delivery intelligence.
 
 #### Capacity
 
+Implementation plan (isolated sub-section tracks): [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md)
+
 - **Overview:** High-level KPIs + summary.
 - **Operations:** Current month operational usage. Includes: utilization, logged, billable, PTO, operational saturation.
 - **Planning:** Future planned allocations. Includes: planned utilization, role allocation, future staffing, monthly planning.

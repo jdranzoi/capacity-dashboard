@@ -7,7 +7,7 @@ import {
 } from '@/lib/data/load-month-fact-bundle'
 import {
   billableVersusLoggedEfficiencyPct,
-  overviewWeeklyLoggedUtilizationPct,
+  capacityFillPct,
 } from '@/lib/domain/workload-metrics'
 import {
   loadWeeklyOverview,
@@ -39,16 +39,16 @@ export type TeamMonthKpisPayload = {
    */
   projectScopedHours: ProjectScopedHours | null
   /**
-   * Org capacity fill: summed logged (MTD) / monthly net capacity in snapshot facts.
+   * **Capacity fill** — summed logged (MTD) / monthly net capacity in snapshot facts.
    * Uses **project-scoped logged** when `projectScopedHours` is set; else org-wide logged.
    */
-  utilizationOrgPct: number | null
+  capacityFillPct: number | null
   /**
-   * Mean of per-person pace (overview donut definition): logged MTD / (elapsed net weekdays × 8h),
+   * **Utilization** — mean per-person pace (logged MTD / (elapsed net weekdays × 8h)),
    * same filters as `loadWeeklyOverview`. Uses **all** non-PTO logs per person when a project filter
    * is active (not project-scoped hours).
    */
-  utilizationPaceAvgPct: number | null
+  utilizationPct: number | null
   /** Uses project-scoped billable/logged when `projectScopedHours` is set. */
   billableEfficiencyPct: number | null
   /** Non-PTO logged hours on `internal` projects (MTD worklog cap). */
@@ -159,11 +159,11 @@ export async function loadTeamMonthKpis(
   const billableForEff = projectScopedHours?.billableHoursMtd ?? rollupHours.billableHoursMtd
   const loggedForEff = projectScopedHours?.loggedHoursMtd ?? rollupHours.loggedHoursMtd
 
-  const utilizationOrgPct = overviewWeeklyLoggedUtilizationPct(
+  const capacityFillPctValue = capacityFillPct(
     loggedForUtil,
     rollupHours.netCapacityHours
   )
-  const utilizationPaceAvgPct = overview.mtdUtilizationAvgPct
+  const utilizationPctValue = overview.utilizationPct
   const billableEfficiencyPct = billableVersusLoggedEfficiencyPct(
     billableForEff,
     loggedForEff
@@ -177,8 +177,8 @@ export async function loadTeamMonthKpis(
       syncCreatedAt: overview.syncCreatedAt,
       rollupHours,
       projectScopedHours,
-      utilizationOrgPct,
-      utilizationPaceAvgPct,
+      capacityFillPct: capacityFillPctValue,
+      utilizationPct: utilizationPctValue,
       billableEfficiencyPct,
       internalLoggedHoursMtd,
       commercialLoggedHoursMtd,

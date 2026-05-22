@@ -71,13 +71,13 @@ export type WeeklyOverviewData = {
    */
   orgMonthRollupHours: OrgMonthRollupHours | null
   /**
-   * Mean of per-person logged utilization (`meanPersonLoggedUtilizationPct` over samples from
+   * **Utilization** — mean of per-person pace (`meanPersonLoggedUtilizationPct` over samples from
    * `personLoggedUtilizationPct` in `lib/domain/workload-metrics.ts`).
    * Elapsed net weekdays = Mon–Fri from month start through `asOf`, minus `dim_holiday` dates for the
    * person's `dim_person.zone_id` in that window (weekdays only), minus distinct weekday PTO dates from
    * `fact_worklogs` (`is_pto`, capped by the same `asOf` as non-PTO logs).
    */
-  mtdUtilizationAvgPct: number | null
+  utilizationPct: number | null
   /**
    * Distinct `person_id` in `fact_capacity` for the reference month (after optional person filter).
    * Same people scope as org capacity / planned / bench rollups.
@@ -128,7 +128,7 @@ export async function loadWeeklyOverview(
     snapshotId: null,
     syncCreatedAt: null,
     orgMonthRollupHours: null,
-    mtdUtilizationAvgPct: null,
+    utilizationPct: null,
     capacityHeadcount: 0,
     weeks: [],
     error: null,
@@ -174,7 +174,7 @@ export async function loadWeeklyOverview(
         snapshotId: resolved.id,
         syncCreatedAt: resolved.createdAt,
         orgMonthRollupHours: zeros,
-        mtdUtilizationAvgPct: null,
+        utilizationPct: null,
         capacityHeadcount: 0,
         weeks: weeksZeroed,
         error: null,
@@ -276,7 +276,7 @@ export async function loadWeeklyOverview(
       const pct = personLoggedUtilizationPct(logged, elapsed, STANDARD_WORKDAY_HOURS)
       if (pct !== null) utilizationSamples.push(pct)
     }
-    const mtdUtilizationAvgPct =
+    const utilizationPct =
       utilizationSamples.length > 0
         ? roundDisplayStat(meanPersonLoggedUtilizationPct(utilizationSamples)!)
         : null
@@ -338,7 +338,7 @@ export async function loadWeeklyOverview(
       snapshotId: resolved.id,
       syncCreatedAt: resolved.createdAt,
       orgMonthRollupHours,
-      mtdUtilizationAvgPct,
+      utilizationPct,
       capacityHeadcount: roundDisplayStat(capacityPersonIds.size),
       weeks,
       error: null,
