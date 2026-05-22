@@ -18,6 +18,10 @@ import { ColumnFilterInput } from '@/components/ui/data-table/column-filter-inpu
 import { SortableHeader } from '@/components/ui/data-table/sortable-header'
 import { fmtHoursKpi, fmtPct } from '@/lib/overview/overview-metrics'
 import {
+  dashboardTableEmptyClass,
+  dashboardTableShellClass,
+} from '@/lib/ui/dashboard-surface'
+import {
   filterNumberContains,
   filterPctContains,
   filterTextIncludesCi,
@@ -68,10 +72,13 @@ const columnHelper = createColumnHelper<TeamStaffingRow>()
 export function TeamStaffingGrid({
   rows,
   footnote,
+  embedded = false,
 }: {
   rows: TeamStaffingRow[]
   /** Explains MTD vs calendar-month bounds for logged vs PTO. */
   footnote: string | null
+  /** When true, renders table body only (parent supplies the panel shell). */
+  embedded?: boolean
 }) {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'roleLabel', desc: false },
@@ -255,7 +262,7 @@ export function TeamStaffingGrid({
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-card/10 p-4 ring-1 ring-foreground/5">
+      <div className={embedded ? 'p-0' : dashboardTableEmptyClass()}>
         <p className="text-xs text-muted-foreground">
           No people with capacity in scope for this month.
         </p>
@@ -275,8 +282,13 @@ export function TeamStaffingGrid({
     id === 'billableEfficiencyPct'
 
   return (
-    <div className="rounded-xl border border-border bg-card/10 ring-1 ring-foreground/5">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2 sm:px-4">
+    <div className={embedded ? undefined : dashboardTableShellClass()}>
+      <div
+        className={cn(
+          'flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2 sm:px-4',
+          embedded && 'px-0'
+        )}
+      >
         <p className="text-[11px] text-muted-foreground">
           {activeColumnFilters ? (
             <>
@@ -291,7 +303,7 @@ export function TeamStaffingGrid({
           )}
         </p>
       </div>
-      <div className="overflow-x-auto p-3 pt-2 sm:p-4 sm:pt-3">
+      <div className={cn('overflow-x-auto p-3 pt-2 sm:p-4 sm:pt-3', embedded && 'px-0 pt-0')}>
         <table className="w-full min-w-6xl table-fixed border-collapse text-sm">
           <colgroup>
             {leafColumns.map((col) => (
@@ -396,7 +408,7 @@ export function TeamStaffingGrid({
       </div>
 
       {filteredCount > 0 && pageCount > 1 ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-2 sm:px-4">
+        <div className={cn('flex flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-2 sm:px-4', embedded && 'px-0')}>
           <p className="text-[11px] text-muted-foreground tabular-nums">
             Page {pageIndex + 1} of {pageCount}
           </p>
@@ -426,7 +438,7 @@ export function TeamStaffingGrid({
       ) : null}
 
       {footnote ? (
-        <p className="border-t border-border px-3 py-2 text-[10px] leading-snug text-muted-foreground sm:px-4">
+        <p className={cn('border-t border-border px-3 py-2 text-[10px] leading-snug text-muted-foreground sm:px-4', embedded && 'px-0')}>
           {footnote}
         </p>
       ) : null}

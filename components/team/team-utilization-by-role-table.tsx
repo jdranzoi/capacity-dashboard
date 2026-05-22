@@ -152,7 +152,8 @@ export function TeamUtilizationByRoleTable({ rows }: { rows: TeamRoleAnalyticsRo
       initialSorting={[{ id: 'roleLabel', desc: false }]}
       emptyMessage="No capacity rows in scope for this month."
       scopeNoun="roles in scope"
-      wrapperClassName="mt-3 border-0 bg-transparent ring-0"
+      embedded
+      wrapperClassName="mt-3"
       isRightAligned={(id) => RIGHT_ALIGNED.has(id)}
     />
   )

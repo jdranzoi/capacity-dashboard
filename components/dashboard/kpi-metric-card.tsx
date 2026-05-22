@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { dashboardSurfaceClass } from '@/lib/ui/dashboard-surface'
 import type { CSSProperties, ReactNode } from 'react'
 
 /** Shared KPI row grid — matches overview `OverviewKpiCards` (5 columns on xl). */
@@ -26,7 +27,8 @@ export function KpiMetricCard({
   return (
     <div
       className={cn(
-        'flex h-full min-h-0 flex-col rounded-xl bg-card p-3 text-card-foreground ring-1 ring-foreground/10',
+        'flex h-full min-h-0 flex-col',
+        dashboardSurfaceClass('p-3'),
         className
       )}
     >

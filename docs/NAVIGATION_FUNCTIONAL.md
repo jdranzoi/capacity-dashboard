@@ -107,7 +107,7 @@ Implementation plan (isolated sub-section tracks): [SP2_CAPACITY_PLAN.md](./SP2_
 Operational workload and capacity-fill metrics belong under **Capacity → Utilization**, not Teams. Teams covers org structure, project team cards, staffing balance, dependencies, and health.
 
 - **Overview:** Organizational structure visualization. Includes: headcount, roles, geographic distribution. Forward-looking: seniority mix, skill composition (no data source yet — surfaced as placeholders).
-- **Composition:** Project teams view. One card per active project, grouped by `dim_project.project_type` (build / support), ordered by PM within each group. Card body lists assigned team members with role. Name filter narrows the visible card set to projects containing the searched person.
+- **Composition:** Project teams view. One card per active project, grouped by `dim_project.project_type` (build / support / internal), ordered by PM within each group. Card body lists assigned team members grouped by role hierarchy. Name filter narrows the visible card set to projects containing the searched person.
 - **Staffing:** Resource allocation by team. Includes: project allocations, staffing distribution, cross-team participation, allocation balance.
 - **Dependencies:** Inter-team operational relationships. Includes: shared resources, delivery dependencies, leadership overlap, collaboration patterns.
 - **Skills Coverage:** `[future — no data source yet]` Capability strength by team. Includes: technology concentration, specialization gaps, redundancy analysis, critical skill risk.

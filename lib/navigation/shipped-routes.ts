@@ -10,6 +10,7 @@ export const SHIPPED_NAV_HREFS = new Set<string>([
   '/capacity/overview',
   '/capacity/utilization',
   '/teams/overview',
+  '/teams/composition',
 ])
 
 export function isNavRouteShipped(href: string): boolean {

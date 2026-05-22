@@ -41,6 +41,9 @@
   --color-card: var(--card);
   --color-team-headcount-bar: var(--team-headcount-bar);
   --color-team-headcount-bar-label: var(--team-headcount-bar-label);
+  --color-search-highlight: var(--search-highlight);
+  --color-search-highlight-foreground: var(--search-highlight-foreground);
+  --color-search-highlight-ring: var(--search-highlight-ring);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -106,6 +109,9 @@
   /* Headcount-by-role horizontal bars (semantic blue; label = on-bar text) */
   --team-headcount-bar: oklch(0.48 0.15 252);
   --team-headcount-bar-label: oklch(0.99 0 0);
+  --search-highlight: oklch(0.84 0.16 92);
+  --search-highlight-foreground: oklch(0.12 0 0);
+  --search-highlight-ring: oklch(0.62 0.14 85);
   /* sidebar geometry */
   --sidebar-w: 240px;
   --sidebar-w-collapsed: 52px;
@@ -162,11 +168,17 @@
   --team-util-tone-over: oklch(0.62 0.22 292);
   --team-headcount-bar: oklch(0.58 0.16 252);
   --team-headcount-bar-label: oklch(0.99 0 0);
+  --search-highlight: oklch(0.72 0.17 88);
+  --search-highlight-foreground: oklch(0.1 0 0);
+  --search-highlight-ring: oklch(0.82 0.14 92);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+  mark {
+    color: inherit;
   }
   body {
     @apply bg-background text-foreground;

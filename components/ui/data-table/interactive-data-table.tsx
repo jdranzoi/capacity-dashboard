@@ -16,6 +16,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { ColumnFilterInput } from '@/components/ui/data-table/column-filter-input'
 import { cn } from '@/lib/utils'
+import {
+  dashboardTableEmptyClass,
+  dashboardTableShellClass,
+} from '@/lib/ui/dashboard-surface'
 
 const DEFAULT_PAGE_SIZE = 15
 
@@ -33,6 +37,8 @@ export type InteractiveDataTableProps<T> = {
   tableClassName?: string
   isRightAligned?: (columnId: string) => boolean
   wrapperClassName?: string
+  /** When true, parent panel supplies the card shell — table body only. */
+  embedded?: boolean
   footnote?: string | null
 }
 
@@ -49,6 +55,7 @@ export function InteractiveDataTable<T>({
   tableClassName = 'w-full min-w-xl border-collapse text-sm',
   isRightAligned = () => false,
   wrapperClassName,
+  embedded = false,
   footnote,
 }: InteractiveDataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>(initialSorting)
@@ -81,12 +88,7 @@ export function InteractiveDataTable<T>({
 
   if (data.length === 0) {
     return (
-      <div
-        className={cn(
-          'rounded-xl border border-border bg-card/10 p-4 ring-1 ring-foreground/5',
-          wrapperClassName
-        )}
-      >
+      <div className={cn(embedded ? 'p-0' : dashboardTableEmptyClass(), wrapperClassName)}>
         <p className="text-xs text-muted-foreground">{emptyMessage}</p>
       </div>
     )
@@ -96,13 +98,13 @@ export function InteractiveDataTable<T>({
   const pageIndex = table.getState().pagination?.pageIndex ?? 0
 
   return (
-    <div
-      className={cn(
-        'rounded-xl border border-border bg-card/10 ring-1 ring-foreground/5',
-        wrapperClassName
-      )}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2 sm:px-4">
+    <div className={cn(embedded ? undefined : dashboardTableShellClass(), wrapperClassName)}>
+      <div
+        className={cn(
+          'flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2 sm:px-4',
+          embedded && 'px-0'
+        )}
+      >
         <p className="text-[11px] text-muted-foreground">
           {activeColumnFilters ? (
             <>
@@ -118,7 +120,7 @@ export function InteractiveDataTable<T>({
         </p>
       </div>
 
-      <div className="overflow-x-auto p-3 pt-2 sm:p-4 sm:pt-3">
+      <div className={cn('overflow-x-auto p-3 pt-2 sm:p-4 sm:pt-3', embedded && 'px-0 pt-0')}>
         <table className={tableClassName}>
           <thead>
             {table.getHeaderGroups().map((hg) => (
@@ -204,7 +206,12 @@ export function InteractiveDataTable<T>({
       </div>
 
       {enablePagination && filteredCount > 0 && pageCount > 1 ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-2 sm:px-4">
+        <div
+          className={cn(
+            'flex flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-2 sm:px-4',
+            embedded && 'px-0'
+          )}
+        >
           <p className="text-[11px] tabular-nums text-muted-foreground">
             Page {pageIndex + 1} of {pageCount}
           </p>
@@ -234,7 +241,12 @@ export function InteractiveDataTable<T>({
       ) : null}
 
       {footnote ? (
-        <p className="border-t border-border px-3 py-2 text-[10px] leading-snug text-muted-foreground sm:px-4">
+        <p
+          className={cn(
+            'border-t border-border px-3 py-2 text-[10px] leading-snug text-muted-foreground sm:px-4',
+            embedded && 'px-0'
+          )}
+        >
           {footnote}
         </p>
       ) : null}

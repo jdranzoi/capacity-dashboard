@@ -1,4 +1,4 @@
-import { TeamFilterSelect } from '@/components/team/team-filter-select'
+import { TeamFilterSuggestInput } from '@/components/team/team-filter-suggest-input'
 import { TeamMonthPicker } from '@/components/team/team-month-picker'
 import type { TeamFilterOptionsPayload } from '@/lib/team/load-team-filter-options'
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
@@ -32,23 +32,29 @@ export function TeamToolbar({
         )}
       </div>
 
-      <TeamFilterSelect
+      <TeamFilterSuggestInput
         paramKey="role"
         label="Role"
+        placeholder="Pick role…"
+        ariaLabel="Filter utilization by role"
         options={filterOptions.roles}
-        selectedValue={routeFilters.roleKey}
+        selectedParamValue={routeFilters.roleKey}
       />
-      <TeamFilterSelect
+      <TeamFilterSuggestInput
         paramKey="project"
         label="Project"
+        placeholder="Search project…"
+        ariaLabel="Filter utilization by project"
         options={filterOptions.projects}
-        selectedValue={routeFilters.projectKey}
+        selectedParamValue={routeFilters.projectKey}
       />
-      <TeamFilterSelect
+      <TeamFilterSuggestInput
         paramKey="zone"
         label="Region"
+        placeholder="Pick region…"
+        ariaLabel="Filter utilization by holiday region"
         options={filterOptions.zones}
-        selectedValue={routeFilters.zoneKey}
+        selectedParamValue={routeFilters.zoneKey}
       />
     </div>
   )

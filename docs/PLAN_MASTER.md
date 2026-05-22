@@ -310,7 +310,7 @@ The current `/team` route also contains role/team-level aggregates. When SP-0 sp
 | Sub-section     | Data available                          | Notes                                   |
 | --------------- | --------------------------------------- | --------------------------------------- |
 | Overview        | ✅ Existing loaders                     | KPI summary per team/role               |
-| Composition     | ✅ `dim_person`, `dim_role`, `dim_zone` | Headcount, role mix                     |
+| Composition     | ✅ `fact_plans`, `dim_project`, `dim_person`, `dim_role` | Project team cards by type, PM sort, name filter |
 | Utilization     | ✅ Existing loaders                     | Team-level capacity fill                |
 | Staffing        | ✅ `fact_plans`, `dim_project`          | Existing staffing grid                  |
 | Dependencies    | ❌ Complex derivation                   | Shared resources across teams — phase 2 |
@@ -322,7 +322,7 @@ The current `/team` route also contains role/team-level aggregates. When SP-0 sp
 - [ ] **SP-4.1** Create `/teams` route shell and layout with Level 2 nav
 - [ ] **SP-4.2** Migrate team-level components from `/team` to `/teams`
 - [ ] **SP-4.3** Teams → Overview sub-page (KPI summary per role) — **Done** (`/teams/overview`: headcount, roles, zones, tenure KPI, coming-soon seniority/skills)
-- [ ] **SP-4.4** Teams → Composition sub-page (headcount, role mix, seniority)
+- [x] **SP-4.4** Teams → Composition sub-page (project team cards by build/support, PM sort, name filter)
 - [ ] **SP-4.5** ~~Teams → Utilization~~ — **Superseded:** role/person utilization dashboard lives under **Capacity → Utilization** (`/capacity/utilization`); not a Teams Level 2 item
 - [ ] **SP-4.6** Teams → Staffing sub-page (migrate existing staffing grid)
 - [ ] **SP-4.7** Teams → Health sub-page (composite scoring from existing metrics)

@@ -1,4 +1,6 @@
 import { Skeleton } from '@/components/ui/skeleton'
+import { DASHBOARD_SURFACE } from '@/lib/ui/dashboard-surface'
+import { cn } from '@/lib/utils'
 
 export function TeamToolbarSkeleton() {
   return (
@@ -23,7 +25,7 @@ export function TeamKpiRowSkeleton() {
       <Skeleton className="h-3 w-40" />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-border p-3">
+          <div key={i} className={cn(DASHBOARD_SURFACE, 'p-3')}>
             <Skeleton className="h-3 w-28" />
             <Skeleton className="mt-2 h-8 w-24" />
             <Skeleton className="mt-3 h-3 w-full" />
@@ -38,20 +40,16 @@ export function TeamKpiRowSkeleton() {
 export function TeamAnalyticsSkeleton() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-72 rounded-xl border border-border" />
-      ))}
+      <Skeleton className={cn(DASHBOARD_SURFACE, 'h-72')} />
+      <Skeleton className={cn(DASHBOARD_SURFACE, 'h-72')} />
+      <Skeleton className={cn(DASHBOARD_SURFACE, 'h-96 lg:col-span-2')} />
     </div>
   )
 }
 
+/** Table body placeholder when staffing loads inside the analytics panel. */
 export function TeamStaffingSkeleton() {
-  return (
-    <div className="space-y-3">
-      <Skeleton className="h-4 w-48" />
-      <Skeleton className="h-96 rounded-xl border border-border" />
-    </div>
-  )
+  return <Skeleton className="h-96 w-full rounded-lg" />
 }
 
 export function TeamPageSkeleton() {
@@ -72,7 +70,6 @@ export function TeamPageSkeleton() {
         <Skeleton className="h-3 w-24" />
         <TeamAnalyticsSkeleton />
       </section>
-      <TeamStaffingSkeleton />
     </div>
   )
 }

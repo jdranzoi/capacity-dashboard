@@ -64,6 +64,7 @@ export function TeamPageShell({
           staffingSlot={
             <TeamStaffingGrid
               rows={staffingRows}
+              embedded
               footnote={
                 kpis.asOfDate
                   ? `Non-PTO logged and billable through ${kpis.asOfDate}; PTO through calendar month end (overview-aligned).`

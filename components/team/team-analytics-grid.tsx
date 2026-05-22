@@ -1,6 +1,11 @@
 import type { ReactNode } from 'react'
 
 import { TeamUtilizationByRoleTable } from '@/components/team/team-utilization-by-role-table'
+import {
+  DataSectionPanel,
+  DataSectionPanelHeader,
+  DataSectionPanelTotalBadge,
+} from '@/components/ui/data-section-panel'
 import { fmtHeadcountKpi, fmtPct } from '@/lib/overview/overview-metrics'
 import type { TeamRoleAnalyticsRow } from '@/lib/team/load-team-role-analytics'
 
@@ -107,58 +112,48 @@ export function TeamAnalyticsGrid({
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <div
-        className="flex min-h-72 flex-col rounded-xl border border-border bg-card/20 p-4 ring-1 ring-foreground/5"
-        data-slot="team-analytics-d1"
-      >
-        <p className="text-sm font-medium text-foreground">Utilization by role</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Planning roster grouped by month role (from worklogs, set at month start). Pace and
-          capacity-fill use the same MTD cap as overview. Sort and filter per column.
-        </p>
+      <DataSectionPanel className="min-h-72" dataSlot="team-analytics-utilization">
+        <DataSectionPanelHeader
+          title="Utilization by role"
+          description={
+            <>
+              Planning roster grouped by month role (from worklogs, set at month start). Pace and
+              capacity-fill use the same MTD cap as overview. Sort and filter per column.
+            </>
+          }
+        />
         <UtilizationByRoleTable rows={rows} />
-      </div>
-      <div
-        className="flex min-h-72 flex-col rounded-xl border border-border bg-card/20 p-4 ring-1 ring-foreground/5"
-        data-slot="team-analytics-d2"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-foreground">Headcount by role</p>
-            <p className="mt-1 text-xs text-muted-foreground">
+      </DataSectionPanel>
+
+      <DataSectionPanel className="min-h-72" dataSlot="team-analytics-headcount">
+        <DataSectionPanelHeader
+          title="Headcount by role"
+          description={
+            <>
               People with capacity rows for the month, grouped by month role (worklog stamp).
               Parentheses: share of <span className="text-foreground/80">Total</span>. Roster
               members with 0 logged still count in headcount.
-            </p>
-          </div>
-          <output
-            className="shrink-0 rounded-md border border-border bg-muted/30 px-2.5 py-1 text-right ring-1 ring-foreground/4"
-            aria-label={`Total headcount in scope: ${fmtHeadcountKpi(headcountTotalInScope)}`}
-          >
-            <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-              Total
-            </span>
-            <span className="font-mono text-xl font-semibold tabular-nums leading-tight tracking-tight text-foreground">
-              {fmtHeadcountKpi(headcountTotalInScope)}
-            </span>
-          </output>
-        </div>
+            </>
+          }
+          aside={
+            <DataSectionPanelTotalBadge
+              label="Total"
+              value={fmtHeadcountKpi(headcountTotalInScope)}
+              ariaLabel={`Total headcount in scope: ${fmtHeadcountKpi(headcountTotalInScope)}`}
+            />
+          }
+        />
         <HeadcountByRoleHorizontalChart rows={rows} totalHeadcount={headcountTotalInScope} />
-      </div>
+      </DataSectionPanel>
+
       {staffingSlot ? (
-        <div
-          className="flex flex-col gap-3 lg:col-span-2"
-          data-slot="team-staffing-embed"
-          aria-labelledby="team-staffing-subheading"
-        >
-          <h3
-            id="team-staffing-subheading"
-            className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
-          >
-            Staffing grid
-          </h3>
+        <DataSectionPanel className="gap-3 lg:col-span-2" dataSlot="team-staffing-embed">
+          <DataSectionPanelHeader
+            title="Staffing grid"
+            description="Person-level capacity, plans, logged hours, utilization, and project mix for the filtered roster. Sort and filter per column."
+          />
           {staffingSlot}
-        </div>
+        </DataSectionPanel>
       ) : null}
     </div>
   )

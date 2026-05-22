@@ -144,7 +144,9 @@ export async function loadTeamFilterOptions(
           .in('id', slice)
         if (projErr) return { data: null, error: projErr.message }
         for (const p of projRows ?? []) {
-          const label = (p.project_name?.trim() || p.project_key) ?? p.project_key
+          const name = p.project_name?.trim()
+          const label =
+            name && name !== p.project_key ? `${p.project_key} — ${name}` : p.project_key
           projectOptions.push({ value: p.project_key, label })
         }
       }

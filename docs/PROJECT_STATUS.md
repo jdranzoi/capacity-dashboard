@@ -43,8 +43,8 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | Track | Route | Status | Notes |
 |---|---|---|---|
 | SP-4.1 Teams Overview | `/teams/overview` | **Done** | Org-structure snapshot: headcount, roles, geographic distribution + coming-soon placeholders |
-| SP-4.2 Teams Composition | `/teams/composition` | Not started | Project teams view: cards per project grouped by build/support, ordered by PM, name filter |
-| SP-4.x other Teams sub-sections | `/teams/*` | Placeholders | Composition, Staffing, Dependencies, Health, Skills coverage — to be planned per track |
+| SP-4.2 Teams Composition | `/teams/composition` | **Done** | Project teams cards grouped by build/support, ordered by PM, `?q=` name filter |
+| SP-4.x other Teams sub-sections | `/teams/*` | Placeholders | Staffing, Dependencies, Health, Skills coverage — to be planned per track |
 
 **Deferred:** SP-1 Overview · SP-3 People · legacy `/team` route migration.
 
@@ -60,6 +60,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | `/capacity/*` (other) | Capacity sub-sections | Placeholders (hidden in nav) |
 | `/teams` | Teams | Redirects → `/teams/overview` |
 | `/teams/overview` | Teams → Overview | **Shipped** — org structure snapshot |
+| `/teams/composition` | Teams → Composition | **Shipped** — project team cards by type |
 | `/teams/*` (other) | Teams sub-sections | Placeholders |
 | `/projects/*` | Projects | Level 2 shells (redirect from `/projects` → portfolio) |
 | `/ask` | Ask | Transversal utility (sidebar bottom) |
@@ -114,4 +115,4 @@ Ask         /ask
 
 ---
 
-*Last updated: SP-4.1 Teams Overview shipped; next = SP-2.6 Bench or SP-4.2 Teams Composition.*
+*Last updated: SP-4.2 Teams Composition shipped; next = SP-2.6 Bench or SP-4.6 Teams Staffing.*

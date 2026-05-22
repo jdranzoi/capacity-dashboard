@@ -167,7 +167,8 @@ export function CapacityOverviewRoleTable({ rows }: { rows: TeamRoleAnalyticsRow
       initialSorting={[{ id: 'netCapacityHours', desc: true }]}
       emptyMessage="No capacity rows in scope for this month."
       scopeNoun="roles in scope"
-      wrapperClassName="h-full border-0 bg-transparent ring-0"
+      embedded
+      wrapperClassName="h-full"
       isRightAligned={(id) => RIGHT_ALIGNED.has(id)}
     />
   )

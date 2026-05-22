@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils'
 
 import { CapacityOverviewRoleTable } from '@/components/capacity/overview/capacity-overview-role-table'
+import { dashboardSurfaceClass } from '@/lib/ui/dashboard-surface'
 import type { TeamRoleAnalyticsRow } from '@/lib/team/load-team-role-analytics'
 
 export function CapacityOverviewRoleSummary({
@@ -12,10 +13,7 @@ export function CapacityOverviewRoleSummary({
 }) {
   return (
     <section
-      className={cn(
-        'flex min-h-0 flex-col rounded-xl bg-card p-4 text-card-foreground ring-1 ring-foreground/10',
-        className
-      )}
+      className={cn('flex min-h-0 flex-col', dashboardSurfaceClass(), className)}
       data-slot="capacity-overview-role-summary"
     >
       <p className="shrink-0 text-sm font-medium tracking-tight">By role</p>

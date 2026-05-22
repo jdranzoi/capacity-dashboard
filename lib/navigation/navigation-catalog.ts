@@ -192,8 +192,7 @@ export const NAV_DOMAINS: NavigationDomainConfig[] = [
         'Teams',
         'Composition',
         '/teams/composition',
-        'Project teams view. Cards per active project grouped by project type (build / support), ordered by PM. Name filter shows which projects a person belongs to.',
-        'coming-soon'
+        'Project teams view. Cards per active project grouped by project type (build / support), ordered by PM. Name filter shows which projects a person belongs to.'
       ),
       domainItem(
         'Teams',

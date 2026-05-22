@@ -48,6 +48,7 @@ export async function TeamStaffingBlock({
   return (
     <TeamStaffingGrid
       rows={staffingResult.data ?? []}
+      embedded
       footnote={
         asOfDate
           ? `Non-PTO logged and billable through ${asOfDate}; PTO through calendar month end (overview-aligned).`
