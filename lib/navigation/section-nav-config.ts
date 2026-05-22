@@ -33,7 +33,7 @@ export function getSectionNavConfig(sectionId: SectionId): SectionNavConfig {
 
 /** Exact match for section index routes that share a path prefix with siblings. */
 export function isSectionNavItemActive(pathname: string, href: string): boolean {
-  if (href === '/teams' || href === '/capacity/utilization') {
+  if (href === '/capacity/utilization') {
     return pathname === href
   }
   return pathname === href || pathname.startsWith(`${href}/`)

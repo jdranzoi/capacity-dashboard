@@ -38,7 +38,15 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | SP-2.6 Bench | `/capacity/bench` | Not started | [§ SP-2.6](./SP2_CAPACITY_PLAN.md#sp-26--bench-capacitybench) |
 | SP-2.7 Forecast / Scenarios | `/capacity/forecast`, `/capacity/scenarios` | Stub done | [§ SP-2.7](./SP2_CAPACITY_PLAN.md#sp-27--forecast--scenarios) |
 
-**Deferred:** SP-1 Overview · SP-3 People · SP-4 Teams migration (can run in parallel with SP-2 tracks).
+**Parallel work:** SP-4 Teams tracks starting alongside SP-2.
+
+| Track | Route | Status | Notes |
+|---|---|---|---|
+| SP-4.1 Teams Overview | `/teams/overview` | **Done** | Org-structure snapshot: headcount, roles, geographic distribution + coming-soon placeholders |
+| SP-4.2 Teams Composition | `/teams/composition` | Not started | Project teams view: cards per project grouped by build/support, ordered by PM, name filter |
+| SP-4.x other Teams sub-sections | `/teams/*` | Placeholders | Composition, Staffing, Dependencies, Health, Skills coverage — to be planned per track |
+
+**Deferred:** SP-1 Overview · SP-3 People · legacy `/team` route migration.
 
 ---
 
@@ -50,7 +58,9 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | `/capacity/overview` | Capacity → Overview | **Shipped** — KPIs, charts, role summary |
 | `/capacity/utilization` | Capacity → Utilization | **Shipped** — role/person dashboard (from `/teams`) |
 | `/capacity/*` (other) | Capacity sub-sections | Placeholders (hidden in nav) |
-| `/teams` | — | Redirects → `/capacity/utilization` |
+| `/teams` | Teams | Redirects → `/teams/overview` |
+| `/teams/overview` | Teams → Overview | **Shipped** — org structure snapshot |
+| `/teams/*` (other) | Teams sub-sections | Placeholders |
 | `/projects/*` | Projects | Level 2 shells (redirect from `/projects` → portfolio) |
 | `/ask` | Ask | Transversal utility (sidebar bottom) |
 | `/team` | — | Redirects → `/capacity/utilization` |
@@ -104,4 +114,4 @@ Ask         /ask
 
 ---
 
-*Last updated: SP-2.0 Foundation + SP-2.2 Overview shipped; next = SP-2.6 Bench.*
+*Last updated: SP-4.1 Teams Overview shipped; next = SP-2.6 Bench or SP-4.2 Teams Composition.*

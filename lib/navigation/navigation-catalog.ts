@@ -180,27 +180,20 @@ export const NAV_DOMAINS: NavigationDomainConfig[] = [
     description:
       'Understand team structures and dynamics. Team composition, delivery load, capacity health, role distribution, staffing balance, inter-team dependencies.',
     icon: Users,
-    defaultHref: '/teams',
+    defaultHref: '/teams/overview',
     items: [
       domainItem(
         'Teams',
         'Overview',
         '/teams/overview',
-        'Team-level operational summary. Utilization, staffing balance, team health, delivery pressure.',
-        'coming-soon'
+        'Organizational structure visualization. Headcount, roles, geographic distribution. Seniority mix and skill composition surfaced as placeholders until a data source exists.'
       ),
       domainItem(
         'Teams',
         'Composition',
         '/teams/composition',
-        'Organizational structure visualization. Headcount, roles, seniority mix, geographic distribution, skill composition.',
+        'Project teams view. Cards per active project grouped by project type (build / support), ordered by PM. Name filter shows which projects a person belongs to.',
         'coming-soon'
-      ),
-      domainItem(
-        'Teams',
-        'Utilization',
-        '/teams',
-        'Team workload and efficiency analysis. Capacity fill, billable %, logged trends, PTO impact, saturation analysis.'
       ),
       domainItem(
         'Teams',

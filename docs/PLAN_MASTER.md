@@ -321,9 +321,9 @@ The current `/team` route also contains role/team-level aggregates. When SP-0 sp
 
 - [ ] **SP-4.1** Create `/teams` route shell and layout with Level 2 nav
 - [ ] **SP-4.2** Migrate team-level components from `/team` to `/teams`
-- [ ] **SP-4.3** Teams → Overview sub-page (KPI summary per role)
+- [ ] **SP-4.3** Teams → Overview sub-page (KPI summary per role) — **Done** (`/teams/overview`: headcount, roles, zones, tenure KPI, coming-soon seniority/skills)
 - [ ] **SP-4.4** Teams → Composition sub-page (headcount, role mix, seniority)
-- [ ] **SP-4.5** Teams → Utilization sub-page (team-level workload charts, migrate from current `/team`)
+- [ ] **SP-4.5** ~~Teams → Utilization~~ — **Superseded:** role/person utilization dashboard lives under **Capacity → Utilization** (`/capacity/utilization`); not a Teams Level 2 item
 - [ ] **SP-4.6** Teams → Staffing sub-page (migrate existing staffing grid)
 - [ ] **SP-4.7** Teams → Health sub-page (composite scoring from existing metrics)
 - [ ] **SP-4.8** Mark Dependencies and Skills Coverage as coming soon
