@@ -1,9 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import type { Database } from '@/lib/supabase/database.types'
-import type { TeamRouteFilters } from '@/lib/team/team-route-filters'
-import { teamRouteFiltersActive } from '@/lib/team/team-route-filters'
-import { fetchMonthRolesForPeople, personMatchesMonthRole } from '@/lib/team/team-month-role'
+import { fetchMonthRolesForPeople, personMatchesMonthRole } from '@/lib/workforce/month-role'
+import {
+  personScopeFiltersActive,
+  type PersonScopeFilters,
+} from '@/lib/workforce/person-scope-filters'
 
 const PAGE = 1000
 
@@ -44,7 +46,7 @@ async function loadCapacityPersonIds(
 }
 
 /**
- * When any `/team` URL filter is active, returns the intersection with people who have
+ * When any person-scope URL filter is active, returns the intersection with people who have
  * `fact_capacity` for the snapshot month. When no filter is active, returns `null` (full org).
  */
 export async function resolveFilteredPersonIds(
@@ -52,9 +54,9 @@ export async function resolveFilteredPersonIds(
   snapshotId: string,
   monthStartStr: string,
   monthEndStr: string,
-  filters: TeamRouteFilters
+  filters: PersonScopeFilters
 ): Promise<{ personIds: Set<string> | null; error: string | null }> {
-  if (!teamRouteFiltersActive(filters)) {
+  if (!personScopeFiltersActive(filters)) {
     return { personIds: null, error: null }
   }
 

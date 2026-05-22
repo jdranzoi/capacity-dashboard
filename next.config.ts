@@ -5,6 +5,15 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  async redirects() {
+    return [
+      {
+        source: '/team',
+        destination: '/capacity/utilization',
+        permanent: true,
+      },
+    ]
+  },
 };
 
 export default nextConfig;

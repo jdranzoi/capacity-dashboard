@@ -26,7 +26,7 @@ export function capacityRouteFiltersActive(f: CapacityRouteFilters): boolean {
   return !!(f.roleKey ?? f.zoneKey ?? f.projectKey ?? f.projectTypeKey)
 }
 
-/** Maps capacity filters to team resolver shape (`projectType` handled in Operations track). */
+/** Maps capacity filters to person-scope resolver shape (`projectType` handled in Operations track). */
 export function capacityFiltersForPersonScope(f: CapacityRouteFilters): {
   roleKey: string | null
   zoneKey: string | null

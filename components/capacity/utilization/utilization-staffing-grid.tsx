@@ -27,8 +27,8 @@ import {
   filterTextIncludesCi,
 } from '@/lib/table/table-filter-fns'
 import { compareNullableNumber } from '@/lib/table/table-sort-utils'
-import type { TeamStaffingRow } from '@/lib/team/load-team-staffing-rows'
-import { utilizationLoggedVsCapacityCellStyle } from '@/lib/team/team-utilization-tone'
+import type { UtilizationStaffingRow } from '@/lib/capacity/utilization/load-staffing-rows'
+import { utilizationLoggedVsCapacityCellStyle } from '@/lib/capacity/shared/utilization-tone'
 import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 15
@@ -67,14 +67,14 @@ const FILTER_ARIA_LABEL: Record<string, string> = {
  * Client-side column filters only refine the `rows` payload (already scoped by URL/global
  * loaders). Changing month/filters on the page replaces `rows`; column filters apply on top.
  */
-const columnHelper = createColumnHelper<TeamStaffingRow>()
+const columnHelper = createColumnHelper<UtilizationStaffingRow>()
 
-export function TeamStaffingGrid({
+export function UtilizationStaffingGrid({
   rows,
   footnote,
   embedded = false,
 }: {
-  rows: TeamStaffingRow[]
+  rows: UtilizationStaffingRow[]
   /** Explains MTD vs calendar-month bounds for logged vs PTO. */
   footnote: string | null
   /** When true, renders table body only (parent supplies the panel shell). */

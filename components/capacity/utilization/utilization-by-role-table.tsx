@@ -13,13 +13,13 @@ import {
   filterTextIncludesCi,
 } from '@/lib/table/table-filter-fns'
 import { compareNullableNumber } from '@/lib/table/table-sort-utils'
-import type { TeamRoleAnalyticsRow } from '@/lib/team/load-team-role-analytics'
+import type { RoleAnalyticsRow } from '@/lib/capacity/shared/load-role-analytics'
 import {
   utilizationLoggedVsCapacityBarStyles,
   utilizationLoggedVsCapacityCellStyle,
-} from '@/lib/team/team-utilization-tone'
+} from '@/lib/capacity/shared/utilization-tone'
 
-const columnHelper = createColumnHelper<TeamRoleAnalyticsRow>()
+const columnHelper = createColumnHelper<RoleAnalyticsRow>()
 
 const RIGHT_ALIGNED = new Set([
   'netCapacityHours',
@@ -28,7 +28,7 @@ const RIGHT_ALIGNED = new Set([
   'utilizationPct',
 ])
 
-export function TeamUtilizationByRoleTable({ rows }: { rows: TeamRoleAnalyticsRow[] }) {
+export function UtilizationByRoleTable({ rows }: { rows: RoleAnalyticsRow[] }) {
   const columns = useMemo(
     () =>
       [
@@ -140,7 +140,7 @@ export function TeamUtilizationByRoleTable({ rows }: { rows: TeamRoleAnalyticsRo
             )
           },
         }),
-      ] as ColumnDef<TeamRoleAnalyticsRow, unknown>[],
+      ] as ColumnDef<RoleAnalyticsRow, unknown>[],
     []
   )
 

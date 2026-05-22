@@ -46,7 +46,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | SP-4.2 Teams Composition | `/teams/composition` | **Done** | Project teams cards grouped by build/support, ordered by PM, `?q=` name filter |
 | SP-4.x other Teams sub-sections | `/teams/*` | Placeholders | Staffing, Dependencies, Health, Skills coverage — to be planned per track |
 
-**Deferred:** SP-1 Overview · SP-3 People · legacy `/team` route migration.
+**Deferred:** SP-1 Overview · SP-3 People.
 
 ---
 
@@ -56,7 +56,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 |---|---|---|
 | `/` | Overview | **Substantial** — weekly cards, KPIs, charts |
 | `/capacity/overview` | Capacity → Overview | **Shipped** — KPIs, charts, role summary |
-| `/capacity/utilization` | Capacity → Utilization | **Shipped** — role/person dashboard (from `/teams`) |
+| `/capacity/utilization` | Capacity → Utilization | **Shipped** — role/person dashboard (`components/capacity/utilization/`) |
 | `/capacity/*` (other) | Capacity sub-sections | Placeholders (hidden in nav) |
 | `/teams` | Teams | Redirects → `/teams/overview` |
 | `/teams/overview` | Teams → Overview | **Shipped** — org structure snapshot |
@@ -64,7 +64,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | `/teams/*` (other) | Teams sub-sections | Placeholders |
 | `/projects/*` | Projects | Level 2 shells (redirect from `/projects` → portfolio) |
 | `/ask` | Ask | Transversal utility (sidebar bottom) |
-| `/team` | — | Redirects → `/capacity/utilization` |
+| `/team` | — | Permanent redirect → `/capacity/utilization` (`next.config.ts`) |
 | `/flags`, `/pipeline` | — | Redirect → `/` |
 
 ---
@@ -74,9 +74,9 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | Subplan | Built today | Target |
 |---|---|---|
 | SP-1 Overview | Weekly section, workload charts, KPI blocks, loaders in `lib/overview/` | **Deferred** — extend after Capacity widgets exist |
-| SP-2 Capacity | `/capacity/overview` shipped; other tracks pending | [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md) |
-| SP-3 People | Part of `/team` (`components/team/`, `lib/team/`) | `/people` + migration |
-| SP-4 Teams | Part of `/team` (staffing grid, role analytics) | `/teams` + migration |
+| SP-2 Capacity | `/capacity/overview` + `/capacity/utilization` shipped; other tracks pending | [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md) |
+| SP-3 People | None (individual views TBD) | `/people` |
+| SP-4 Teams | `/teams/overview` + `/teams/composition` shipped | `/teams/*` remaining sub-sections |
 | SP-5 Projects | None (pipeline stub only) | New `/projects` |
 | SP-6 Insights | `/flags` proto | Phase 2 |
 | SP-7 Reports | None | Phase 2 |
@@ -89,11 +89,12 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 |---|---|
 | Sidebar | `components/layout/sidebar.tsx` |
 | Overview UI | `components/overview/` |
-| Capacity UI (planned) | `components/capacity/{subsection}/`, `_shared/` |
-| Capacity data (planned) | `lib/capacity/{subsection}/`, `shared/` |
-| Team UI (→ People + Teams) | `components/team/` |
+| Capacity UI | `components/capacity/{subsection}/`, `_shared/`, `utilization/` |
+| Capacity data | `lib/capacity/{subsection}/`, `shared/`, `utilization/` |
+| Workforce shared (roster, filters) | `lib/workforce/` |
+| Teams UI | `components/teams/` |
+| Teams data | `lib/teams/` |
 | Overview data | `lib/overview/load-weekly-overview.ts` |
-| Team data | `lib/team/` |
 | Domain formulas | `lib/domain/workload-metrics.ts`, `lib/domain/utilization.ts` |
 | Display rounding | `lib/format/display-stats.ts` |
 
@@ -115,4 +116,4 @@ Ask         /ask
 
 ---
 
-*Last updated: SP-4.2 Teams Composition shipped; next = SP-2.6 Bench or SP-4.6 Teams Staffing.*
+*Last updated: legacy `/team` removed; utilization lives under Capacity; shared roster in `lib/workforce/`.*

@@ -1,17 +1,13 @@
 import type { ReactNode } from 'react'
 
-import { TeamUtilizationByRoleTable } from '@/components/team/team-utilization-by-role-table'
+import { UtilizationByRoleTable } from '@/components/capacity/utilization/utilization-by-role-table'
 import {
   DataSectionPanel,
   DataSectionPanelHeader,
   DataSectionPanelTotalBadge,
 } from '@/components/ui/data-section-panel'
 import { fmtHeadcountKpi, fmtPct } from '@/lib/overview/overview-metrics'
-import type { TeamRoleAnalyticsRow } from '@/lib/team/load-team-role-analytics'
-
-function UtilizationByRoleTable({ rows }: { rows: TeamRoleAnalyticsRow[] }) {
-  return <TeamUtilizationByRoleTable rows={rows} />
-}
+import type { RoleAnalyticsRow } from '@/lib/capacity/shared/load-role-analytics'
 
 function headcountAxisDomainMax(maxHc: number): number {
   if (maxHc <= 0) return 5
@@ -22,7 +18,7 @@ function HeadcountByRoleHorizontalChart({
   rows,
   totalHeadcount,
 }: {
-  rows: TeamRoleAnalyticsRow[]
+  rows: RoleAnalyticsRow[]
   /** Sum of row headcounts; same denominator for share % (respects `/team` filters). */
   totalHeadcount: number
 }) {
@@ -100,11 +96,11 @@ function HeadcountByRoleHorizontalChart({
   )
 }
 
-export function TeamAnalyticsGrid({
+export function UtilizationAnalyticsGrid({
   rows,
   staffingSlot,
 }: {
-  rows: TeamRoleAnalyticsRow[]
+  rows: RoleAnalyticsRow[]
   /** Full-width staffing grid below utilization and headcount cards. */
   staffingSlot?: ReactNode
 }) {

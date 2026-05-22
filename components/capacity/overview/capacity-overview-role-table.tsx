@@ -18,9 +18,9 @@ import {
   filterTextIncludesCi,
 } from '@/lib/table/table-filter-fns'
 import { compareNullableNumber } from '@/lib/table/table-sort-utils'
-import type { TeamRoleAnalyticsRow } from '@/lib/team/load-team-role-analytics'
+import type { RoleAnalyticsRow } from '@/lib/capacity/shared/load-role-analytics'
 
-const columnHelper = createColumnHelper<TeamRoleAnalyticsRow>()
+const columnHelper = createColumnHelper<RoleAnalyticsRow>()
 
 const RIGHT_ALIGNED = new Set([
   'headcount',
@@ -32,7 +32,7 @@ const RIGHT_ALIGNED = new Set([
   'plannedPct',
 ])
 
-export function CapacityOverviewRoleTable({ rows }: { rows: TeamRoleAnalyticsRow[] }) {
+export function CapacityOverviewRoleTable({ rows }: { rows: RoleAnalyticsRow[] }) {
   const columns = useMemo(
     () =>
       [
@@ -155,7 +155,7 @@ export function CapacityOverviewRoleTable({ rows }: { rows: TeamRoleAnalyticsRow
             ),
           }
         ),
-      ] as ColumnDef<TeamRoleAnalyticsRow, unknown>[],
+      ] as ColumnDef<RoleAnalyticsRow, unknown>[],
     []
   )
 

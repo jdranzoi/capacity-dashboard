@@ -1,12 +1,13 @@
-export type TeamRouteFilters = {
+/** URL-backed person scope filters shared by Capacity and future People routes. */
+export type PersonScopeFilters = {
   roleKey: string | null
   zoneKey: string | null
   projectKey: string | null
 }
 
-export function parseTeamRouteFilters(
+export function parsePersonScopeFilters(
   raw: Record<string, string | string[] | undefined>
-): TeamRouteFilters {
+): PersonScopeFilters {
   const one = (k: string): string | null => {
     const v = raw[k]
     const s = Array.isArray(v) ? v[0] : v
@@ -20,6 +21,6 @@ export function parseTeamRouteFilters(
   }
 }
 
-export function teamRouteFiltersActive(f: TeamRouteFilters): boolean {
+export function personScopeFiltersActive(f: PersonScopeFilters): boolean {
   return !!(f.roleKey ?? f.zoneKey ?? f.projectKey)
 }

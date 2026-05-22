@@ -1,17 +1,19 @@
 import { Suspense } from 'react'
 
-import { TeamAnalyticsBlock } from '@/components/team/team-analytics-block'
-import { TeamHeaderBlock } from '@/components/team/team-header-block'
-import { TeamKpiBlock } from '@/components/team/team-kpi-block'
-import { TeamRoutePendingShell } from '@/components/team/team-route-pending-shell'
-import { TeamRouteSection } from '@/components/team/team-route-section'
+import { CapacityHeaderBlock } from '@/components/capacity/_shared/capacity-header-block'
+import { CapacityRoutePendingShell } from '@/components/capacity/_shared/capacity-route-pending-shell'
+import { CapacityRouteSection } from '@/components/capacity/_shared/capacity-route-section'
 import {
-  TeamAnalyticsSkeleton,
-  TeamKpiRowSkeleton,
-  TeamToolbarSkeleton,
-} from '@/components/team/team-section-skeletons'
-import { TeamToolbarBlock } from '@/components/team/team-toolbar-block'
-import { parseTeamRouteFilters } from '@/lib/team/team-route-filters'
+  UtilizationAnalyticsSkeleton,
+  UtilizationKpiRowSkeleton,
+  UtilizationPageSkeleton,
+  UtilizationToolbarSkeleton,
+} from '@/components/capacity/_shared/capacity-section-skeletons'
+import { UtilizationAnalyticsBlock } from '@/components/capacity/utilization/utilization-analytics-block'
+import { UtilizationKpiBlock } from '@/components/capacity/utilization/utilization-kpi-block'
+import { UtilizationToolbarBlock } from '@/components/capacity/utilization/utilization-toolbar-block'
+import { getCapacityMonthSelection } from '@/lib/capacity/shared/capacity-page-cache'
+import { parseCapacityRouteFilters } from '@/lib/capacity/shared/capacity-route-filters'
 
 type CapacityUtilizationPageProps = {
   searchParams: Promise<{
@@ -36,46 +38,47 @@ function utilizationHeaderSkeleton() {
 
 export default function CapacityUtilizationPage({ searchParams }: CapacityUtilizationPageProps) {
   return (
-    <TeamRoutePendingShell>
-      <Suspense fallback={utilizationHeaderSkeleton()}>
+    <CapacityRoutePendingShell>
+      <Suspense fallback={<UtilizationPageSkeleton />}>
         <CapacityUtilizationPageContent searchParams={searchParams} />
       </Suspense>
-    </TeamRoutePendingShell>
+    </CapacityRoutePendingShell>
   )
 }
 
 async function CapacityUtilizationPageContent({ searchParams }: CapacityUtilizationPageProps) {
   const raw = await searchParams
-  const routeFilters = parseTeamRouteFilters(raw)
+  const routeFilters = parseCapacityRouteFilters(raw)
   const monthParam = raw.month
   const monthStr = Array.isArray(monthParam) ? monthParam[0] : monthParam
+  const { selected } = await getCapacityMonthSelection(monthStr)
 
   return (
     <div className="flex flex-col gap-8">
-      <TeamRouteSection fallback={utilizationHeaderSkeleton()}>
-        <TeamHeaderBlock
-          monthStr={monthStr}
+      <CapacityRouteSection fallback={utilizationHeaderSkeleton()}>
+        <CapacityHeaderBlock
           title="Utilization"
           subtitle="Role and person operational usage"
+          referenceMonthLabel={selected?.label}
         />
-      </TeamRouteSection>
+      </CapacityRouteSection>
 
-      <Suspense fallback={<TeamToolbarSkeleton />}>
-        <TeamRouteSection fallback={<TeamToolbarSkeleton />}>
-          <TeamToolbarBlock monthStr={monthStr} routeFilters={routeFilters} />
-        </TeamRouteSection>
+      <Suspense fallback={<UtilizationToolbarSkeleton />}>
+        <CapacityRouteSection fallback={<UtilizationToolbarSkeleton />}>
+          <UtilizationToolbarBlock monthStr={monthStr} routeFilters={routeFilters} />
+        </CapacityRouteSection>
       </Suspense>
 
-      <Suspense fallback={<TeamKpiRowSkeleton />}>
-        <TeamRouteSection fallback={<TeamKpiRowSkeleton />}>
-          <TeamKpiBlock monthStr={monthStr} routeFilters={routeFilters} />
-        </TeamRouteSection>
+      <Suspense fallback={<UtilizationKpiRowSkeleton />}>
+        <CapacityRouteSection fallback={<UtilizationKpiRowSkeleton />}>
+          <UtilizationKpiBlock monthStr={monthStr} routeFilters={routeFilters} />
+        </CapacityRouteSection>
       </Suspense>
 
-      <Suspense fallback={<TeamAnalyticsSkeleton />}>
-        <TeamRouteSection fallback={<TeamAnalyticsSkeleton />}>
-          <TeamAnalyticsBlock monthStr={monthStr} routeFilters={routeFilters} />
-        </TeamRouteSection>
+      <Suspense fallback={<UtilizationAnalyticsSkeleton />}>
+        <CapacityRouteSection fallback={<UtilizationAnalyticsSkeleton />}>
+          <UtilizationAnalyticsBlock monthStr={monthStr} routeFilters={routeFilters} />
+        </CapacityRouteSection>
       </Suspense>
     </div>
   )

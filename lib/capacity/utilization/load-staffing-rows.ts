@@ -18,20 +18,20 @@ import {
   teamHolidaysByZoneForEligible,
   teamPersonElapsedNetWeekdays,
   teamPtoWeekdayDatesThrough,
-} from '@/lib/team/team-elapsed-pace-context'
+} from '@/lib/capacity/shared/elapsed-pace-context'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import type { Database } from '@/lib/supabase/database.types'
-import { fetchMonthRolesForPeople } from '@/lib/team/team-month-role'
+import { fetchMonthRolesForPeople } from '@/lib/workforce/month-role'
 
 const DIM_BATCH = 200
 
-export type TeamStaffingProjectRef = {
+export type UtilizationStaffingProjectRef = {
   projectId: string
   /** Stable slug from `dim_project.project_key` (compact grid display). */
   projectKey: string
 }
 
-export type TeamStaffingRow = {
+export type UtilizationStaffingRow = {
   personId: string
   /** From `dim_person.name`. */
   personName: string
@@ -44,16 +44,16 @@ export type TeamStaffingRow = {
   billableEfficiencyPct: number | null
   ptoHoursMonth: number
   /** Projects with non-PTO logged time in the MTD window (same bound as Logged). */
-  projects: TeamStaffingProjectRef[]
+  projects: UtilizationStaffingProjectRef[]
 }
 
 /**
- * Person-level staffing rows for `/team` (SLOT-E). Same snapshot month, worklog MTD cap,
- * and optional person filter as `loadTeamRoleAnalytics` / `loadWeeklyOverview`.
+ * Person-level staffing rows for capacity utilization (SLOT-E). Same snapshot month, worklog MTD cap,
+ * and optional person filter as `loadRoleAnalytics` / `loadWeeklyOverview`.
  * Row utilization is **pace**: `personLoggedUtilizationPct` with zone holidays and weekday PTO through as-of.
  * Role label from stamped `role_id` on bench → plans → worklogs (D-022).
  */
-export async function loadTeamStaffingRows(
+export async function loadUtilizationStaffingRows(
   supabase: SupabaseClient<Database>,
   params: {
     monthStartStr: string
@@ -61,7 +61,7 @@ export async function loadTeamStaffingRows(
     personIdFilter: Set<string> | null
     now?: Date
   }
-): Promise<{ data: TeamStaffingRow[]; error: string | null }> {
+): Promise<{ data: UtilizationStaffingRow[]; error: string | null }> {
   const { monthStartStr, snapshot, personIdFilter } = params
   const now = params.now ?? new Date()
 
@@ -201,7 +201,7 @@ export async function loadTeamStaffingRows(
       }
     }
 
-    const rowsOut: TeamStaffingRow[] = []
+    const rowsOut: UtilizationStaffingRow[] = []
 
     for (const pid of capacityPersonIds) {
       const meta = personMeta.get(pid)
@@ -238,7 +238,7 @@ export async function loadTeamStaffingRows(
       const pacePct = pacePctRaw != null ? roundDisplayStat(pacePctRaw) : null
 
       const pmap = projectHoursByPerson.get(pid)
-      const projects: TeamStaffingProjectRef[] = []
+      const projects: UtilizationStaffingProjectRef[] = []
       if (pmap) {
         for (const [projectId, hours] of pmap) {
           if (hours <= 0) continue

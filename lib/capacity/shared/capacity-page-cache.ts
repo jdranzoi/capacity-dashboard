@@ -5,14 +5,26 @@ import {
   capacityFiltersForPersonScope,
   type CapacityRouteFilters,
 } from '@/lib/capacity/shared/capacity-route-filters'
+import { loadRoleAnalytics, type RoleAnalyticsRow } from '@/lib/capacity/shared/load-role-analytics'
+import {
+  loadUtilizationMonthKpis,
+  type UtilizationMonthKpisPayload,
+} from '@/lib/capacity/utilization/load-month-kpis'
+import {
+  loadUtilizationStaffingRows,
+  type UtilizationStaffingRow,
+} from '@/lib/capacity/utilization/load-staffing-rows'
 import {
   loadOverviewMonthOptions,
   resolveSelectedOverviewMonth,
   type OverviewMonthOption,
 } from '@/lib/overview/overview-month-options'
 import { createServiceClientCached } from '@/lib/supabase/server'
-import { loadTeamFilterOptions, type TeamFilterOptionsPayload } from '@/lib/team/load-team-filter-options'
-import { resolveFilteredPersonIds } from '@/lib/team/resolve-filtered-person-ids'
+import {
+  loadWorkforceFilterOptions,
+  type WorkforceFilterOptionsPayload,
+} from '@/lib/workforce/load-filter-options'
+import { resolveFilteredPersonIds } from '@/lib/workforce/resolve-filtered-person-ids'
 
 export type CapacityMonthSelectionResult = {
   options: OverviewMonthOption[]
@@ -34,7 +46,7 @@ export const getCapacityMonthSelection = cache(
 export type CapacityMonthContext = {
   options: OverviewMonthOption[]
   selected: OverviewMonthOption
-  filterOptions: TeamFilterOptionsPayload
+  filterOptions: WorkforceFilterOptionsPayload
   personIds: Set<string> | null
   snapshot: { id: string; createdAt: string }
   monthEndStr: string
@@ -59,7 +71,7 @@ export const getCapacityMonthContext = cache(
     const snapshot = { id: selected.snapshotId, createdAt: selected.syncCreatedAt }
 
     const [filterOptionsResult, personIdsResult] = await Promise.all([
-      loadTeamFilterOptions(selected.snapshotId, selected.monthStartStr),
+      loadWorkforceFilterOptions(selected.snapshotId, selected.monthStartStr),
       resolveFilteredPersonIds(
         supabase,
         selected.snapshotId,
@@ -92,3 +104,50 @@ export const getCapacityMonthContext = cache(
     }
   }
 )
+
+export const getUtilizationMonthKpisCached = cache(
+  async (monthStr: string | undefined, routeFilters: CapacityRouteFilters) => {
+    const ctx = await getCapacityMonthContext(monthStr, routeFilters)
+    if (ctx.error) return { data: null, error: ctx.error }
+    if (!ctx.data) return { data: null, error: 'No month selected.' }
+
+    return loadUtilizationMonthKpis(
+      ctx.data.selected.monthStartStr,
+      ctx.data.snapshot,
+      capacityFiltersForPersonScope(routeFilters),
+      ctx.data.personIds
+    )
+  }
+)
+
+export const getUtilizationRoleAnalyticsCached = cache(
+  async (monthStr: string | undefined, routeFilters: CapacityRouteFilters) => {
+    const ctx = await getCapacityMonthContext(monthStr, routeFilters)
+    if (ctx.error) return { data: null, error: ctx.error }
+    if (!ctx.data) return { data: [], error: null }
+
+    const supabase = createServiceClientCached()
+    return loadRoleAnalytics(supabase, {
+      monthStartStr: ctx.data.selected.monthStartStr,
+      snapshot: ctx.data.snapshot,
+      personIdFilter: ctx.data.personIds,
+    })
+  }
+)
+
+export const getUtilizationStaffingRowsCached = cache(
+  async (monthStr: string | undefined, routeFilters: CapacityRouteFilters) => {
+    const ctx = await getCapacityMonthContext(monthStr, routeFilters)
+    if (ctx.error) return { data: null, error: ctx.error }
+    if (!ctx.data) return { data: [], error: null }
+
+    const supabase = createServiceClientCached()
+    return loadUtilizationStaffingRows(supabase, {
+      monthStartStr: ctx.data.selected.monthStartStr,
+      snapshot: ctx.data.snapshot,
+      personIdFilter: ctx.data.personIds,
+    })
+  }
+)
+
+export type { RoleAnalyticsRow, UtilizationMonthKpisPayload, UtilizationStaffingRow }

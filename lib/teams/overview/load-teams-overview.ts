@@ -5,7 +5,7 @@ import { getMonthFactBundle } from '@/lib/data/load-month-fact-bundle'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import { createServiceClientCached } from '@/lib/supabase/server'
 import type { Database } from '@/lib/supabase/database.types'
-import { fetchMonthRolesForPeople } from '@/lib/team/team-month-role'
+import { fetchMonthRolesForPeople } from '@/lib/workforce/month-role'
 
 const DIM_BATCH = 200
 

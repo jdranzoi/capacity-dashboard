@@ -2,13 +2,13 @@ import { cn } from '@/lib/utils'
 
 import { CapacityOverviewRoleTable } from '@/components/capacity/overview/capacity-overview-role-table'
 import { dashboardSurfaceClass } from '@/lib/ui/dashboard-surface'
-import type { TeamRoleAnalyticsRow } from '@/lib/team/load-team-role-analytics'
+import type { RoleAnalyticsRow } from '@/lib/capacity/shared/load-role-analytics'
 
 export function CapacityOverviewRoleSummary({
   rows,
   className,
 }: {
-  rows: TeamRoleAnalyticsRow[]
+  rows: RoleAnalyticsRow[]
   className?: string
 }) {
   return (

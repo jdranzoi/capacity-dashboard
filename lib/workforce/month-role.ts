@@ -37,7 +37,7 @@ function setFactMonthRole(
 }
 
 /**
- * Month role for `/team` roster people. Reads stamped `role_id` on snapshot facts (D-022);
+ * Month role for roster people. Reads stamped `role_id` on snapshot facts (D-022);
  * no `dim_person_month_role` or `dim_person` — MCP keeps facts aligned with month role.
  *
  * Order: `fact_bench` (one row/person) → `fact_plans` for gaps → `fact_worklogs` for gaps.

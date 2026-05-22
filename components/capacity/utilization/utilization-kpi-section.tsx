@@ -7,7 +7,7 @@ import {
   CAPACITY_FILL_KPI,
   UTILIZATION_KPI,
 } from '@/lib/overview/capacity-kpi-contract'
-import type { TeamMonthKpisPayload } from '@/lib/team/load-team-month-kpis'
+import type { UtilizationMonthKpisPayload } from '@/lib/capacity/utilization/load-month-kpis'
 import { fmtHoursKpi, fmtPct } from '@/lib/overview/overview-metrics'
 import type { ReactNode } from 'react'
 
@@ -18,7 +18,7 @@ type TeamKpiItem = {
   valueColorVar?: string
 }
 
-export function TeamKpiSection({ kpis }: { kpis: TeamMonthKpisPayload }) {
+export function UtilizationKpiSection({ kpis }: { kpis: UtilizationMonthKpisPayload }) {
   const { rollupHours: r, asOfDate, projectScopedHours: scoped } = kpis
   const mtdNote = asOfDate ? 'Non-PTO worklogs' : 'Overview worklog bound'
   const snapshotNote = 'Snapshot facts for reference month'

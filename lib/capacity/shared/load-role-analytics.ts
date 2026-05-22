@@ -19,14 +19,14 @@ import {
   teamHolidaysByZoneForEligible,
   teamPersonElapsedNetWeekdays,
   teamPtoWeekdayDatesThrough,
-} from '@/lib/team/team-elapsed-pace-context'
+} from '@/lib/capacity/shared/elapsed-pace-context'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import type { Database } from '@/lib/supabase/database.types'
-import { fetchMonthRolesForPeople } from '@/lib/team/team-month-role'
+import { fetchMonthRolesForPeople } from '@/lib/workforce/month-role'
 
 const DIM_BATCH = 200
 
-export type TeamRoleAnalyticsRow = {
+export type RoleAnalyticsRow = {
   roleId: string | null
   roleKey: string
   roleLabel: string
@@ -45,10 +45,10 @@ function keepPerson(personIdFilter: Set<string> | null, pid: string): boolean {
 }
 
 /**
- * Role-level aggregates for `/team` analytics (D1–D3). Roster from `fact_capacity`;
+ * Role-level aggregates for capacity utilization analytics (D1–D3). Roster from `fact_capacity`;
  * grouping by month role from stamped `role_id` on bench → plans → worklogs.
  */
-export async function loadTeamRoleAnalytics(
+export async function loadRoleAnalytics(
   supabase: SupabaseClient<Database>,
   params: {
     monthStartStr: string
@@ -56,7 +56,7 @@ export async function loadTeamRoleAnalytics(
     personIdFilter: Set<string> | null
     now?: Date
   }
-): Promise<{ data: TeamRoleAnalyticsRow[]; error: string | null }> {
+): Promise<{ data: RoleAnalyticsRow[]; error: string | null }> {
   const { monthStartStr, snapshot, personIdFilter } = params
   const now = params.now ?? new Date()
 
@@ -203,7 +203,7 @@ export async function loadTeamRoleAnalytics(
       }
     }
 
-    const tmp: { sort: string; row: TeamRoleAnalyticsRow }[] = []
+    const tmp: { sort: string; row: RoleAnalyticsRow }[] = []
     for (const [k, agg] of byRole) {
       const roleId = k === '__none__' ? null : k
       const meta = roleId ? roleMeta.get(roleId) : null

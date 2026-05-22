@@ -2,11 +2,11 @@
 
 import { useMemo } from 'react'
 
-import { useTeamRoutePending } from '@/components/team/team-route-pending-shell'
+import { useCapacityRoutePending } from '@/components/capacity/_shared/capacity-route-pending-shell'
 import { FilterSuggestInput } from '@/components/ui/filter-suggest-input'
-import type { TeamFilterSelectOption } from '@/lib/team/load-team-filter-options'
+import type { WorkforceFilterSelectOption } from '@/lib/workforce/load-filter-options'
 
-export function TeamFilterSuggestInput({
+export function CapacityFilterSuggestInput({
   paramKey,
   label,
   placeholder,
@@ -18,10 +18,10 @@ export function TeamFilterSuggestInput({
   label: string
   placeholder: string
   ariaLabel: string
-  options: TeamFilterSelectOption[]
+  options: WorkforceFilterSelectOption[]
   selectedParamValue: string | null
 }) {
-  const teamPending = useTeamRoutePending()
+  const teamPending = useCapacityRoutePending()
 
   const displayValue = useMemo(() => {
     if (!selectedParamValue) return ''

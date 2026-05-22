@@ -1,19 +1,19 @@
 import { endOfMonth, format, parse } from 'date-fns'
 
 import { createServiceClientCached } from '@/lib/supabase/server'
-import { fetchMonthRolesForPeople } from '@/lib/team/team-month-role'
+import { fetchMonthRolesForPeople } from '@/lib/workforce/month-role'
 
 const PAGE = 1000
 
-export type TeamFilterSelectOption = {
+export type WorkforceFilterSelectOption = {
   value: string
   label: string
 }
 
-export type TeamFilterOptionsPayload = {
-  roles: TeamFilterSelectOption[]
-  zones: TeamFilterSelectOption[]
-  projects: TeamFilterSelectOption[]
+export type WorkforceFilterOptionsPayload = {
+  roles: WorkforceFilterSelectOption[]
+  zones: WorkforceFilterSelectOption[]
+  projects: WorkforceFilterSelectOption[]
 }
 
 type PagedResult<T> = { rows: T[]; error: string | null }
@@ -34,10 +34,10 @@ async function pagedQuery<T>(
   return { rows, error: null }
 }
 
-export async function loadTeamFilterOptions(
+export async function loadWorkforceFilterOptions(
   snapshotId: string,
   monthStartStr: string
-): Promise<{ data: TeamFilterOptionsPayload | null; error: string | null }> {
+): Promise<{ data: WorkforceFilterOptionsPayload | null; error: string | null }> {
   const monthStart = parse(monthStartStr, 'yyyy-MM-dd', new Date())
   const monthEndStr = format(endOfMonth(monthStart), 'yyyy-MM-dd')
 
@@ -132,7 +132,7 @@ export async function loadTeamFilterOptions(
       if (r.project_id) projectIds.add(r.project_id)
     }
 
-    const projectOptions: TeamFilterSelectOption[] = []
+    const projectOptions: WorkforceFilterSelectOption[] = []
 
     if (projectIds.size > 0) {
       const idList = Array.from(projectIds)
@@ -154,11 +154,11 @@ export async function loadTeamFilterOptions(
 
     projectOptions.sort((a, b) => a.label.localeCompare(b.label))
 
-    const roleOptions: TeamFilterSelectOption[] = (rolesRes.data ?? [])
+    const roleOptions: WorkforceFilterSelectOption[] = (rolesRes.data ?? [])
       .map((r) => ({ value: r.key, label: r.label }))
       .sort((a, b) => a.label.localeCompare(b.label))
 
-    const zoneOptions: TeamFilterSelectOption[] = (zonesRes.data ?? [])
+    const zoneOptions: WorkforceFilterSelectOption[] = (zonesRes.data ?? [])
       .map((z) => ({ value: z.key, label: z.label }))
       .sort((a, b) => a.label.localeCompare(b.label))
 
@@ -171,7 +171,7 @@ export async function loadTeamFilterOptions(
       error: null,
     }
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'Unexpected error loading team filters.'
+    const message = e instanceof Error ? e.message : 'Unexpected error loading filter options.'
     return { data: null, error: message }
   }
 }

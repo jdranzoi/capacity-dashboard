@@ -17,16 +17,16 @@ import { createServiceClientCached } from '@/lib/supabase/server'
 import {
   loadProjectScopedHours,
   type ProjectScopedHours,
-} from '@/lib/team/load-project-scoped-hours'
+} from '@/lib/capacity/utilization/load-project-scoped-hours'
 import {
   loadProjectTypeById,
   sumLoggedHoursByProjectType,
-} from '@/lib/team/sum-logged-hours-by-project-type'
-import type { TeamRouteFilters } from '@/lib/team/team-route-filters'
+} from '@/lib/capacity/utilization/sum-logged-hours-by-project-type'
+import type { PersonScopeFilters } from '@/lib/workforce/person-scope-filters'
 
 export type { ProjectScopedHours }
 
-export type TeamMonthKpisPayload = {
+export type UtilizationMonthKpisPayload = {
   monthLabel: string
   /** Worklog (`logged`/`billable`) upper bound (`yyyy-MM-dd`); aligns with overview. */
   asOfDate: string | null
@@ -57,13 +57,13 @@ export type TeamMonthKpisPayload = {
   commercialLoggedHoursMtd: number
 }
 
-export async function loadTeamMonthKpis(
+export async function loadUtilizationMonthKpis(
   monthStartStr: string,
   snapshot: { id: string; createdAt: string },
-  routeFilters: TeamRouteFilters,
+  routeFilters: PersonScopeFilters,
   /** Pre-resolved from `resolveFilteredPersonIds` (must match URL filters). */
   personIdFilter: Set<string> | null
-): Promise<{ data: TeamMonthKpisPayload | null; error: string | null }> {
+): Promise<{ data: UtilizationMonthKpisPayload | null; error: string | null }> {
   const referenceDate = parse(monthStartStr, 'yyyy-MM-dd', new Date())
   const monthEndStr = format(endOfMonth(referenceDate), 'yyyy-MM-dd')
 

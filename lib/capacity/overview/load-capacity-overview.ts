@@ -9,7 +9,7 @@ import {
   type WeeklyHeadline,
 } from '@/lib/overview/load-weekly-overview'
 import { createServiceClientCached } from '@/lib/supabase/server'
-import { loadTeamRoleAnalytics, type TeamRoleAnalyticsRow } from '@/lib/team/load-team-role-analytics'
+import { loadRoleAnalytics, type RoleAnalyticsRow } from '@/lib/capacity/shared/load-role-analytics'
 
 export type CapacityOverviewPayload = {
   monthLabel: string
@@ -25,7 +25,7 @@ export type CapacityOverviewPayload = {
   benchHeadcount: number
   benchRatePct: number | null
   capacityHeadcount: number
-  roleSummary: TeamRoleAnalyticsRow[]
+  roleSummary: RoleAnalyticsRow[]
 }
 
 export async function loadCapacityOverview(params: {
@@ -62,7 +62,7 @@ export async function loadCapacityOverview(params: {
       personIdFilter,
       netCapacityHours: rollup.netCapacityHours,
     }),
-    loadTeamRoleAnalytics(supabase, {
+    loadRoleAnalytics(supabase, {
       monthStartStr,
       snapshot,
       personIdFilter,
