@@ -26,6 +26,7 @@ export type MonthFactWorklogRow = {
   log_date: string
   billable_seconds: number
   logged_seconds: number
+  is_commercial: boolean
 }
 
 export type MonthFactPtoWorklogRow = {
@@ -90,7 +91,7 @@ async function loadMonthFactBundleCached(
     pagedQuery<MonthFactWorklogRow>(async (from) =>
       supabase
         .from('fact_worklogs')
-        .select('person_id, project_id, log_date, billable_seconds, logged_seconds')
+        .select('person_id, project_id, log_date, billable_seconds, logged_seconds, is_commercial')
         .eq('is_pto', false)
         .gte('log_date', monthStartStr)
         .lte('log_date', monthEndStr)

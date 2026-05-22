@@ -12,7 +12,7 @@
  * Time-adjusted billable utilization.
  * Used for mid-month snapshots to avoid comparing partial actuals to a full-month target.
  *
- * @param billableHours   - Billable hours logged so far (is_billable = true, excluding internal)
+ * @param billableHours   - Billable hours logged so far (`is_billable` from Tempo; independent of commercial)
  * @param monthlyTargetHours - Full-month net capacity (v2: `fact_capacity.net_capacity_hours`)
  * @param daysElapsed     - Working days elapsed in the month
  * @param totalWorkingDays - Total working days in the month

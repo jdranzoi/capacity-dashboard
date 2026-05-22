@@ -189,6 +189,7 @@ export type Database = {
           created_at: string | null
           end_date: string | null
           id: string
+          is_commercial: boolean
           loe_estimate_hours: number | null
           project_key: string
           project_name: string | null
@@ -203,6 +204,7 @@ export type Database = {
           created_at?: string | null
           end_date?: string | null
           id?: string
+          is_commercial?: boolean
           loe_estimate_hours?: number | null
           project_key: string
           project_name?: string | null
@@ -217,6 +219,7 @@ export type Database = {
           created_at?: string | null
           end_date?: string | null
           id?: string
+          is_commercial?: boolean
           loe_estimate_hours?: number | null
           project_key?: string
           project_name?: string | null
@@ -601,6 +604,7 @@ export type Database = {
           first_seen_at: string
           id: string
           is_billable: boolean
+          is_commercial: boolean
           is_pto: boolean
           log_date: string
           logged_seconds: number
@@ -614,6 +618,7 @@ export type Database = {
           first_seen_at?: string
           id?: string
           is_billable?: boolean
+          is_commercial?: boolean
           is_pto?: boolean
           log_date: string
           logged_seconds?: number
@@ -627,6 +632,7 @@ export type Database = {
           first_seen_at?: string
           id?: string
           is_billable?: boolean
+          is_commercial?: boolean
           is_pto?: boolean
           log_date?: string
           logged_seconds?: number

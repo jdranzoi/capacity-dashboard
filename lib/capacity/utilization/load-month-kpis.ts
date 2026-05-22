@@ -18,10 +18,7 @@ import {
   loadProjectScopedHours,
   type ProjectScopedHours,
 } from '@/lib/capacity/utilization/load-project-scoped-hours'
-import {
-  loadProjectTypeById,
-  sumLoggedHoursByProjectType,
-} from '@/lib/capacity/utilization/sum-logged-hours-by-project-type'
+import { sumLoggedHoursByCommercial } from '@/lib/capacity/utilization/sum-logged-hours-by-commercial'
 import type { PersonScopeFilters } from '@/lib/workforce/person-scope-filters'
 
 export type { ProjectScopedHours }
@@ -51,9 +48,9 @@ export type UtilizationMonthKpisPayload = {
   utilizationPct: number | null
   /** Uses project-scoped billable/logged when `projectScopedHours` is set. */
   billableEfficiencyPct: number | null
-  /** Non-PTO logged hours on `internal` projects (MTD worklog cap). */
-  internalLoggedHoursMtd: number
-  /** Non-PTO logged hours on `build` + `support` projects (MTD worklog cap). */
+  /** Non-PTO logged hours where `fact_worklogs.is_commercial` is false (MTD worklog cap). */
+  nonCommercialLoggedHoursMtd: number
+  /** Non-PTO logged hours where `fact_worklogs.is_commercial` is true (MTD worklog cap). */
   commercialLoggedHoursMtd: number
 }
 
@@ -141,19 +138,8 @@ export async function loadUtilizationMonthKpis(
     wlRows = wlRows.filter((r) => r.project_id === filteredProjectId)
   }
 
-  const projectIds = wlRows.map((r) => r.project_id)
-  const { data: projectTypeById, error: typeErr } = await loadProjectTypeById(
-    supabase,
-    projectIds
-  )
-  if (typeErr) {
-    return { data: null, error: typeErr }
-  }
-
-  const { internalLoggedHoursMtd, commercialLoggedHoursMtd } = sumLoggedHoursByProjectType(
-    wlRows,
-    projectTypeById
-  )
+  const { nonCommercialLoggedHoursMtd, commercialLoggedHoursMtd } =
+    sumLoggedHoursByCommercial(wlRows)
 
   const loggedForUtil = projectScopedHours?.loggedHoursMtd ?? rollupHours.loggedHoursMtd
   const billableForEff = projectScopedHours?.billableHoursMtd ?? rollupHours.billableHoursMtd
@@ -180,7 +166,7 @@ export async function loadUtilizationMonthKpis(
       capacityFillPct: capacityFillPctValue,
       utilizationPct: utilizationPctValue,
       billableEfficiencyPct,
-      internalLoggedHoursMtd,
+      nonCommercialLoggedHoursMtd,
       commercialLoggedHoursMtd,
     },
     error: null,

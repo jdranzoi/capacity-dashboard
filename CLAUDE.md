@@ -48,7 +48,7 @@ Do not write new dashboard queries against v1 tables.
 | Table | Purpose |
 |---|---|
 | `dim_person` | Team members; carries `role_id FK → dim_role`, `zone_id FK → dim_zone` |
-| `dim_project` | Project registry; `project_type` is `build` \| `support` \| `internal`, upserted each sync from Jira `projectCategory.name` (**D-011**). Dashboard reads this column — never infer type from `project_key`. |
+| `dim_project` | Project registry; `project_type` is raw Jira category (lowercase); `is_commercial` derived at sync (**D-011**). Dashboard reads these columns — never infer from `project_key`. |
 | `dim_role` | Controlled role vocabulary: `(id, key, label)` — keys: `fsd`, `fed`, `qa`, `pm`, `tl`, `ux`, `em` |
 | `dim_zone` | Holiday zones: `(id, key, label)` |
 | `dim_holiday` | Company-observed holidays with `zone_id FK → dim_zone` |
@@ -56,7 +56,7 @@ Do not write new dashboard queries against v1 tables.
 
 **D-021 (formal model):** No denormalized text copies of FK-target values (e.g. dropped `dim_person.role` / `zone` / `team`, `dim_project.client`). Join `dim_role`, `dim_zone`, etc. See `capacity/doc/DECISIONS.md`.
 
-**D-011 (project type):** `dim_project.project_type` and stamped `project_type` on facts come from Jira `projectCategory.name` on each `sync-v2` run (`categoryToType` → upsert `dim_project` → `classifyProject` reads `projectTypeByKey`). PTO is still `project_key = 'HR'`. Do not classify from project key in dashboard loaders.
+**D-011 (project type & commercial):** `dim_project.project_type` stores raw Jira `projectCategory.name` (lowercase). `dim_project.is_commercial` and stamped `fact_worklogs.is_commercial` come from ingestion (`COMMERCIAL_CATEGORIES` in capacity-mcp). **Commercial vs non-commercial logged hours** use `is_commercial`, not `project_type`. **`is_billable`** on worklogs is Tempo-derived (`billable_seconds > 0`) — independent of commercial. PTO is still `project_key = 'HR'`. Do not classify from project key in dashboard loaders.
 
 #### Sync anchor
 
@@ -68,7 +68,7 @@ Do not write new dashboard queries against v1 tables.
 
 | Table | Model | Unique key | Notes |
 |---|---|---|---|
-| `fact_worklogs` | Upsert (no `snapshot_id`) | `(person_id, project_id, log_date)` | Individual worklog entries; stable once logged. Use for billable hour totals. |
+| `fact_worklogs` | Upsert (no `snapshot_id`) | `(person_id, project_id, log_date)` | Individual worklog entries; `is_commercial` stamped at sync; `is_billable` from Tempo. Use for logged/billable totals and commercial split. |
 | `fact_plans` | Snapshot per sync | `(snapshot_id, person_id, project_id, month_date)` | Planned hours per person per project per month |
 | `fact_capacity` | Snapshot per sync | `(snapshot_id, person_id, month_date, source)` | Zone-adjusted net capacity |
 | `fact_project_actuals` | Snapshot per sync | `(snapshot_id, project_id, month_date)` | Aggregate logged + billable hours per project |

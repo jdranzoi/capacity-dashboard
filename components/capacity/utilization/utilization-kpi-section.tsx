@@ -29,9 +29,12 @@ export function UtilizationKpiSection({ kpis }: { kpis: UtilizationMonthKpisPayl
     ? `${snapshotNote} Selected project only (non-PTO plans).`
     : snapshotNote
   const logBillFootnote = scoped ? `${mtdNote} Selected project only.` : mtdNote
-  const typeFootnote = scoped
-    ? `${mtdNote} Selected project only (by project type).`
-    : 'Non-PTO worklogs by project type (internal vs build + support).'
+  const commercialFootnote = scoped
+    ? `${mtdNote} Selected project only (commercial flag on worklog).`
+    : 'Non-PTO worklogs stamped commercial at sync (Jira commercial category).'
+  const nonCommercialFootnote = scoped
+    ? `${mtdNote} Selected project only (commercial flag on worklog).`
+    : 'Non-PTO worklogs stamped non-commercial at sync.'
   const utilizationCapacityFootnote = scoped
     ? 'Logged on selected project / monthly net capacity (filtered people).'
     : CAPACITY_FILL_KPI.formulaFootnote
@@ -77,16 +80,16 @@ export function UtilizationKpiSection({ kpis }: { kpis: UtilizationMonthKpisPayl
       subline: <KpiMetricSubline>{logBillFootnote}</KpiMetricSubline>,
     },
     {
-      label: 'Internal hours (MTD)',
-      value: fmtHoursKpi(kpis.internalLoggedHoursMtd),
+      label: 'Non-commercial hours (MTD)',
+      value: fmtHoursKpi(kpis.nonCommercialLoggedHoursMtd),
       valueColorVar: '--overview-metric-logged',
-      subline: <KpiMetricSubline>{typeFootnote}</KpiMetricSubline>,
+      subline: <KpiMetricSubline>{nonCommercialFootnote}</KpiMetricSubline>,
     },
     {
       label: 'Commercial hours (MTD)',
       value: fmtHoursKpi(kpis.commercialLoggedHoursMtd),
       valueColorVar: '--overview-metric-billable',
-      subline: <KpiMetricSubline>{typeFootnote}</KpiMetricSubline>,
+      subline: <KpiMetricSubline>{commercialFootnote}</KpiMetricSubline>,
     },
     {
       label: CAPACITY_FILL_KPI.label,
