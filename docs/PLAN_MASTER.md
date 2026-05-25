@@ -31,6 +31,7 @@
 | SP-5 | Projects                | SP-0       | 1     | § SP-5 below |
 | SP-6 | Insights                | SP-1–5     | 2     | § SP-6 below |
 | SP-7 | Reports                 | SP-1–5     | 2     | § SP-7 below |
+| SP-AUTH | Access approval & RBAC | SP-0       | 0–1   | **[SP_AUTH_PLAN.md](./SP_AUTH_PLAN.md)** (**deferred**) |
 
 ---
 

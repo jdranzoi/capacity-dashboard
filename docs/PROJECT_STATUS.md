@@ -2,7 +2,7 @@
 
 Lightweight checkpoint for agents and contributors. Update this file when a subplan milestone completes.
 
-**Authoritative plans:** [NAVIGATION_FUNCTIONAL.md](./NAVIGATION_FUNCTIONAL.md) (IA spec) · [PLAN_MASTER.md](./PLAN_MASTER.md) (subplans SP-0–SP-7) · **[SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md)** (active — isolated Capacity tracks)
+**Authoritative plans:** [NAVIGATION_FUNCTIONAL.md](./NAVIGATION_FUNCTIONAL.md) (IA spec) · [PLAN_MASTER.md](./PLAN_MASTER.md) (subplans SP-0–SP-7) · **[SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md)** (active — isolated Capacity tracks) · [SP_AUTH_PLAN.md](./SP_AUTH_PLAN.md) (deferred — access approval & RBAC)
 
 ---
 
@@ -48,6 +48,18 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 
 **Deferred:** SP-1 Overview · SP-3 People.
 
+### SP-AUTH — Access approval & RBAC (deferred)
+
+Documented in **[SP_AUTH_PLAN.md](./SP_AUTH_PLAN.md)**. Not in active development.
+
+| When you resume | Ship first |
+| --- | --- |
+| Phase 0–1 | Pre-listed emails only (`before-user-created` hook); block everyone else |
+| Phase 2 | Admin UI to add/revoke emails (bootstrap 2–3 admins via seed or Supabase) |
+| Phase 3–4 | Section RBAC + loader scoping — **later**; until Phase 4, allowlisted users see full dashboard as today |
+
+Locked decisions: pre-list only; PM scope from `fact_plans` (handover TBD); admin notification email provider TBD.
+
 ---
 
 ## Current routes (code today)
@@ -80,6 +92,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | SP-5 Projects | None (pipeline stub only) | New `/projects` |
 | SP-6 Insights | `/flags` proto | Phase 2 |
 | SP-7 Reports | None | Phase 2 |
+| SP-AUTH | OAuth only; RBAC not enforced | [SP_AUTH_PLAN.md](./SP_AUTH_PLAN.md) — Phases 0–2 then 3–4 |
 
 ---
 
@@ -116,4 +129,4 @@ Ask         /ask
 
 ---
 
-*Last updated: legacy `/team` removed; utilization lives under Capacity; shared roster in `lib/workforce/`.*
+*Last updated: SP-AUTH plan added (deferred); legacy `/team` removed; utilization under Capacity.*
