@@ -128,23 +128,34 @@ Apply migration to Supabase before deploying the dashboard change.
 
 | Item | Detail |
 | --- | --- |
-| Auth | `Authorization: Bearer <DASHBOARD_CACHE_REVALIDATE_SECRET>` or header `x-revalidate-secret` |
+| Auth | `Authorization: Bearer <DASHBOARD_SYNC_REVALIDATE_SECRET>` or header `x-revalidate-secret` |
 | Body (optional) | `{ "snapshotId": "<uuid>" }` — also busts `snapshot-{id}` tag |
-| Tags cleared | `overview-months`, `month-facts`, and optional snapshot tag |
+| Tags cleared | `sync-latest`, `overview-months`, `month-facts`, and optional snapshot tag |
 | Middleware | `/api/revalidate` bypasses Google OAuth (secret-only) |
 
-**Env:** `DASHBOARD_CACHE_REVALIDATE_SECRET` in Vercel (and `.env.local` for local tests).
+**Env:** `DASHBOARD_SYNC_REVALIDATE_SECRET` in Vercel.
 
-**Sync hook (capacity-mcp / GitHub Actions):** after `sync-v2` succeeds, call the dashboard URL:
+**Ingestion hook (GitHub Actions):** after a successful sync run, call the dashboard URL:
 
 ```bash
-curl -sS -X POST "$DASHBOARD_URL/api/revalidate" \
-  -H "Authorization: Bearer $DASHBOARD_CACHE_REVALIDATE_SECRET" \
+curl -sS -X POST "$DASHBOARD_SYNC_URL/api/revalidate" \
+  -H "Authorization: Bearer $DASHBOARD_SYNC_REVALIDATE_SECRET" \
   -H "Content-Type: application/json" \
   -d "{\"snapshotId\":\"$SNAPSHOT_ID\"}"
 ```
 
 Omit `snapshotId` to invalidate only global tags (month list + all month-fact entries).
+
+## Phase 5 — open-tab freshness (client)
+
+| Item | Detail |
+| --- | --- |
+| Probe | `GET /api/sync-version` — authenticated, uncached `{ snapshotId, createdAt }` |
+| Watcher | `SyncVersionWatcher` in dashboard layout — polls while tab visible (`DASHBOARD_SYNC_POLL_INTERVAL_MS`, default 90s); checks on focus |
+| Refresh | `POST /api/sync-notify` (cache tags) then `router.refresh()` when `snapshotId` differs |
+| Ingestion hook | `notifyDashboardRevalidate(snapshotId)` after a successful sync run |
+
+**Env contract:** `lib/sync/dashboard-sync-env.ts` — `DASHBOARD_SYNC_POLL_INTERVAL_MS`, `DASHBOARD_SYNC_REVALIDATE_SECRET` (dashboard); `DASHBOARD_SYNC_URL`, `DASHBOARD_SYNC_REVALIDATE_SECRET`, optional `DASHBOARD_SYNC_REVALIDATE_TARGETS` (ingestion).
 
 ## References
 

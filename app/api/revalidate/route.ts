@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { invalidateDashboardCache } from '@/lib/cache/invalidate-dashboard-cache'
+import { DASHBOARD_SYNC_ENV } from '@/lib/sync/dashboard-sync-env'
 
 type RevalidateBody = {
   snapshotId?: string
@@ -15,13 +16,12 @@ function readSecret(request: Request): string | null {
 }
 
 /**
- * POST /api/revalidate
- * Invalidates dashboard cache tags after sync-v2. Secured by DASHBOARD_CACHE_REVALIDATE_SECRET.
- *
+ * POST /api/revalidate — bust dashboard cache tags after ingestion.
+ * Auth: `DASHBOARD_SYNC_REVALIDATE_SECRET` (Bearer or `x-revalidate-secret`).
  * Body (optional): { "snapshotId": "<uuid>" }
  */
 export async function POST(request: Request) {
-  const expected = process.env.DASHBOARD_CACHE_REVALIDATE_SECRET
+  const expected = process.env[DASHBOARD_SYNC_ENV.REVALIDATE_SECRET]?.trim()
   if (!expected) {
     return NextResponse.json(
       { error: 'Revalidate secret is not configured on this deployment.' },
@@ -48,6 +48,11 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
-    tags: ['overview-months', 'month-facts', ...(snapshotId ? [`snapshot-${snapshotId}`] : [])],
+    tags: [
+      'sync-latest',
+      'overview-months',
+      'month-facts',
+      ...(snapshotId ? [`snapshot-${snapshotId}`] : []),
+    ],
   })
 }

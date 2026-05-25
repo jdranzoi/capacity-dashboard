@@ -1,27 +1,41 @@
+import { CACHE_TAG_SYNC_LATEST } from '@/lib/data/cache-tags'
 import { createServiceClientCached } from '@/lib/supabase/server'
+import { cacheLife, cacheTag } from 'next/cache'
 
 export type LatestSyncSnapshot = {
   id: string
-  /** When the run finished; use for "last ingested" freshness. */
+  /** Ingestion `sync_snapshot.taken_at` (when the run was taken). */
   createdAt: string
 }
 
-/**
- * Most recent row in sync_snapshot (C-003). Required anchor for snapshot fact tables
- * and for a consistent "last sync" label in the UI.
- */
-export async function getLatestSyncSnapshot(): Promise<LatestSyncSnapshot | null> {
+async function queryLatestSyncSnapshot(): Promise<LatestSyncSnapshot | null> {
   const supabase = createServiceClientCached()
   const { data, error } = await supabase
     .from('sync_snapshot')
-    .select('id, created_at')
-    .order('created_at', { ascending: false })
+    .select('id, taken_at')
+    .order('taken_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 
   if (error || !data) return null
   return {
     id: data.id as string,
-    createdAt: data.created_at as string,
+    createdAt: data.taken_at as string,
   }
+}
+
+/**
+ * Uncached read for `/api/sync-version` and other live freshness probes.
+ */
+export async function getLatestSyncSnapshotLive(): Promise<LatestSyncSnapshot | null> {
+  return queryLatestSyncSnapshot()
+}
+
+/** Most recent `sync_snapshot` row — anchor for snapshot fact tables and the sync badge. */
+export async function getLatestSyncSnapshot(): Promise<LatestSyncSnapshot | null> {
+  'use cache'
+  cacheLife('minutes')
+  cacheTag(CACHE_TAG_SYNC_LATEST)
+
+  return queryLatestSyncSnapshot()
 }

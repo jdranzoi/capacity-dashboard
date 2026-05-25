@@ -1,7 +1,7 @@
 import { createAuthClient } from '@/lib/supabase/server'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { SyncStatus } from './sync-status'
+import { SyncStatusBadge } from './sync-status-badge'
 import { SignOutButton } from './sign-out-button'
 import { ThemeToggle } from './theme-toggle'
 
@@ -32,7 +32,7 @@ export async function Header() {
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm">
-      <SyncStatus />
+      <SyncStatusBadge />
       <div className="flex items-center gap-2">
         <ThemeToggle />
         {roleLabel && (

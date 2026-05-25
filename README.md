@@ -15,12 +15,65 @@ Do this in order the first time you work on the repo.
 |---|---|
 | **1. Prerequisites** | [Node.js](https://nodejs.org/) 20+ and [pnpm](https://pnpm.io/) (`corepack enable` is fine). Optional: [Supabase CLI](https://supabase.com/docs/guides/cli) if you will run `pnpm db:types`. |
 | **2. Install** | `pnpm install` |
-| **3. Environment** | Copy the example file: `cp .env.example .env.local` — then set **`NEXT_PUBLIC_SUPABASE_URL`**, **`NEXT_PUBLIC_SUPABASE_ANON_KEY`**, and **`SUPABASE_SERVICE_ROLE_KEY`** (Supabase dashboard: *Project Settings* > *API*). The service role key is **server-only**; keep `.env.local` out of git. |
+| **3. Environment** | `cp .env.example .env.local` — Supabase keys from *Project Settings* > *API*, plus optional sync-freshness vars (see [Environment variables](#environment-variables)). Keep `.env.local` out of git. |
 | **4. (Recommended) TypeScript types** | Authenticate the CLI: `supabase login` (one-time per machine). Then `pnpm db:types` to refresh `lib/supabase/database.types.ts` from the live `public` schema. If you skip this, the committed types may still match, or you may need to regen after schema changes. Details: [Supabase TypeScript types](#supabase-typescript-types-dbtypes) below. |
 | **5. Run the app** | `pnpm dev` — open [http://localhost:3000](http://localhost:3000), sign in with Google (Mira Commerce workspace account per your Supabase Auth / Google provider setup). |
 | **6. Productive checks** | `pnpm build` should pass before you open a PR. Data-heavy pages need a project with ingestion run (`sync_snapshot`, `fact_worklogs`, etc. per `CLAUDE.md`). |
 
 If `pnpm db:types` errors with *Access token not provided*, run `supabase login` or set `SUPABASE_ACCESS_TOKEN` for that shell (see the [db:types section](#supabase-typescript-types-dbtypes); that token is not the same as the keys in `.env.local`).
+
+---
+
+## Environment variables
+
+**Not in Supabase.** Supabase only provides the database and Auth API keys below. Sync-freshness settings go in **Vercel** (this app) and **GitHub Actions** (capacity-mcp ingestion, `daily-sync-v2.yml`).
+
+### Supabase (dashboard — required)
+
+Set in `.env.local` and Vercel (*Project Settings* in the Supabase **project** is only for copying these values):
+
+| Variable | Example |
+|----------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://abcdefgh.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
+| `SUPABASE_SERVICE_ROLE_KEY` | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` (server-only) |
+
+### Sync freshness — dashboard (Vercel + `.env.local`)
+
+| Variable | Required | Example |
+|----------|----------|---------|
+| `DASHBOARD_SYNC_REVALIDATE_SECRET` | Yes (if ingestion should bust cache) | `openssl rand -base64 32` → paste one line, no quotes |
+| `DASHBOARD_SYNC_POLL_INTERVAL_MS` | No (default `90000`) | `90000` |
+
+`DASHBOARD_SYNC_REVALIDATE_SECRET` must be **identical** to the value configured for ingestion (same environment: prod with prod, staging with staging).
+
+### Sync freshness — ingestion (GitHub secrets on **capacity-mcp**)
+
+Configure in **capacity-mcp** (workflow `daily-sync-v2.yml`). Use [GitHub Environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-jobs) so prod and staging each point at the matching Supabase + dashboard.
+
+| Variable | Required | Example |
+|----------|----------|---------|
+| `DASHBOARD_SYNC_URL` | Yes (for post-sync cache bust) | `https://capacity-dashboard.vercel.app` (no trailing `/`) |
+| `DASHBOARD_SYNC_REVALIDATE_SECRET` | Yes | Same string as on Vercel for that dashboard |
+| `DASHBOARD_SYNC_REVALIDATE_TARGETS` | No | `[{"url":"https://dashboard-a.example","secret":"..."},{"url":"https://dashboard-b.example","secret":"..."}]` — only if one sync must notify **multiple** dashboards |
+
+Do **not** put `DASHBOARD_SYNC_URL` on Vercel. Do **not** put `DASHBOARD_SYNC_POLL_INTERVAL_MS` on GitHub.
+
+### How the pieces connect
+
+1. **After sync** — ingestion `POST`s `{DASHBOARD_SYNC_URL}/api/revalidate` with `Authorization: Bearer {DASHBOARD_SYNC_REVALIDATE_SECRET}` → server cache tags refresh.
+2. **Open browser tab** — polls `/api/sync-version`; on a new `sync_snapshot.id`, calls `/api/sync-notify` (cache bust) then `router.refresh()` so KPIs/charts pick up the new snapshot, not only the badge (`DASHBOARD_SYNC_POLL_INTERVAL_MS` controls poll frequency).
+
+Local manual revalidate test:
+
+```bash
+curl -sS -X POST "http://localhost:3000/api/revalidate" \
+  -H "Authorization: Bearer $DASHBOARD_SYNC_REVALIDATE_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"snapshotId":"<uuid-from-sync_snapshot>"}'
+```
+
+See `.env.example` for a minimal local template. Ingestion examples: `capacity-mcp/packages/tempo-mcp/.env.example`.
 
 ---
 
