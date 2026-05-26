@@ -9,6 +9,7 @@ export const SHIPPED_NAV_HREFS = new Set<string>([
   '/ask',
   '/capacity/overview',
   '/capacity/utilization',
+  '/capacity/planning',
   '/teams/overview',
   '/teams/composition',
 ])

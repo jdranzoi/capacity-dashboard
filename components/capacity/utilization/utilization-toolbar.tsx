@@ -14,12 +14,9 @@ export function UtilizationToolbar({
   routeFilters: CapacityRouteFilters
 }) {
   return (
-    <div
-      className="flex flex-wrap items-end gap-3 border-b border-border/80 pb-5"
-      data-slot="capacity-utilization-toolbar"
-    >
-      <div className="flex min-w-[11.5rem] flex-col gap-1.5">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+    <div className="flex flex-wrap items-end gap-3" data-slot="capacity-utilization-toolbar">
+      <div className="flex min-w-[9.5rem] flex-col gap-1">
+        <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
           Period
         </span>
         {monthPicker && monthPicker.options.length > 0 ? (
@@ -28,7 +25,7 @@ export function UtilizationToolbar({
             selectedMonthKey={monthPicker.selectedMonthKey}
           />
         ) : (
-          <div className="h-9 min-w-[11.5rem] rounded-lg border border-border bg-muted/20" />
+          <div className="h-9 min-w-[9.5rem] rounded-lg border border-border bg-muted/20" />
         )}
       </div>
 

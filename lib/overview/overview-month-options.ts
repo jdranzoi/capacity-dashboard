@@ -39,11 +39,28 @@ type DashboardMonthOptionRow = {
   sync_created_at: string
 }
 
+/** `through-current` — overview/historical pickers. `from-current-forward` — planning horizon. */
+export type OverviewMonthWindow = 'through-current' | 'from-current-forward'
+
+function filterDashboardMonthRows(
+  rows: DashboardMonthOptionRow[],
+  window: OverviewMonthWindow
+): DashboardMonthOptionRow[] {
+  const currentKey = format(startOfMonth(new Date()), 'yyyy-MM')
+  const ceiling = format(endOfMonth(new Date()), 'yyyy-MM-dd')
+  if (window === 'from-current-forward') {
+    return rows.filter((row) => row.month_date.slice(0, 7) >= currentKey)
+  }
+  return rows.filter((row) => row.month_date <= ceiling)
+}
+
 /**
- * Elapsed calendar months in `fact_capacity`, each with the newest `sync_snapshot` for that
+ * Calendar months in `fact_capacity`, each with the newest `sync_snapshot` for that
  * `month_date`. Backed by `v_dashboard_month_options` (migration 016 in capacity-mcp).
  */
-export async function loadOverviewMonthOptions(): Promise<{
+export async function loadOverviewMonthOptions(
+  window: OverviewMonthWindow = 'through-current'
+): Promise<{
   options: OverviewMonthOption[]
   error: string | null
 }> {
@@ -61,11 +78,9 @@ export async function loadOverviewMonthOptions(): Promise<{
     return { options: [], error: error.message }
   }
 
-  const ceiling = format(endOfMonth(new Date()), 'yyyy-MM-dd')
-  const rows = (data as DashboardMonthOptionRow[] | null) ?? []
+  const rows = filterDashboardMonthRows((data as DashboardMonthOptionRow[] | null) ?? [], window)
 
   const options: OverviewMonthOption[] = rows
-    .filter((row) => row.month_date <= ceiling)
     .map((row) => ({
       monthKey: row.month_date.slice(0, 7),
       monthStartStr: row.month_date,

@@ -1,29 +1,5 @@
+import { DashboardSectionHeaderSkeleton } from '@/components/layout/dashboard-section-header-skeleton'
 import { Skeleton } from '@/components/ui/skeleton'
-
-export function TeamsToolbarSkeleton({
-  showNameFilter = false,
-  showCompositionFilters = false,
-}: {
-  showNameFilter?: boolean
-  showCompositionFilters?: boolean
-}) {
-  const filterCount = showCompositionFilters ? 2 : showNameFilter ? 1 : 0
-
-  return (
-    <div className="flex flex-wrap items-end gap-3 border-b border-border/80 pb-5">
-      <div className="flex min-w-[11.5rem] flex-col gap-1.5">
-        <Skeleton className="h-3 w-16" />
-        <Skeleton className="h-9 w-full rounded-lg" />
-      </div>
-      {Array.from({ length: filterCount }).map((_, index) => (
-        <div key={index} className="flex min-w-[12rem] flex-1 flex-col gap-1.5 sm:max-w-md">
-          <Skeleton className="h-3 w-12" />
-          <Skeleton className="h-9 w-full rounded-lg" />
-        </div>
-      ))}
-    </div>
-  )
-}
 
 export function TeamsKpiRowSkeleton({ count = 4 }: { count?: number }) {
   return (
@@ -83,11 +59,7 @@ export function TeamsCompositionGridSkeleton() {
 export function TeamsPageSkeleton({ variant = 'overview' }: { variant?: 'overview' | 'composition' }) {
   return (
     <div className="flex flex-col gap-8">
-      <div className="space-y-1 border-b border-border pb-6">
-        <Skeleton className="h-7 w-40" />
-        <Skeleton className="h-4 w-72" />
-      </div>
-      <TeamsToolbarSkeleton showCompositionFilters={variant === 'composition'} />
+      <DashboardSectionHeaderSkeleton filterCount={variant === 'composition' ? 3 : 1} />
       {variant === 'composition' ? (
         <TeamsCompositionGridSkeleton />
       ) : (

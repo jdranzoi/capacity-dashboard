@@ -1,103 +1,84 @@
-import { Suspense } from "react";
+import { Suspense } from 'react'
 
-import { CapacityHeaderBlock } from "@/components/capacity/_shared/capacity-header-block";
-import { CapacityRoutePendingShell } from "@/components/capacity/_shared/capacity-route-pending-shell";
-import { CapacityRouteSection } from "@/components/capacity/_shared/capacity-route-section";
+import { CapacityRoutePendingShell } from '@/components/capacity/_shared/capacity-route-pending-shell'
+import { CapacityRouteSection } from '@/components/capacity/_shared/capacity-route-section'
 import {
-  CapacityChartsSkeleton,
-  CapacityKpiRowSkeleton,
-  CapacityPageSkeleton,
-  CapacityToolbarSkeleton,
-} from "@/components/capacity/_shared/capacity-section-skeletons";
-import { CapacityToolbarBlock } from "@/components/capacity/_shared/capacity-toolbar-block";
-import { CapacityPlanningPageBlock } from "@/components/capacity/planning/capacity-planning-page";
-import { getCapacityMonthSelection } from "@/lib/capacity/shared/capacity-page-cache";
-import { parseCapacityRouteFilters } from "@/lib/capacity/shared/capacity-route-filters";
+  CapacityPlanningChromeSkeleton,
+  CapacityPlanningGridSkeleton,
+  CapacityPlanningPageSkeleton,
+  CapacityPlanningUpcomingSkeleton,
+} from '@/components/capacity/_shared/capacity-section-skeletons'
+import { CapacityPlanningAvailablePeopleLoading } from '@/components/capacity/planning/capacity-planning-available-people-loading'
+import { CapacityPlanningAvailablePeopleBlock } from '@/components/capacity/planning/capacity-planning-available-people-block'
+import { CapacityPlanningChromeBlock } from '@/components/capacity/planning/capacity-planning-chrome-block'
+import { CapacityPlanningGridBlock } from '@/components/capacity/planning/capacity-planning-grid-block'
+import { CapacityPlanningUpcomingBlock } from '@/components/capacity/planning/capacity-planning-upcoming-block'
+import { CapacityPlanningViewTabs } from '@/components/capacity/planning/capacity-planning-view-tabs'
+import { parsePlanningView } from '@/lib/capacity/planning/planning-route-period'
 
 type CapacityPlanningPageProps = {
   searchParams: Promise<{
-    month?: string;
-    role?: string;
-    zone?: string;
-    project?: string;
-    projectType?: string;
-  }>;
-};
-
-function capacityHeaderSkeleton() {
-  return (
-    <header className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
-      <div className="space-y-2">
-        <div className="h-7 w-48 animate-pulse rounded-md bg-muted" />
-        <div className="h-4 w-72 animate-pulse rounded-md bg-muted" />
-      </div>
-      <div className="h-9 w-24 shrink-0 animate-pulse rounded-lg bg-muted" />
-    </header>
-  );
+    from?: string
+    to?: string
+    view?: string
+    peopleMonth?: string
+    minAvail?: string
+    peopleRole?: string
+  }>
 }
 
-export default function CapacityPlanningPage({
-  searchParams,
-}: CapacityPlanningPageProps) {
+export default function CapacityPlanningPage({ searchParams }: CapacityPlanningPageProps) {
   return (
     <CapacityRoutePendingShell>
-      <Suspense fallback={<CapacityPageSkeleton />}>
+      <Suspense fallback={<CapacityPlanningPageSkeleton />}>
         <CapacityPlanningPageContent searchParams={searchParams} />
       </Suspense>
     </CapacityRoutePendingShell>
-  );
+  )
 }
 
-async function CapacityPlanningPageContent({
-  searchParams,
-}: CapacityPlanningPageProps) {
-  const raw = await searchParams;
-  const routeFilters = parseCapacityRouteFilters(raw);
-  const monthParam = raw.month;
-  const monthStr = Array.isArray(monthParam) ? monthParam[0] : monthParam;
-
-  const { selected } = await getCapacityMonthSelection(monthStr);
+async function CapacityPlanningPageContent({ searchParams }: CapacityPlanningPageProps) {
+  const raw = await searchParams
+  const view = parsePlanningView(raw.view)
 
   return (
     <div className="flex flex-col gap-8">
-      <CapacityRouteSection fallback={capacityHeaderSkeleton()}>
-        <CapacityHeaderBlock
-          title="Planning & horizon"
-          subtitle="Planned commitments this month and capacity outlook across months"
-          referenceMonthLabel={selected?.label}
-        />
+      <CapacityRouteSection fallback={<CapacityPlanningChromeSkeleton />}>
+        <Suspense fallback={<CapacityPlanningChromeSkeleton />}>
+          <CapacityPlanningChromeBlock fromParam={raw.from} toParam={raw.to} />
+        </Suspense>
       </CapacityRouteSection>
 
-      <Suspense fallback={<CapacityToolbarSkeleton />}>
-        <CapacityRouteSection fallback={<CapacityToolbarSkeleton />}>
-          <CapacityToolbarBlock monthStr={monthStr} />
-        </CapacityRouteSection>
-      </Suspense>
+      <CapacityPlanningViewTabs activeView={view} />
 
-      <Suspense
-        fallback={
-          <div className="flex flex-col gap-8">
-            <CapacityKpiRowSkeleton />
-            <CapacityChartsSkeleton />
-            <CapacityChartsSkeleton />
-          </div>
-        }
-      >
-        <CapacityRouteSection
-          fallback={
-            <div className="flex flex-col gap-8">
-              <CapacityKpiRowSkeleton />
-              <CapacityChartsSkeleton />
-              <CapacityChartsSkeleton />
-            </div>
-          }
-        >
-          <CapacityPlanningPageBlock
-            monthStr={monthStr}
-            routeFilters={routeFilters}
-          />
-        </CapacityRouteSection>
-      </Suspense>
+      <div className="grid gap-6 xl:grid-cols-12 xl:items-start">
+        <section className="space-y-3 xl:col-span-9">
+          <CapacityRouteSection fallback={<CapacityPlanningGridSkeleton />}>
+            <Suspense fallback={<CapacityPlanningGridSkeleton />}>
+              <CapacityPlanningGridBlock
+                fromParam={raw.from}
+                toParam={raw.to}
+                viewParam={raw.view}
+              />
+            </Suspense>
+          </CapacityRouteSection>
+        </section>
+
+        <aside className="flex flex-col gap-4 xl:col-span-3">
+          <Suspense fallback={<CapacityPlanningAvailablePeopleLoading />}>
+            <CapacityPlanningAvailablePeopleBlock
+              fromParam={raw.from}
+              toParam={raw.to}
+              peopleMonthParam={raw.peopleMonth}
+              minAvailParam={raw.minAvail}
+              peopleRoleParam={raw.peopleRole}
+            />
+          </Suspense>
+          <Suspense fallback={<CapacityPlanningUpcomingSkeleton />}>
+            <CapacityPlanningUpcomingBlock fromParam={raw.from} toParam={raw.to} />
+          </Suspense>
+        </aside>
+      </div>
     </div>
-  );
+  )
 }

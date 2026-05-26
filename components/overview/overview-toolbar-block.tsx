@@ -1,10 +1,9 @@
 import { connection } from 'next/server'
 
-import {
-  OverviewPageTitle,
-  OverviewToolbarPanel,
-  overviewRangeLabel,
-} from "@/components/overview/overview-headline-parts";
+import { OverviewMonthPicker } from '@/components/overview/overview-month-picker'
+import { overviewRangeLabel } from '@/components/overview/overview-headline-parts'
+import { DashboardFilterField } from '@/components/layout/dashboard-filter-field'
+import { DashboardSectionHeader } from '@/components/layout/dashboard-section-header'
 import {
   OverviewDataError,
   OverviewEmptyMonths,
@@ -43,17 +42,18 @@ export async function OverviewToolbarBlock({
     data.weeks.length > 0 ? overviewRangeLabel(data.weeks) : '—'
 
   return (
-    <header className="flex flex-col gap-3 border-b border-border/80 pb-5">
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
-        <div>
-          <OverviewPageTitle />
-        </div>
-      </div>
-      <OverviewToolbarPanel
-        rangeLabel={rangeLabel}
-        monthPicker={{ options, selectedMonthKey: selected.monthKey }}
-      />
-    </header>
-  );
+    <DashboardSectionHeader
+      title="Workload performance"
+      subtitle="Weekly workload metrics for the reference month."
+      filters={
+        <DashboardFilterField
+          label="Period"
+          hint={data.weeks.length > 0 ? `Weeks overlapping month: ${rangeLabel}` : undefined}
+        >
+          <OverviewMonthPicker options={options} selectedMonthKey={selected.monthKey} />
+        </DashboardFilterField>
+      }
+    />
+  )
   })
 }

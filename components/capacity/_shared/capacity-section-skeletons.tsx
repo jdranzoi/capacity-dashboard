@@ -1,35 +1,8 @@
+import { CapacityPlanningAvailablePeopleLoading } from '@/components/capacity/planning/capacity-planning-available-people-loading'
+import { DashboardSectionHeaderSkeleton } from '@/components/layout/dashboard-section-header-skeleton'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DASHBOARD_SURFACE } from '@/lib/ui/dashboard-surface'
 import { cn } from '@/lib/utils'
-
-export function CapacityToolbarSkeleton() {
-  return (
-    <div className="flex flex-wrap items-end gap-3 border-b border-border/80 pb-5">
-      <div className="flex min-w-[11.5rem] flex-col gap-1.5">
-        <Skeleton className="h-3 w-16" />
-        <Skeleton className="h-9 w-full rounded-lg" />
-      </div>
-    </div>
-  )
-}
-
-/** Utilization toolbar includes month + role/project/region filters. */
-export function UtilizationToolbarSkeleton() {
-  return (
-    <div className="flex flex-wrap items-end gap-3 border-b border-border/80 pb-5">
-      <div className="flex min-w-[11.5rem] flex-col gap-1.5">
-        <Skeleton className="h-3 w-16" />
-        <Skeleton className="h-9 w-full rounded-lg" />
-      </div>
-      {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="flex min-w-[7.5rem] flex-col gap-1.5">
-          <Skeleton className="h-3 w-12" />
-          <Skeleton className="h-9 w-full rounded-lg" />
-        </div>
-      ))}
-    </div>
-  )
-}
 
 export function CapacityKpiRowSkeleton({ count = 6 }: { count?: number }) {
   return (
@@ -80,16 +53,7 @@ export function UtilizationStaffingSkeleton() {
 export function UtilizationPageSkeleton() {
   return (
     <div className="flex flex-col gap-8">
-      <div className="space-y-1 border-b border-border pb-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-2">
-            <Skeleton className="h-7 w-32" />
-            <Skeleton className="h-4 w-full max-w-md" />
-          </div>
-          <Skeleton className="h-9 w-24 shrink-0 rounded-lg" />
-        </div>
-      </div>
-      <UtilizationToolbarSkeleton />
+      <DashboardSectionHeaderSkeleton filterCount={4} />
       <UtilizationKpiRowSkeleton />
       <section className="space-y-3">
         <Skeleton className="h-3 w-24" />
@@ -115,14 +79,49 @@ export function CapacityRoleSummarySkeleton() {
 export function CapacityPageSkeleton() {
   return (
     <div className="flex flex-col gap-8">
-      <div className="space-y-1 border-b border-border pb-6">
-        <Skeleton className="h-7 w-40" />
-        <Skeleton className="h-4 w-72" />
-      </div>
-      <CapacityToolbarSkeleton />
+      <DashboardSectionHeaderSkeleton />
       <CapacityKpiRowSkeleton />
       <CapacityChartsSkeleton />
       <CapacityRoleSummarySkeleton />
+    </div>
+  )
+}
+
+export function CapacityPlanningChromeSkeleton() {
+  return (
+    <>
+      <DashboardSectionHeaderSkeleton filterCount={2} />
+      <CapacityKpiRowSkeleton count={4} />
+    </>
+  )
+}
+
+export function CapacityPlanningGridSkeleton() {
+  return <Skeleton className={cn(DASHBOARD_SURFACE, 'h-[28rem] w-full')} />
+}
+
+export function CapacityPlanningAvailablePeopleSkeleton() {
+  return <CapacityPlanningAvailablePeopleLoading />
+}
+
+export function CapacityPlanningUpcomingSkeleton() {
+  return <Skeleton className={cn(DASHBOARD_SURFACE, 'h-56 w-full')} />
+}
+
+export function CapacityPlanningPageSkeleton() {
+  return (
+    <div className="flex flex-col gap-8">
+      <CapacityPlanningChromeSkeleton />
+      <Skeleton className="h-10 w-72" />
+      <div className="grid gap-6 xl:grid-cols-12">
+        <div className="xl:col-span-9">
+          <CapacityPlanningGridSkeleton />
+        </div>
+        <div className="flex flex-col gap-4 xl:col-span-3">
+          <CapacityPlanningAvailablePeopleSkeleton />
+          <CapacityPlanningUpcomingSkeleton />
+        </div>
+      </div>
     </div>
   )
 }

@@ -1,23 +1,9 @@
+import { DashboardSectionHeaderSkeleton } from '@/components/layout/dashboard-section-header-skeleton'
 import { Skeleton } from '@/components/ui/skeleton'
 import { OVERVIEW_METRIC_ROWS } from '@/lib/overview/overview-metrics'
 
 export function OverviewToolbarSkeleton() {
-  return (
-    <div className="space-y-3 border-b border-border/80 pb-5">
-      <div className="space-y-2">
-        <Skeleton className="h-7 w-64" />
-        <Skeleton className="h-4 w-full max-w-xl" />
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <div className="flex min-w-[11.5rem] flex-col gap-1">
-          <Skeleton className="h-9 w-full rounded-lg" />
-          <Skeleton className="h-3 w-48" />
-        </div>
-        <Skeleton className="h-16 min-w-[200px] flex-1" />
-        <Skeleton className="h-8 w-24" />
-      </div>
-    </div>
-  )
+  return <DashboardSectionHeaderSkeleton />
 }
 
 export function OverviewKpiCardSkeleton() {

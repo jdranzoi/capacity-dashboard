@@ -1,29 +1,16 @@
-import { Button } from '@/components/ui/button'
+import type { ReactNode } from 'react'
 
+import { DashboardSectionHeader } from '@/components/layout/dashboard-section-header'
+
+/** @deprecated Prefer route chrome blocks with `DashboardSectionHeader` and master filters on the right. */
 export function CapacityHeaderBlock({
   title,
   subtitle,
-  referenceMonthLabel,
+  filters,
 }: {
   title: string
   subtitle: string
-  referenceMonthLabel?: string
+  filters?: ReactNode
 }) {
-  return (
-    <header
-      className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between"
-      data-slot="capacity-header"
-    >
-      <div className="space-y-1">
-        <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
-        <p className="text-sm text-muted-foreground">
-          {subtitle}
-          {referenceMonthLabel ? ` — ${referenceMonthLabel}` : ''}
-        </p>
-      </div>
-      <Button type="button" variant="outline" size="sm" className="shrink-0" disabled>
-        Export
-      </Button>
-    </header>
-  )
+  return <DashboardSectionHeader title={title} subtitle={subtitle} filters={filters} />
 }

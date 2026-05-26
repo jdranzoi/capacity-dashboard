@@ -33,7 +33,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | SP-2.0 Foundation | — | **Done** | [§ SP-2.0](./SP2_CAPACITY_PLAN.md#shared-foundation-sp-20) |
 | SP-2.2 Overview | `/capacity/overview` | **Done** | [§ SP-2.2](./SP2_CAPACITY_PLAN.md#sp-22--overview-capacityoverview) |
 | SP-2.3 Operations | `/capacity/operations` | Not started | [§ SP-2.3](./SP2_CAPACITY_PLAN.md#sp-23--operations-capacityoperations) |
-| SP-2.4 Planning | `/capacity/planning` | Not started | [§ SP-2.4](./SP2_CAPACITY_PLAN.md#sp-24--planning-capacityplanning) |
+| SP-2.4 Planning | `/capacity/planning` | **Done** | [§ SP-2.4](./SP2_CAPACITY_PLAN.md#sp-24--planning-capacityplanning) |
 | SP-2.5 Allocations | `/capacity/allocations` | Not started | [§ SP-2.5](./SP2_CAPACITY_PLAN.md#sp-25--allocations-capacityallocations) |
 | SP-2.6 Bench | `/capacity/bench` | Not started | [§ SP-2.6](./SP2_CAPACITY_PLAN.md#sp-26--bench-capacitybench) |
 | SP-2.7 Forecast / Scenarios | `/capacity/forecast`, `/capacity/scenarios` | Stub done | [§ SP-2.7](./SP2_CAPACITY_PLAN.md#sp-27--forecast--scenarios) |
@@ -57,7 +57,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | `/` | Overview | **Substantial** — weekly cards, KPIs, charts |
 | `/capacity/overview` | Capacity → Overview | **Shipped** — KPIs, charts, role summary |
 | `/capacity/utilization` | Capacity → Utilization | **Shipped** — role/person dashboard (`components/capacity/utilization/`) |
-| `/capacity/*` (other) | Capacity sub-sections | Placeholders (hidden in nav) |
+| `/capacity/planning` | Capacity → Planning | **Shipped** — dual-tab workspace (People + Project planning) |
 | `/teams` | Teams | Redirects → `/teams/overview` |
 | `/teams/overview` | Teams → Overview | **Shipped** — org structure snapshot |
 | `/teams/composition` | Teams → Composition | **Shipped** — project team cards by type |
@@ -74,7 +74,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | Subplan | Built today | Target |
 |---|---|---|
 | SP-1 Overview | Weekly section, workload charts, KPI blocks, loaders in `lib/overview/` | **Deferred** — extend after Capacity widgets exist |
-| SP-2 Capacity | `/capacity/overview` + `/capacity/utilization` shipped; other tracks pending | [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md) |
+| SP-2 Capacity | `/capacity/overview`, `/capacity/utilization`, `/capacity/planning` shipped; other tracks pending | [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md) |
 | SP-3 People | None (individual views TBD) | `/people` |
 | SP-4 Teams | `/teams/overview` + `/teams/composition` shipped | `/teams/*` remaining sub-sections |
 | SP-5 Projects | None (pipeline stub only) | New `/projects` |
@@ -116,4 +116,4 @@ Ask         /ask
 
 ---
 
-*Last updated: legacy `/team` removed; utilization lives under Capacity; shared roster in `lib/workforce/`.*
+*Last updated: SP-2.4 Planning workspace shipped (`/capacity/planning` — People + Project tabs).*

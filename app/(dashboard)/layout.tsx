@@ -50,7 +50,9 @@ export default async function DashboardLayout({
                   <Suspense fallback={<HeaderSkeleton />}>
                     <Header />
                   </Suspense>
-                  <main className="flex-1 overflow-y-auto p-8">{children}</main>
+                  <main className="flex-1 overflow-y-auto px-8 pb-8">
+                    <div className="pt-8">{children}</div>
+                  </main>
                 </div>
               </div>
             </SyncVersionWatcher>
