@@ -13,7 +13,6 @@ import type {
   PlanningProjectMonthCell,
   PlanningProjectNode,
 } from '@/lib/capacity/planning/planning-types'
-import { plannedPct } from '@/lib/domain/workload-metrics'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 
 export function buildPlanningPeopleTree(
@@ -31,7 +30,8 @@ export function buildPlanningPeopleTree(
     const facts = factsByMonth.get(monthKey)
     if (!facts) continue
     for (const person of facts.people) {
-      const roleId = person.roleId ?? '__none__'
+      if (!person.roleId) continue
+      const roleId = person.roleId
       if (!roleOrder.has(roleId)) {
         roleOrder.set(roleId, {
           roleKey: person.roleKey,
@@ -106,27 +106,17 @@ export function buildPlanningMonthKpis(
         plannedHours: 0,
         openHours: 0,
         utilizationPct: null,
-        rolesAtOrAbove90Pct: 0,
-        roleCount: 0,
-        rolesAbove90SharePct: null,
       }
     }
 
     const net = roundDisplayStat(facts.people.reduce((s, p) => s + p.netCapacityHours, 0))
     const planned = roundDisplayStat(facts.people.reduce((s, p) => s + p.plannedHours, 0))
     const metrics = buildPlanningNodeMetrics(net, planned)
-    const { roleCount, rolesAtOrAbove90Pct } = facts.roleStats
 
     return {
       monthKey,
       monthLabel: facts.monthLabel,
       ...metrics,
-      rolesAtOrAbove90Pct,
-      roleCount,
-      rolesAbove90SharePct:
-        roleCount > 0
-          ? roundDisplayStat((rolesAtOrAbove90Pct / roleCount) * 100)
-          : null,
     }
   })
 }
@@ -186,6 +176,7 @@ export function buildPlanningProjectTree(
     if (!facts) continue
 
     for (const person of facts.people) {
+      if (!person.roleId) continue
       for (const [projectId, hours] of person.plannedByProject.entries()) {
         if (hours <= 0) continue
         const meta = facts.projects.get(projectId)
@@ -198,7 +189,7 @@ export function buildPlanningProjectTree(
         }
         project.sortPlanned += hours
 
-        const roleId = person.roleId ?? '__none__'
+        const roleId = person.roleId
         let role = project.roles.get(roleId)
         if (!role) {
           role = {
@@ -268,28 +259,3 @@ export function buildPlanningProjectTree(
     })
 }
 
-export function computeRoleStats(
-  people: PlanningMonthPersonFact[]
-): { roleCount: number; rolesAtOrAbove90Pct: number } {
-  type RoleAgg = { net: number; planned: number }
-  const byRole = new Map<string, RoleAgg>()
-
-  for (const person of people) {
-    const key = person.roleId ?? '__none__'
-    let agg = byRole.get(key)
-    if (!agg) {
-      agg = { net: 0, planned: 0 }
-      byRole.set(key, agg)
-    }
-    agg.net += person.netCapacityHours
-    agg.planned += person.plannedHours
-  }
-
-  let rolesAtOrAbove90Pct = 0
-  for (const agg of byRole.values()) {
-    const pct = plannedPct(agg.planned, agg.net)
-    if (pct != null && pct >= 90) rolesAtOrAbove90Pct += 1
-  }
-
-  return { roleCount: byRole.size, rolesAtOrAbove90Pct }
-}

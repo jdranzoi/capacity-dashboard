@@ -17,15 +17,19 @@ import {
   fmtPlanningHours,
   PLANNING_METRIC_CELL_CLASS,
   PLANNING_METRIC_COL_CLASS,
+  PLANNING_METRIC_COL_WIDTH,
   PLANNING_NAME_CELL_CLASS,
   PLANNING_NAME_COL_CLASS,
+  PLANNING_NAME_COL_WIDTH,
   PlanningMetricCell,
   PlanningTreeNameCell,
 } from '@/components/capacity/planning/planning-tree-grid-utils'
 import { SortableHeader } from '@/components/ui/data-table/sortable-header'
 import {
+  filterProjectTreeByRoleOrName,
   filterProjectTreeByType,
   type PlanningProjectTypeFilter,
+  type PlanningStaffFilterMode,
   type PlanningTreeExpansion,
 } from '@/lib/capacity/planning/planning-grid-filters'
 import {
@@ -48,14 +52,19 @@ export function CapacityPlanningProjectGrid({
   rows,
   monthKeys,
   monthLabels,
+  roleOptions,
 }: {
   rows: PlanningProjectNode[]
   monthKeys: string[]
   monthLabels: Record<string, string>
+  roleOptions: string[]
 }) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [treeExpansion, setTreeExpansion] = useState<PlanningTreeExpansion>('collapse')
+  const [filterMode, setFilterMode] = useState<PlanningStaffFilterMode>('role')
+  const [roleFilter, setRoleFilter] = useState('')
+  const [nameQuery, setNameQuery] = useState('')
   const [projectType, setProjectType] = useState<PlanningProjectTypeFilter>('all')
   const [monthVisibility, setMonthVisibility] = useState<PlanningMonthVisibilityFilter>(
     PLANNING_MONTH_VISIBILITY_ALL
@@ -76,10 +85,10 @@ export function CapacityPlanningProjectGrid({
     setExpanded(value === 'expand' ? true : {})
   }
 
-  const filteredRows = useMemo(
-    () => filterProjectTreeByType(rows, projectType),
-    [rows, projectType]
-  )
+  const filteredRows = useMemo(() => {
+    const byType = filterProjectTreeByType(rows, projectType)
+    return filterProjectTreeByRoleOrName(byType, filterMode, roleFilter, nameQuery)
+  }, [rows, projectType, filterMode, roleFilter, nameQuery])
 
   const columns = useMemo(() => {
     const nameCol = columnHelper.accessor('label', {
@@ -143,9 +152,18 @@ export function CapacityPlanningProjectGrid({
   const visibleRows = table.getRowModel().rows
   const filteredEmpty = rows.length > 0 && visibleRows.length === 0
 
+  const tableMinWidth = `calc(${PLANNING_NAME_COL_WIDTH} + ${visibleMonthKeys.length} * ${PLANNING_METRIC_COL_WIDTH})`
+
   return (
     <>
       <CapacityPlanningProjectGridToolbar
+        filterMode={filterMode}
+        onFilterModeChange={setFilterMode}
+        roleValue={roleFilter}
+        onRoleChange={setRoleFilter}
+        nameQuery={nameQuery}
+        onNameQueryChange={setNameQuery}
+        roleOptions={roleOptions}
         projectType={projectType}
         onProjectTypeChange={setProjectType}
         monthKeys={monthKeys}
@@ -157,7 +175,16 @@ export function CapacityPlanningProjectGrid({
       />
       <div className={dashboardTableShellClass('overflow-hidden rounded-none border-0 ring-0')}>
         <div className="max-h-[min(36rem,70vh)] overflow-auto">
-          <table className="w-full min-w-max border-collapse text-sm">
+          <table
+            className="w-full table-fixed border-collapse text-sm"
+            style={{ minWidth: tableMinWidth }}
+          >
+            <colgroup>
+              <col style={{ width: PLANNING_NAME_COL_WIDTH }} />
+              {visibleMonthKeys.map((monthKey) => (
+                <col key={monthKey} style={{ width: PLANNING_METRIC_COL_WIDTH }} />
+              ))}
+            </colgroup>
             <thead className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--border)]">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id} className="border-b border-border/80">

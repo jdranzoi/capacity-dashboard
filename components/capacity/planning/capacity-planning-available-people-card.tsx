@@ -5,7 +5,6 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { CapacityPlanningAvailablePeopleLoading } from '@/components/capacity/planning/capacity-planning-available-people-loading'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   DataSectionPanel,
   DataSectionPanelHeader,
@@ -17,10 +16,18 @@ import { cn } from '@/lib/utils'
 
 function fragmentationVariant(
   label: PlanningAvailablePerson['fragmentationLabel']
-): 'secondary' | 'outline' | 'destructive' {
+): 'secondary' | 'warning' | 'destructive' {
   if (label === 'High') return 'destructive'
-  if (label === 'Moderate') return 'outline'
+  if (label === 'Moderate') return 'warning'
   return 'secondary'
+}
+
+const FRAGMENTATION_BADGE_HINT: Record<PlanningAvailablePerson['fragmentationLabel'], string> = {
+  Healthy:
+    'Fewer than four concurrent projects and no fragmentation flag from the latest sync.',
+  Moderate:
+    'Flagged for fragmentation with up to three concurrent projects in this month.',
+  High: 'Four or more concurrent projects in this month.',
 }
 
 export function CapacityPlanningAvailablePeopleCard({
@@ -147,13 +154,14 @@ export function CapacityPlanningAvailablePeopleCard({
                     <p className="mt-1 text-xs tabular-nums text-emerald-600 dark:text-emerald-400">
                       {fmtHoursKpi(person.availableHours)} available · {person.projectCount} projects
                     </p>
-                    <Badge variant={fragmentationVariant(person.fragmentationLabel)} className="mt-2">
-                      {person.fragmentationLabel}
-                    </Badge>
                   </div>
-                  <Button type="button" size="sm" variant="outline" disabled title="Coming soon">
-                    Allocate
-                  </Button>
+                  <Badge
+                    variant={fragmentationVariant(person.fragmentationLabel)}
+                    className="shrink-0"
+                    title={FRAGMENTATION_BADGE_HINT[person.fragmentationLabel]}
+                  >
+                    {person.fragmentationLabel}
+                  </Badge>
                 </li>
               ))
             )}

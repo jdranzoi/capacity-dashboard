@@ -176,7 +176,7 @@ export async function loadPlanningAvailablePeople(params: {
   }
 
   const roleOptions = Array.from(
-    new Set(monthResult.data.people.map((p) => p.roleLabel).filter((label) => label !== 'Unassigned'))
+    new Set(monthResult.data.people.map((p) => p.roleLabel).filter((label) => label.length > 0))
   ).sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }))
 
   const fragResult = await loadFragmentationByPerson(monthOpt.snapshotId, monthOpt.monthStartStr)

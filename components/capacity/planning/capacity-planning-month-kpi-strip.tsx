@@ -37,14 +37,7 @@ function MonthKpiCard({ kpi }: { kpi: PlanningMonthKpi }) {
           value={fmtHoursKpi(kpi.openHours)}
           className="text-emerald-600 dark:text-emerald-400"
         />
-        <MetricItem
-          label="Roles ≥ 90%"
-          value={
-            kpi.roleCount > 0
-              ? `${kpi.rolesAtOrAbove90Pct}/${kpi.roleCount} (${fmtPct(kpi.rolesAbove90SharePct)})`
-              : '—'
-          }
-        />
+        <MetricItem label="Utilization" value={fmtPct(kpi.utilizationPct)} />
       </dl>
     </article>
   )

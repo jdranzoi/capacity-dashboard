@@ -58,3 +58,40 @@ export function filterProjectTreeByType(
   if (typeFilter === 'all') return rows
   return rows.filter((row) => row.kind === 'project' && row.projectType === typeFilter)
 }
+
+export type PlanningStaffFilterMode = 'role' | 'name'
+
+/** Prune project → role → person tree by role label or person name (same UX as people grid). */
+export function filterProjectTreeByRoleOrName(
+  rows: PlanningProjectNode[],
+  mode: PlanningStaffFilterMode,
+  roleValue: string,
+  nameQuery: string
+): PlanningProjectNode[] {
+  if (mode === 'role' && roleValue) {
+    const out: PlanningProjectNode[] = []
+    for (const project of rows) {
+      const roles = (project.subRows ?? []).filter((role) => role.label === roleValue)
+      if (roles.length > 0) out.push({ ...project, subRows: roles })
+    }
+    return out
+  }
+
+  const q = nameQuery.trim().toLowerCase()
+  if (mode === 'name' && q) {
+    const out: PlanningProjectNode[] = []
+    for (const project of rows) {
+      const roles: PlanningProjectNode[] = []
+      for (const role of project.subRows ?? []) {
+        const people = (role.subRows ?? []).filter((person) =>
+          person.label.toLowerCase().includes(q)
+        )
+        if (people.length > 0) roles.push({ ...role, subRows: people })
+      }
+      if (roles.length > 0) out.push({ ...project, subRows: roles })
+    }
+    return out
+  }
+
+  return rows
+}

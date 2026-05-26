@@ -12,8 +12,7 @@ type RoleHeadcountRollup = {
   headcount: number
 }
 
-export function planningRoleAvailabilityCode(roleKey: string, roleLabel: string): string {
-  if (roleKey === 'unassigned') return roleLabel
+export function planningRoleAvailabilityCode(roleKey: string): string {
   return roleKey.toUpperCase()
 }
 
@@ -41,6 +40,7 @@ export function buildUpcomingAvailability(
     const byRole = new Map<string, RoleHeadcountRollup>()
 
     for (const person of month.people) {
+      if (!person.roleId || !person.roleKey) continue
       if (!personBelowPlannedUtilizationThreshold(person, maxPlannedUtilPct)) continue
 
       const key = person.roleKey
@@ -66,7 +66,7 @@ export function buildUpcomingAvailability(
       events.push({
         monthKey: month.monthKey,
         monthLabel,
-        roleCode: planningRoleAvailabilityCode(agg.roleKey, agg.roleLabel),
+        roleCode: planningRoleAvailabilityCode(agg.roleKey),
         roleLabel: agg.roleLabel,
         headcount: agg.headcount,
       })

@@ -73,9 +73,8 @@ function AvailablePeopleListSkeleton({
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-3 w-24" />
               <Skeleton className="h-3 w-40" />
-              <Skeleton className="mt-1 h-5 w-16 rounded-full" />
             </div>
-            <Skeleton className="h-8 w-[4.5rem] shrink-0 rounded-md" />
+            <Skeleton className="h-5 w-16 shrink-0 rounded-full" />
           </div>
         </li>
       ))}

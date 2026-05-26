@@ -66,6 +66,7 @@ export async function CapacityPlanningGridBlock({
             rows={data.projectTreeRows}
             monthKeys={data.period.monthKeys}
             monthLabels={data.period.monthLabels}
+            roleOptions={roleOptions}
           />
         )}
       </div>

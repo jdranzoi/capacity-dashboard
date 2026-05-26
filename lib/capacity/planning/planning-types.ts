@@ -48,9 +48,6 @@ export type PlanningProjectNode = {
 export type PlanningMonthKpi = PlanningNodeMetrics & {
   monthKey: string
   monthLabel: string
-  rolesAtOrAbove90Pct: number
-  roleCount: number
-  rolesAbove90SharePct: number | null
 }
 
 export type PlanningAvailablePerson = {
@@ -65,7 +62,7 @@ export type PlanningAvailablePerson = {
 export type PlanningAvailabilityEvent = {
   monthKey: string
   monthLabel: string
-  /** Display code (e.g. FSD, TL) or full label for unassigned. */
+  /** Display code (e.g. FSD, TL). */
   roleCode: string
   roleLabel: string
   headcount: number
@@ -106,5 +103,4 @@ export type PlanningMonthFacts = {
   snapshotId: string
   people: PlanningMonthPersonFact[]
   projects: Map<string, PlanningMonthProjectMeta>
-  roleStats: { roleCount: number; rolesAtOrAbove90Pct: number }
 }

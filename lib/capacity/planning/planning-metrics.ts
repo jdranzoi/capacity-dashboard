@@ -43,11 +43,12 @@ export function mergeMonthMetricsMaps(
   return out
 }
 
+/** `total_count` = concurrent planned projects in the month (from `fact_fragmentation`). */
 export function fragmentationLabelFromFacts(
   flagged: boolean,
   totalCount: number
 ): 'Healthy' | 'Moderate' | 'High' {
-  if (flagged && totalCount >= 3) return 'High'
-  if (flagged || totalCount >= 3) return 'Moderate'
+  if (totalCount >= 4) return 'High'
+  if (flagged) return 'Moderate'
   return 'Healthy'
 }

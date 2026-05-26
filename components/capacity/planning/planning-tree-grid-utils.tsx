@@ -95,8 +95,13 @@ export function fmtPlanningPct(value: number | null | undefined): string {
   return fmtPct(value)
 }
 
-export const PLANNING_NAME_COL_CLASS = 'sticky left-0 z-20 min-w-[10rem] max-w-[14rem] bg-card text-left'
+/** Fixed layout widths for planning tree grids (colgroup + sticky name column). */
+export const PLANNING_NAME_COL_WIDTH = '14rem'
+export const PLANNING_METRIC_COL_WIDTH = '3.5rem'
+
+export const PLANNING_NAME_COL_CLASS =
+  'sticky left-0 z-20 w-[14rem] max-w-[14rem] shrink-0 bg-card text-left'
 export const PLANNING_NAME_CELL_CLASS =
-  'sticky left-0 z-[1] bg-card px-1.5 pt-1.5 pb-1'
-export const PLANNING_METRIC_COL_CLASS = 'min-w-[3rem] max-w-[3.5rem]'
+  'sticky left-0 z-[1] w-[14rem] max-w-[14rem] shrink-0 bg-card px-1.5 pt-1.5 pb-1'
+export const PLANNING_METRIC_COL_CLASS = 'w-[3.5rem] max-w-[3.5rem] shrink-0'
 export const PLANNING_METRIC_CELL_CLASS = 'px-1 py-1.5 text-right'

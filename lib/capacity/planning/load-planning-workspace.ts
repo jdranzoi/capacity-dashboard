@@ -7,7 +7,6 @@ import {
   buildPlanningMonthKpis,
   buildPlanningPeopleTree,
   buildPlanningProjectTree,
-  computeRoleStats,
 } from '@/lib/capacity/planning/build-planning-trees'
 import { buildPlanningNodeMetrics } from '@/lib/capacity/planning/planning-metrics'
 import { resolvePlanningPeriod } from '@/lib/capacity/planning/planning-route-period'
@@ -22,8 +21,8 @@ import { getMonthFactBundle } from '@/lib/data/load-month-fact-bundle'
 import { CACHE_TAG_MONTH_FACTS, cacheTagSnapshot } from '@/lib/data/cache-tags'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import { loadPlanningMonthOptions } from '@/lib/capacity/planning/load-planning-month-options'
+import { fetchPlanningMonthRolesForPeople } from '@/lib/capacity/planning/resolve-planning-month-roles'
 import { createServiceClientCached } from '@/lib/supabase/server'
-import { fetchMonthRolesForPeople } from '@/lib/workforce/month-role'
 import { isCompositionProjectType } from '@/lib/teams/composition/teams-composition-utils'
 
 const PAGE = 1000
@@ -88,7 +87,7 @@ export async function loadMonthFacts(
   const planRows = planRowsResult.rows
   const capacityPersonIds = capRows.map((r) => r.person_id)
 
-  const { roleByPerson, error: roleErr } = await fetchMonthRolesForPeople(supabase, {
+  const { roleByPerson, error: roleErr } = await fetchPlanningMonthRolesForPeople(supabase, {
     snapshotId,
     monthStartStr,
     monthEndStr,
@@ -172,13 +171,13 @@ export async function loadMonthFacts(
 
   const people: PlanningMonthPersonFact[] = capacityPersonIds.map((personId) => {
     const roleId = roleByPerson.get(personId) ?? null
-    const role = roleId ? roleMeta.get(roleId) : null
+    const role = roleId ? roleMeta.get(roleId) : undefined
     return {
       personId,
       personName: personNameById.get(personId) ?? personId,
       roleId,
-      roleKey: role?.key ?? 'unassigned',
-      roleLabel: role?.label ?? 'Unassigned',
+      roleKey: role?.key ?? '',
+      roleLabel: role?.label ?? '',
       netCapacityHours: roundDisplayStat(capByPerson.get(personId) ?? 0),
       plannedHours: roundDisplayStat(plannedByPerson.get(personId) ?? 0),
       plannedByProject: plannedByPersonProject.get(personId) ?? new Map(),
@@ -193,7 +192,6 @@ export async function loadMonthFacts(
       snapshotId,
       people,
       projects,
-      roleStats: computeRoleStats(people),
     },
     error: null,
   }
@@ -405,9 +403,6 @@ export function getMockPlanningWorkspace(): CapacityPlanningWorkspacePayload {
       monthKey,
       monthLabel: monthLabels[monthKey]!,
       ...m(3120, 2732),
-      rolesAtOrAbove90Pct: 2,
-      roleCount: 6,
-      rolesAbove90SharePct: 33,
     })),
     peopleTreeRows,
     projectTreeRows,
