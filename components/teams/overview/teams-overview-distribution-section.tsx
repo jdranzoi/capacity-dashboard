@@ -39,8 +39,7 @@ export function TeamsOverviewDistributionSection({ data }: { data: TeamsOverview
             title="Geographic distribution"
             description={
               <>
-                Roster grouped by holiday zone from{' '}
-                <code className="font-mono text-[0.65rem]">dim_zone</code>. Zones drive PTO and
+                Roster grouped by holiday zone from Zones. Zones drive PTO and
                 holiday calendars.
               </>
             }
@@ -61,5 +60,5 @@ export function TeamsOverviewDistributionSection({ data }: { data: TeamsOverview
         </DataSectionPanel>
       </div>
     </section>
-  )
+  );
 }

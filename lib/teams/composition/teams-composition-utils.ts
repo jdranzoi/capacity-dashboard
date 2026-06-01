@@ -137,6 +137,18 @@ export function resolvePmForMembers(
   return { pmName: pms[0]!, pmSortKey: pms[0]!.toLocaleLowerCase('en') }
 }
 
+const TL_ROLE_KEY = 'tl'
+
+export function resolveTlNamesForMembers(members: TeamsCompositionMember[]): string | null {
+  const tls = members
+    .filter((m) => m.roleKey === TL_ROLE_KEY)
+    .map((m) => m.personName)
+    .sort((a, b) => a.localeCompare(b, 'en'))
+
+  if (tls.length === 0) return null
+  return tls.join(', ')
+}
+
 export function sortCompositionProjects(
   projects: TeamsCompositionProject[]
 ): TeamsCompositionProject[] {

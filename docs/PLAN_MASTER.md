@@ -368,8 +368,8 @@ The existing `/pipeline` route (proto-Projects) contains a deal list for pre-sal
 
 ### Implementation steps
 
-- [ ] **SP-5.1** Create `/projects` route shell and layout with Level 2 nav
-- [ ] **SP-5.2** Projects → Portfolio sub-page (project list with type, status, staffing load)
+- [x] **SP-5.1** Create `/projects` route shell and layout with Level 2 nav
+- [x] **SP-5.2** Projects → Overview sub-page (`/projects/overview` — delivery KPIs, progress chart, drill-down)
 - [ ] **SP-5.3** Projects → Staffing sub-page (people assigned per project, allocation %)
 - [ ] **SP-5.4** Projects → Health sub-page (risk indicators per project)
 - [ ] **SP-5.5** Mark Delivery, Financials, Dependencies as coming soon

@@ -186,51 +186,99 @@ export type Database = {
       }
       dim_project: {
         Row: {
+          budget_hours: number | null
           created_at: string | null
           end_date: string | null
           id: string
           is_commercial: boolean
-          loe_estimate_hours: number | null
           project_key: string
           project_name: string | null
           project_type: string
+          projected_hours_at_completion: number | null
           size_bucket: string | null
           start_date: string | null
           status: string
+          target_release_date: string | null
           tech_stack: string[] | null
           updated_at: string | null
         }
         Insert: {
+          budget_hours?: number | null
           created_at?: string | null
           end_date?: string | null
           id?: string
           is_commercial?: boolean
-          loe_estimate_hours?: number | null
           project_key: string
           project_name?: string | null
           project_type?: string
+          projected_hours_at_completion?: number | null
           size_bucket?: string | null
           start_date?: string | null
           status?: string
+          target_release_date?: string | null
           tech_stack?: string[] | null
           updated_at?: string | null
         }
         Update: {
+          budget_hours?: number | null
           created_at?: string | null
           end_date?: string | null
           id?: string
           is_commercial?: boolean
-          loe_estimate_hours?: number | null
           project_key?: string
           project_name?: string | null
           project_type?: string
+          projected_hours_at_completion?: number | null
           size_bucket?: string | null
           start_date?: string | null
           status?: string
+          target_release_date?: string | null
           tech_stack?: string[] | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      dim_project_repo: {
+        Row: {
+          bb_repo_slug: string
+          bb_workspace: string
+          created_at: string | null
+          id: string
+          is_active: boolean
+          project_id: string
+        }
+        Insert: {
+          bb_repo_slug: string
+          bb_workspace: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          project_id: string
+        }
+        Update: {
+          bb_repo_slug?: string
+          bb_workspace?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dim_project_repo_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "dim_project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dim_project_repo_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_project_delivery_totals"
+            referencedColumns: ["project_id"]
+          },
+        ]
       }
       dim_role: {
         Row: {
@@ -252,6 +300,60 @@ export type Database = {
           label?: string
         }
         Relationships: []
+      }
+      dim_sprint: {
+        Row: {
+          complete_date: string | null
+          created_at: string | null
+          end_date: string | null
+          id: string
+          jira_sprint_id: number
+          project_id: string
+          sprint_name: string
+          start_date: string | null
+          state: string
+          updated_at: string | null
+        }
+        Insert: {
+          complete_date?: string | null
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          jira_sprint_id: number
+          project_id: string
+          sprint_name: string
+          start_date?: string | null
+          state?: string
+          updated_at?: string | null
+        }
+        Update: {
+          complete_date?: string | null
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          jira_sprint_id?: number
+          project_id?: string
+          sprint_name?: string
+          start_date?: string | null
+          state?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dim_sprint_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "dim_project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dim_sprint_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_project_delivery_totals"
+            referencedColumns: ["project_id"]
+          },
+        ]
       }
       dim_zone: {
         Row: {
@@ -488,6 +590,79 @@ export type Database = {
           },
         ]
       }
+      fact_issue_loe: {
+        Row: {
+          estimated_hours: number | null
+          first_seen_at: string
+          id: string
+          issue_key: string
+          issue_summary: string | null
+          issue_type: string
+          loe_accuracy: number | null
+          logged_hours: number | null
+          project_id: string
+          resolved_at: string | null
+          sprint_id: string | null
+          status: string | null
+          updated_at: string
+          variance_hours: number | null
+        }
+        Insert: {
+          estimated_hours?: number | null
+          first_seen_at?: string
+          id?: string
+          issue_key: string
+          issue_summary?: string | null
+          issue_type: string
+          loe_accuracy?: number | null
+          logged_hours?: number | null
+          project_id: string
+          resolved_at?: string | null
+          sprint_id?: string | null
+          status?: string | null
+          updated_at?: string
+          variance_hours?: number | null
+        }
+        Update: {
+          estimated_hours?: number | null
+          first_seen_at?: string
+          id?: string
+          issue_key?: string
+          issue_summary?: string | null
+          issue_type?: string
+          loe_accuracy?: number | null
+          logged_hours?: number | null
+          project_id?: string
+          resolved_at?: string | null
+          sprint_id?: string | null
+          status?: string | null
+          updated_at?: string
+          variance_hours?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fact_issue_loe_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "dim_project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_issue_loe_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_project_delivery_totals"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "fact_issue_loe_sprint_id_fkey"
+            columns: ["sprint_id"]
+            isOneToOne: false
+            referencedRelation: "dim_sprint"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fact_plans: {
         Row: {
           created_at: string | null
@@ -538,6 +713,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fact_plans_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_project_delivery_totals"
+            referencedColumns: ["project_id"]
+          },
+          {
             foreignKeyName: "fact_plans_role_id_fkey"
             columns: ["role_id"]
             isOneToOne: false
@@ -546,6 +728,58 @@ export type Database = {
           },
           {
             foreignKeyName: "fact_plans_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "sync_snapshot"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fact_project_account_mix: {
+        Row: {
+          account_category: string
+          created_at: string | null
+          id: string
+          logged_hours: number
+          month_date: string
+          project_id: string
+          snapshot_id: string
+        }
+        Insert: {
+          account_category: string
+          created_at?: string | null
+          id?: string
+          logged_hours?: number
+          month_date: string
+          project_id: string
+          snapshot_id: string
+        }
+        Update: {
+          account_category?: string
+          created_at?: string | null
+          id?: string
+          logged_hours?: number
+          month_date?: string
+          project_id?: string
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fact_project_account_mix_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "dim_project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_project_account_mix_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_project_delivery_totals"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "fact_project_account_mix_snapshot_id_fkey"
             columns: ["snapshot_id"]
             isOneToOne: false
             referencedRelation: "sync_snapshot"
@@ -590,6 +824,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fact_project_actuals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_project_delivery_totals"
+            referencedColumns: ["project_id"]
+          },
+          {
             foreignKeyName: "fact_project_actuals_snapshot_id_fkey"
             columns: ["snapshot_id"]
             isOneToOne: false
@@ -598,8 +839,193 @@ export type Database = {
           },
         ]
       }
+      fact_project_monthly_kpis: {
+        Row: {
+          avg_sprint_completion_rate: number | null
+          bug_aging_days: number | null
+          bug_ratio: number | null
+          burn_rate_hours: number | null
+          cr_aging_days: number | null
+          cr_ratio: number | null
+          created_at: string | null
+          cumulative_logged_hours: number | null
+          current_sprint_id: string | null
+          id: string
+          month_date: string
+          months_active: number | null
+          open_blockers: number
+          pending_prs: number
+          project_id: string
+          qa_bug_count: number
+          qa_bug_hours: number
+          snapshot_id: string
+          story_aging_days: number | null
+          top1_contributor_pct: number | null
+          top3_contributor_hours: number[]
+          top3_contributor_names: string[]
+          top3_contributor_pct: number | null
+          total_sprint_count: number | null
+          uat_bug_count: number
+          uat_bug_hours: number
+        }
+        Insert: {
+          avg_sprint_completion_rate?: number | null
+          bug_aging_days?: number | null
+          bug_ratio?: number | null
+          burn_rate_hours?: number | null
+          cr_aging_days?: number | null
+          cr_ratio?: number | null
+          created_at?: string | null
+          cumulative_logged_hours?: number | null
+          current_sprint_id?: string | null
+          id?: string
+          month_date: string
+          months_active?: number | null
+          open_blockers?: number
+          pending_prs?: number
+          project_id: string
+          qa_bug_count?: number
+          qa_bug_hours?: number
+          snapshot_id: string
+          story_aging_days?: number | null
+          top1_contributor_pct?: number | null
+          top3_contributor_hours?: number[]
+          top3_contributor_names?: string[]
+          top3_contributor_pct?: number | null
+          total_sprint_count?: number | null
+          uat_bug_count?: number
+          uat_bug_hours?: number
+        }
+        Update: {
+          avg_sprint_completion_rate?: number | null
+          bug_aging_days?: number | null
+          bug_ratio?: number | null
+          burn_rate_hours?: number | null
+          cr_aging_days?: number | null
+          cr_ratio?: number | null
+          created_at?: string | null
+          cumulative_logged_hours?: number | null
+          current_sprint_id?: string | null
+          id?: string
+          month_date?: string
+          months_active?: number | null
+          open_blockers?: number
+          pending_prs?: number
+          project_id?: string
+          qa_bug_count?: number
+          qa_bug_hours?: number
+          snapshot_id?: string
+          story_aging_days?: number | null
+          top1_contributor_pct?: number | null
+          top3_contributor_hours?: number[]
+          top3_contributor_names?: string[]
+          top3_contributor_pct?: number | null
+          total_sprint_count?: number | null
+          uat_bug_count?: number
+          uat_bug_hours?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fact_project_monthly_kpis_current_sprint_id_fkey"
+            columns: ["current_sprint_id"]
+            isOneToOne: false
+            referencedRelation: "dim_sprint"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_project_monthly_kpis_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "dim_project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_project_monthly_kpis_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_project_delivery_totals"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "fact_project_monthly_kpis_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "sync_snapshot"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fact_sprint_metrics: {
+        Row: {
+          closed_hours: number
+          committed_hours: number
+          created_at: string | null
+          id: string
+          month_date: string
+          project_id: string
+          qa_bugs_created: number
+          snapshot_id: string
+          sprint_id: string
+          uat_bugs_created: number
+        }
+        Insert: {
+          closed_hours?: number
+          committed_hours?: number
+          created_at?: string | null
+          id?: string
+          month_date: string
+          project_id: string
+          qa_bugs_created?: number
+          snapshot_id: string
+          sprint_id: string
+          uat_bugs_created?: number
+        }
+        Update: {
+          closed_hours?: number
+          committed_hours?: number
+          created_at?: string | null
+          id?: string
+          month_date?: string
+          project_id?: string
+          qa_bugs_created?: number
+          snapshot_id?: string
+          sprint_id?: string
+          uat_bugs_created?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fact_sprint_metrics_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "dim_project"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_sprint_metrics_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_project_delivery_totals"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "fact_sprint_metrics_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "sync_snapshot"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_sprint_metrics_sprint_id_fkey"
+            columns: ["sprint_id"]
+            isOneToOne: false
+            referencedRelation: "dim_sprint"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fact_worklogs: {
         Row: {
+          account_category: string | null
           billable_seconds: number
           first_seen_at: string
           id: string
@@ -614,6 +1040,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_category?: string | null
           billable_seconds?: number
           first_seen_at?: string
           id?: string
@@ -628,6 +1055,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_category?: string | null
           billable_seconds?: number
           first_seen_at?: string
           id?: string
@@ -655,6 +1083,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "dim_project"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_worklogs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "v_project_delivery_totals"
+            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "fact_worklogs_role_id_fkey"
@@ -972,15 +1407,21 @@ export type Database = {
           snapshot_id: string | null
           sync_created_at: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fact_capacity_snapshot_id_fkey"
-            columns: ["snapshot_id"]
-            isOneToOne: false
-            referencedRelation: "sync_snapshot"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      v_project_delivery_totals: {
+        Row: {
+          budget_hours: number | null
+          lifetime_billable_hours: number | null
+          lifetime_logged_hours: number | null
+          lifetime_planned_hours: number | null
+          project_id: string | null
+          project_key: string | null
+          project_name: string | null
+          project_type: string | null
+          start_date: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {

@@ -38,7 +38,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | SP-2.6 Bench | `/capacity/bench` | Not started | [§ SP-2.6](./SP2_CAPACITY_PLAN.md#sp-26--bench-capacitybench) |
 | SP-2.7 Forecast / Scenarios | `/capacity/forecast`, `/capacity/scenarios` | Stub done | [§ SP-2.7](./SP2_CAPACITY_PLAN.md#sp-27--forecast--scenarios) |
 
-**Parallel work:** SP-4 Teams tracks starting alongside SP-2.
+**Parallel work:** SP-4 Teams · SP-5 Projects Overview shipped ([SP5_PROJECTS_PLAN.md](./SP5_PROJECTS_PLAN.md)).
 
 | Track | Route | Status | Notes |
 |---|---|---|---|
@@ -62,7 +62,8 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | `/teams/overview` | Teams → Overview | **Shipped** — org structure snapshot |
 | `/teams/composition` | Teams → Composition | **Shipped** — project team cards by type |
 | `/teams/*` (other) | Teams sub-sections | Placeholders |
-| `/projects/*` | Projects | Level 2 shells (redirect from `/projects` → portfolio) |
+| `/projects/overview` | Projects → Overview | **Shipped** — delivery KPIs, progress chart, detail sheet |
+| `/projects/*` (other) | Projects sub-sections | Placeholders (redirect `/projects` → overview) |
 | `/ask` | Ask | Transversal utility (sidebar bottom) |
 | `/team` | — | Permanent redirect → `/capacity/utilization` (`next.config.ts`) |
 | `/flags`, `/pipeline` | — | Redirect → `/` |
@@ -77,7 +78,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | SP-2 Capacity | `/capacity/overview`, `/capacity/utilization`, `/capacity/planning` shipped; other tracks pending | [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md) |
 | SP-3 People | None (individual views TBD) | `/people` |
 | SP-4 Teams | `/teams/overview` + `/teams/composition` shipped | `/teams/*` remaining sub-sections |
-| SP-5 Projects | None (pipeline stub only) | New `/projects` |
+| SP-5 Projects | `/projects/overview` shipped | [SP5_PROJECTS_PLAN.md](./SP5_PROJECTS_PLAN.md) |
 | SP-6 Insights | `/flags` proto | Phase 2 |
 | SP-7 Reports | None | Phase 2 |
 

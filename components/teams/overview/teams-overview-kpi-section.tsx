@@ -22,23 +22,25 @@ export function TeamsOverviewKpiSection({ data }: { data: TeamsOverviewPayload }
           label="Headcount"
           value={fmtHeadcountKpi(data.headcount)}
           subline={
-            <KpiMetricSubline>
-              Planning roster from <code className="font-mono text-[0.65rem]">fact_capacity</code>
-            </KpiMetricSubline>
+            <KpiMetricSubline>Planning roster from Capacity</KpiMetricSubline>
           }
         />
         <KpiMetricCard
           label="Active roles"
           value={fmtHeadcountKpi(data.activeRoleCount)}
           subline={
-            <KpiMetricSubline>Distinct stamped month roles on the roster</KpiMetricSubline>
+            <KpiMetricSubline>
+              Distinct stamped month roles on the roster
+            </KpiMetricSubline>
           }
         />
         <KpiMetricCard
           label="Locations"
           value={fmtHeadcountKpi(data.locationCount)}
           subline={
-            <KpiMetricSubline>Distinct holiday zones assigned to roster members</KpiMetricSubline>
+            <KpiMetricSubline>
+              Distinct holiday zones assigned to roster members
+            </KpiMetricSubline>
           }
         />
         <KpiMetricCard
@@ -52,5 +54,5 @@ export function TeamsOverviewKpiSection({ data }: { data: TeamsOverviewPayload }
         />
       </div>
     </section>
-  )
+  );
 }

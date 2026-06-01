@@ -1,5 +1,6 @@
-import { SectionRoutePlaceholder } from '@/components/layout/section-route-placeholder'
+import { redirect } from 'next/navigation'
 
-export default function Page() {
-  return <SectionRoutePlaceholder href="/projects/portfolio" />
+/** Legacy Portfolio URL — Overview is the delivery dashboard entry point. */
+export default function ProjectsPortfolioRedirectPage() {
+  redirect('/projects/overview')
 }

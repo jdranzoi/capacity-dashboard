@@ -1,0 +1,77 @@
+import {
+  isCompositionProjectType,
+  type CompositionProjectType,
+} from '@/lib/teams/composition/teams-composition-utils'
+
+import { DEFAULT_PROJECTS_CATEGORY } from '@/lib/projects/overview/projects-overview-constants'
+
+export type ProjectsViewMode = 'monthly' | 'global'
+
+export type ProjectsCategoryFilter = CompositionProjectType
+
+export type ProjectsRouteFilters = {
+  view: ProjectsViewMode
+  category: ProjectsCategoryFilter
+  searchQuery: string | null
+  projectKey: string | null
+}
+
+function firstParam(value: string | string[] | undefined): string | undefined {
+  if (value == null) return undefined
+  return Array.isArray(value) ? value[0] : value
+}
+
+/** Build → global lifetime window. Support / internal → monthly window. */
+export function coerceViewForCategory(
+  category: ProjectsCategoryFilter,
+  view: ProjectsViewMode
+): ProjectsViewMode {
+  if (category === 'build') return 'global'
+  return 'monthly'
+}
+
+export function parseProjectsRouteFilters(
+  raw: Record<string, string | string[] | undefined>
+): ProjectsRouteFilters {
+  const viewRaw = firstParam(raw.view)?.toLowerCase()
+  const requestedView: ProjectsViewMode =
+    viewRaw === 'monthly' ? 'monthly' : 'global'
+
+  const categoryRaw = firstParam(raw.category)?.toLowerCase()
+  let category: ProjectsCategoryFilter = DEFAULT_PROJECTS_CATEGORY
+  if (categoryRaw && isCompositionProjectType(categoryRaw)) {
+    category = categoryRaw
+  }
+
+  const view = coerceViewForCategory(category, requestedView)
+
+  const q = firstParam(raw.q)?.trim()
+  const project = firstParam(raw.project)?.trim()
+
+  return {
+    view,
+    category,
+    searchQuery: q && q.length > 0 ? q : null,
+    projectKey: project && project.length > 0 ? project : null,
+  }
+}
+
+export function matchesProjectsCategory(
+  projectType: string,
+  category: ProjectsCategoryFilter
+): boolean {
+  return projectType === category
+}
+
+export function matchesProjectsSearch(
+  projectKey: string,
+  projectName: string | null,
+  query: string | null
+): boolean {
+  if (!query) return true
+  const needle = query.toLowerCase()
+  if (projectKey.toLowerCase().includes(needle)) return true
+  const name = projectName?.trim()
+  if (name && name.toLowerCase().includes(needle)) return true
+  return false
+}

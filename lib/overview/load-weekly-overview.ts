@@ -4,7 +4,7 @@ import {
   filterWorklogsThrough,
   getMonthFactBundle,
 } from '@/lib/data/load-month-fact-bundle'
-import { getLatestSyncSnapshot } from '@/lib/data/latest-sync-snapshot'
+import { resolveSnapshotForMonth } from '@/lib/overview/overview-month-options'
 import { createServiceClientCached } from '@/lib/supabase/server'
 import { overviewLogThroughDate } from '@/lib/overview/worklog-through-date'
 import { buildWeekdayWeightMap } from '@/lib/overview/prorate-to-weeks'
@@ -103,7 +103,7 @@ function weeksOverlappingMonth(monthStart: Date, monthEnd: Date): string[] {
 export async function loadWeeklyOverview(
   referenceDate?: Date,
   now?: Date,
-  /** When set, use this sync anchor instead of the global latest `sync_snapshot`. */
+  /** When set, use this sync anchor; otherwise resolves via `v_dashboard_month_options` for the reference month. */
   snapshot?: { id: string; createdAt: string },
   /**
    * Restrict headline rollups and weekly rows to these people (must be a subset of
@@ -135,12 +135,12 @@ export async function loadWeeklyOverview(
   }
 
   try {
-    const resolved = snapshot ?? (await getLatestSyncSnapshot())
+    const resolved = snapshot ?? (await resolveSnapshotForMonth(monthStartStr))
     if (!resolved) {
       return {
         ...empty,
         error:
-          'No sync_snapshot rows yet. Run the capacity-mcp ingestion sync, then refresh.',
+          'No sync snapshot for this month. Run the capacity-mcp ingestion sync, then refresh.',
       }
     }
 

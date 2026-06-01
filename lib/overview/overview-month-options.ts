@@ -91,3 +91,29 @@ export async function loadOverviewMonthOptions(
 
   return { options, error: null }
 }
+
+/**
+ * Newest `sync_snapshot` for a calendar month (`fact_*`.`month_date`), from
+ * `v_dashboard_month_options`. Use instead of `getLatestSyncSnapshot()` when facts
+ * must reflect the last sync that targeted that month.
+ */
+export async function resolveSnapshotForMonth(
+  monthStartStr: string
+): Promise<{ id: string; createdAt: string } | null> {
+  'use cache'
+  cacheLife('hours')
+  cacheTag(CACHE_TAG_OVERVIEW_MONTHS)
+
+  const supabase = createServiceClientCached()
+  const { data, error } = await supabase
+    .from('v_dashboard_month_options')
+    .select('snapshot_id, sync_created_at')
+    .eq('month_date', monthStartStr)
+    .maybeSingle()
+
+  if (error || !data?.snapshot_id || !data.sync_created_at) return null
+  return {
+    id: data.snapshot_id,
+    createdAt: data.sync_created_at,
+  }
+}

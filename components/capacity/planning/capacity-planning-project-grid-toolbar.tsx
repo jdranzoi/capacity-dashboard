@@ -4,6 +4,7 @@ import { PlanningGridToolbarShell } from '@/components/capacity/planning/plannin
 import { PlanningMonthVisibilityControl } from '@/components/capacity/planning/planning-month-visibility-control'
 import { PlanningSegmentedControl } from '@/components/capacity/planning/planning-segmented-control'
 import {
+  PLANNING_PROJECT_TYPE_OPTIONS,
   PLANNING_ROLE_NAME_FILTER_WIDTH,
   PLANNING_TREE_OPTIONS,
   PlanningToolbarSearch,
@@ -19,13 +20,6 @@ import type { PlanningMonthVisibilityFilter } from '@/lib/capacity/planning/plan
 const FILTER_BY_OPTIONS = [
   { value: 'role' as const, label: 'Role' },
   { value: 'name' as const, label: 'Name' },
-]
-
-const PROJECT_TYPE_OPTIONS = [
-  { value: 'all' as const, label: 'All' },
-  { value: 'build' as const, label: 'Build' },
-  { value: 'support' as const, label: 'Support' },
-  { value: 'internal' as const, label: 'Internal' },
 ]
 
 export function CapacityPlanningProjectGridToolbar({
@@ -109,7 +103,7 @@ export function CapacityPlanningProjectGridToolbar({
         label="Project type"
         value={projectType}
         onChange={onProjectTypeChange}
-        options={PROJECT_TYPE_OPTIONS}
+        options={PLANNING_PROJECT_TYPE_OPTIONS}
       />
 
       <PlanningMonthVisibilityControl

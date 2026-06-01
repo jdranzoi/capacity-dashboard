@@ -11,6 +11,14 @@ export const PLANNING_TREE_OPTIONS: readonly PlanningSegmentOption<PlanningTreeE
   { value: 'collapse', label: 'Collapse' },
 ]
 
+/** Shared with Projects Overview space-type filter (same values as Capacity Planning project grid). */
+export const PLANNING_PROJECT_TYPE_OPTIONS = [
+  { value: 'all' as const, label: 'All' },
+  { value: 'build' as const, label: 'Build' },
+  { value: 'support' as const, label: 'Support' },
+  { value: 'internal' as const, label: 'Internal' },
+]
+
 export const PLANNING_TOOLBAR_LABEL_CLASS =
   'block h-3.5 shrink-0 text-[10px] font-medium uppercase leading-none tracking-wide text-muted-foreground'
 

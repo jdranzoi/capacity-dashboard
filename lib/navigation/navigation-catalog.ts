@@ -224,13 +224,13 @@ export const NAV_DOMAINS: NavigationDomainConfig[] = [
     description:
       'Understand the operational state of active projects. Staffing, burn, delivery risk, allocation, velocity, project health score, dependency mapping.',
     icon: Briefcase,
-    defaultHref: '/projects/portfolio',
+    defaultHref: '/projects/overview',
     items: [
       domainItem(
         'Projects',
-        'Portfolio',
-        '/projects/portfolio',
-        'High-level portfolio overview. Active projects, delivery status, staffing distribution, portfolio load.'
+        'Overview',
+        '/projects/overview',
+        'High-level delivery overview. Active projects, planned vs logged progress, risk indicators, and project drill-down.'
       ),
       domainItem(
         'Projects',
