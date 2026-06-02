@@ -192,12 +192,15 @@ export function CapacityPlanningPeopleGrid({
                 Open
               </SortableHeader>
             ),
-            cell: ({ row }) => (
-              <PlanningMetricCell
-                value={fmtPlanningHours(row.original.months[monthKey]?.openHours)}
-                emphasizeOpen
-              />
-            ),
+            cell: ({ row }) => {
+              const openHours = row.original.months[monthKey]?.openHours ?? null
+              return (
+                <PlanningMetricCell
+                  value={fmtPlanningHours(openHours)}
+                  openHours={openHours}
+                />
+              )
+            },
           }),
           columnHelper.accessor((row) => row.months[monthKey]?.utilizationPct ?? null, {
             id: `${monthKey}_util`,

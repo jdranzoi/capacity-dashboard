@@ -56,11 +56,12 @@ export function PlanningTreeNameCell({
 export function PlanningMetricCell({
   value,
   tonePct,
-  emphasizeOpen,
+  openHours,
 }: {
   value: ReactNode
   tonePct?: number | null
-  emphasizeOpen?: boolean
+  /** When set, positive open hours render green and negative (over-booked) render red. */
+  openHours?: number | null
 }) {
   if (tonePct != null) {
     return (
@@ -73,12 +74,16 @@ export function PlanningMetricCell({
     )
   }
 
+  const openClass =
+    openHours != null && openHours < 0
+      ? 'font-medium text-red-600 dark:text-red-400'
+      : openHours != null && openHours > 0
+        ? 'font-medium text-emerald-600 dark:text-emerald-400'
+        : undefined
+
   return (
     <span
-      className={cn(
-        'block truncate text-right tabular-nums text-[0.8125rem]',
-        emphasizeOpen && 'font-medium text-emerald-600 dark:text-emerald-400'
-      )}
+      className={cn('block truncate text-right tabular-nums text-[0.8125rem]', openClass)}
     >
       {value}
     </span>

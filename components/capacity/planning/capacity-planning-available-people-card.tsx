@@ -75,7 +75,7 @@ export function CapacityPlanningAvailablePeopleCard({
   )
 
   return (
-    <DataSectionPanel dataSlot="capacity-planning-available-people" className="gap-4">
+    <DataSectionPanel dataSlot="capacity-planning-available-people" className="gap-3">
       <DataSectionPanelHeader
         title="Available People"
         description="Identify open capacity for staffing decisions."
@@ -133,31 +133,41 @@ export function CapacityPlanningAvailablePeopleCard({
         </FilterField>
       </div>
 
-      <div className="relative min-h-48" aria-busy={isPending}>
+      <div className="relative min-h-32" aria-busy={isPending}>
         {isPending ? (
           <CapacityPlanningAvailablePeopleLoading listOnly />
         ) : (
-          <ul className="space-y-2">
+          <ul className="space-y-1">
             {people.length === 0 ? (
-              <li className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
+              <li className="rounded-md border border-dashed border-border px-2.5 py-4 text-center text-xs text-muted-foreground">
                 No people match the current filters.
               </li>
             ) : (
               people.slice(0, 8).map((person) => (
                 <li
                   key={person.personId}
-                  className="flex items-start justify-between gap-3 rounded-lg border border-border/70 bg-muted/10 px-3 py-2.5"
+                  className="flex items-center justify-between gap-2 rounded-md border border-border/70 bg-muted/10 px-2.5 py-1.5"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">{person.personName}</p>
-                    <p className="truncate text-xs text-muted-foreground">{person.roleLabel}</p>
-                    <p className="mt-1 text-xs tabular-nums text-emerald-600 dark:text-emerald-400">
-                      {fmtHoursKpi(person.availableHours)} available · {person.projectCount} projects
+                  <div className="min-w-0 flex-1 leading-tight">
+                    <p className="truncate text-xs font-medium text-foreground">
+                      {person.personName}
+                    </p>
+                    <p className="truncate text-[11px] text-muted-foreground">
+                      {person.roleLabel}
+                      <span aria-hidden="true"> · </span>
+                      <span className="tabular-nums text-emerald-600 dark:text-emerald-400">
+                        {fmtHoursKpi(person.availableHours)} avail
+                      </span>
+                      <span aria-hidden="true"> · </span>
+                      <span>
+                        {person.projectCount}{' '}
+                        {person.projectCount === 1 ? 'project' : 'projects'}
+                      </span>
                     </p>
                   </div>
                   <Badge
                     variant={fragmentationVariant(person.fragmentationLabel)}
-                    className="shrink-0"
+                    className="h-4 shrink-0 px-1.5 text-[10px] leading-none"
                     title={FRAGMENTATION_BADGE_HINT[person.fragmentationLabel]}
                   >
                     {person.fragmentationLabel}

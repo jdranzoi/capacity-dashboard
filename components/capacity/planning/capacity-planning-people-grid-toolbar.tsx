@@ -25,7 +25,7 @@ const FILTER_BY_OPTIONS = [
 const UTIL_BAND_OPTIONS = [
   { value: 'all' as const, label: 'All' },
   { value: 'lt40' as const, label: '<40' },
-  { value: 'lt65' as const, label: '<65' },
+  { value: 'lt60' as const, label: '<60' },
   { value: 'lt80' as const, label: '<80' },
   { value: 'gt80' as const, label: '>80' },
 ]

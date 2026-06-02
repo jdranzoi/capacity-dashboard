@@ -17,11 +17,11 @@ export async function CapacityPlanningUpcomingBlock({
   if (workspaceResult.error) return <CapacityDataError message={workspaceResult.error} />
   if (!workspaceResult.data) return <CapacityEmptyMonths />
 
-  const { upcomingAvailability, period } = workspaceResult.data
+  const { upcomingAvailabilityByThreshold, period } = workspaceResult.data
 
   return (
     <CapacityPlanningUpcomingAvailabilityCard
-      events={upcomingAvailability}
+      availabilityByThreshold={upcomingAvailabilityByThreshold}
       monthKeys={period.monthKeys}
       monthLabels={period.monthLabels}
     />

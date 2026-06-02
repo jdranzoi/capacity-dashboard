@@ -2,7 +2,7 @@ import { cache } from 'react'
 import { cacheLife, cacheTag } from 'next/cache'
 import { endOfMonth, format, parse } from 'date-fns'
 
-import { buildUpcomingAvailability } from '@/lib/capacity/planning/build-upcoming-availability'
+import { buildUpcomingAvailabilityByThreshold } from '@/lib/capacity/planning/build-upcoming-availability'
 import {
   buildPlanningMonthKpis,
   buildPlanningPeopleTree,
@@ -237,7 +237,10 @@ export async function loadPlanningWorkspace(params: {
       monthKpis: buildPlanningMonthKpis(period, monthFacts),
       peopleTreeRows: buildPlanningPeopleTree(period, monthFacts),
       projectTreeRows: buildPlanningProjectTree(period, monthFacts),
-      upcomingAvailability: buildUpcomingAvailability(monthFacts, period.monthLabels),
+      upcomingAvailabilityByThreshold: buildUpcomingAvailabilityByThreshold(
+        monthFacts,
+        period.monthLabels
+      ),
     },
     error: null,
   }
@@ -406,21 +409,55 @@ export function getMockPlanningWorkspace(): CapacityPlanningWorkspacePayload {
     })),
     peopleTreeRows,
     projectTreeRows,
-    upcomingAvailability: [
-      {
-        monthKey: '2026-07',
-        monthLabel: 'Jul 2026',
-        roleCode: 'FSD',
-        roleLabel: 'Full Stack Developer',
-        headcount: 2,
-      },
-      {
-        monthKey: '2026-08',
-        monthLabel: 'Aug 2026',
-        roleCode: 'QA',
-        roleLabel: 'QA Tester',
-        headcount: 1,
-      },
-    ],
+    upcomingAvailabilityByThreshold: {
+      lt40: [
+        {
+          monthKey: '2026-07',
+          monthLabel: 'Jul 2026',
+          roleCode: 'FSD',
+          roleLabel: 'Full Stack Developer',
+          headcount: 2,
+        },
+        {
+          monthKey: '2026-08',
+          monthLabel: 'Aug 2026',
+          roleCode: 'QA',
+          roleLabel: 'QA Tester',
+          headcount: 1,
+        },
+      ],
+      lt60: [
+        {
+          monthKey: '2026-07',
+          monthLabel: 'Jul 2026',
+          roleCode: 'FSD',
+          roleLabel: 'Full Stack Developer',
+          headcount: 2,
+        },
+        {
+          monthKey: '2026-08',
+          monthLabel: 'Aug 2026',
+          roleCode: 'QA',
+          roleLabel: 'QA Tester',
+          headcount: 1,
+        },
+      ],
+      lt80: [
+        {
+          monthKey: '2026-07',
+          monthLabel: 'Jul 2026',
+          roleCode: 'FSD',
+          roleLabel: 'Full Stack Developer',
+          headcount: 3,
+        },
+        {
+          monthKey: '2026-08',
+          monthLabel: 'Aug 2026',
+          roleCode: 'QA',
+          roleLabel: 'QA Tester',
+          headcount: 2,
+        },
+      ],
+    },
   }
 }

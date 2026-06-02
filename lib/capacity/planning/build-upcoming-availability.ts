@@ -1,9 +1,15 @@
 import { plannedPct } from '@/lib/domain/workload-metrics'
-import { PLANNING_UPCOMING_MAX_PLANNED_UTIL_PCT } from '@/lib/capacity/planning/planning-upcoming-availability-config'
+import {
+  PLANNING_UPCOMING_DEFAULT_UTIL_THRESHOLD,
+  PLANNING_UPCOMING_UTIL_THRESHOLDS,
+  PLANNING_UPCOMING_UTIL_THRESHOLD_PCT,
+  planningUpcomingUtilThresholdPct,
+} from '@/lib/capacity/planning/planning-upcoming-availability-config'
 import type {
   PlanningAvailabilityEvent,
   PlanningMonthFacts,
   PlanningMonthPersonFact,
+  PlanningUpcomingAvailabilityByThreshold,
 } from '@/lib/capacity/planning/planning-types'
 
 type RoleHeadcountRollup = {
@@ -32,7 +38,9 @@ export function personBelowPlannedUtilizationThreshold(
 export function buildUpcomingAvailability(
   monthFacts: PlanningMonthFacts[],
   periodLabels: Record<string, string>,
-  maxPlannedUtilPct: number = PLANNING_UPCOMING_MAX_PLANNED_UTIL_PCT
+  maxPlannedUtilPct: number = planningUpcomingUtilThresholdPct(
+    PLANNING_UPCOMING_DEFAULT_UTIL_THRESHOLD
+  )
 ): PlanningAvailabilityEvent[] {
   const events: PlanningAvailabilityEvent[] = []
 
@@ -74,4 +82,20 @@ export function buildUpcomingAvailability(
   }
 
   return events
+}
+
+export function buildUpcomingAvailabilityByThreshold(
+  monthFacts: PlanningMonthFacts[],
+  periodLabels: Record<string, string>
+): PlanningUpcomingAvailabilityByThreshold {
+  return Object.fromEntries(
+    PLANNING_UPCOMING_UTIL_THRESHOLDS.map((threshold) => [
+      threshold,
+      buildUpcomingAvailability(
+        monthFacts,
+        periodLabels,
+        PLANNING_UPCOMING_UTIL_THRESHOLD_PCT[threshold]
+      ),
+    ])
+  ) as PlanningUpcomingAvailabilityByThreshold
 }

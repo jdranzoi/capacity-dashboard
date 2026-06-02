@@ -2,7 +2,7 @@ import { plannedPct } from '@/lib/domain/workload-metrics'
 import type { CompositionProjectType } from '@/lib/teams/composition/teams-composition-utils'
 import type { PlanningPeopleNode, PlanningProjectNode } from '@/lib/capacity/planning/planning-types'
 
-export type PlanningUtilizationBand = 'all' | 'lt40' | 'lt65' | 'lt80' | 'gt80'
+export type PlanningUtilizationBand = 'all' | 'lt40' | 'lt60' | 'lt80' | 'gt80'
 export type PlanningProjectTypeFilter = 'all' | CompositionProjectType
 export type PlanningTreeExpansion = 'expand' | 'collapse'
 
@@ -29,7 +29,7 @@ export function matchesUtilizationBand(
   if (band === 'all') return true
   if (pct == null) return false
   if (band === 'lt40') return pct < 40
-  if (band === 'lt65') return pct < 65
+  if (band === 'lt60') return pct < 60
   if (band === 'lt80') return pct < 80
   return pct > 80
 }

@@ -26,7 +26,7 @@ export function CapacityPlanningAvailablePeopleLoading({
   return (
     <DataSectionPanel
       dataSlot="capacity-planning-available-people"
-      className={cn('gap-4', className)}
+      className={cn('gap-3', className)}
       aria-busy
       aria-label="Loading available people"
     >
@@ -58,7 +58,7 @@ function AvailablePeopleListSkeleton({
 }) {
   return (
     <ul
-      className={cn('space-y-2', className)}
+      className={cn('space-y-1', className)}
       aria-busy="true"
       aria-live="polite"
       aria-label={ariaLabel}
@@ -66,15 +66,14 @@ function AvailablePeopleListSkeleton({
       {Array.from({ length: 4 }).map((_, i) => (
         <li
           key={i}
-          className="rounded-lg border border-border/70 bg-muted/10 px-3 py-2.5"
+          className="rounded-md border border-border/70 bg-muted/10 px-2.5 py-1.5"
         >
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1 space-y-2">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-3 w-40" />
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1 space-y-1">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-3 w-44" />
             </div>
-            <Skeleton className="h-5 w-16 shrink-0 rounded-full" />
+            <Skeleton className="h-4 w-14 shrink-0 rounded-full" />
           </div>
         </li>
       ))}
