@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 
-import { PlanningSegmentedControl } from '@/components/capacity/planning/planning-segmented-control'
+import { SegmentedControl } from '@/components/ui/segmented-control'
 import {
   buildMonthVisibilitySegmentOptions,
   type PlanningMonthVisibilityFilter,
@@ -25,7 +25,7 @@ export function PlanningMonthVisibilityControl({
   )
 
   return (
-    <PlanningSegmentedControl
+    <SegmentedControl
       label="Months"
       value={value}
       onChange={onChange}

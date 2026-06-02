@@ -3,7 +3,7 @@
 import { useCallback } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
-import { PlanningSegmentedControl } from '@/components/capacity/planning/planning-segmented-control'
+import { SegmentedControl } from '@/components/ui/segmented-control'
 import { PROJECTS_OVERVIEW_TYPE_OPTIONS } from '@/lib/projects/overview/projects-overview-constants'
 import { useProjectsRoutePending } from '@/components/projects/_shared/projects-route-pending-shell'
 import { DashboardFilterField } from '@/components/layout/dashboard-filter-field'
@@ -34,7 +34,7 @@ export function ProjectsOverviewToolbar({
 
   return (
     <div className="flex flex-wrap items-end justify-end gap-3">
-      <PlanningSegmentedControl
+      <SegmentedControl
         label="Project type"
         value={category}
         onChange={(v) => navigate({ category: v })}

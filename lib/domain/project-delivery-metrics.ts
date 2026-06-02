@@ -5,8 +5,8 @@
 
 import { roundDisplayStat } from '@/lib/format/display-stats'
 
-/** Overrun threshold for "at risk" — logged exceeds planned by more than 15%. */
-export const PROJECT_OVERRUN_RISK_THRESHOLD = 1.15
+/** Budget-at-risk threshold: logged hours exceed budget by more than 15%. */
+export const PROJECT_BUDGET_AT_RISK_PCT = 115
 
 /**
  * Distinct people with non-zero logged hours (project worklogs in the queried period).
@@ -55,10 +55,13 @@ export function projectOverrunHours(loggedHours: number, plannedHours: number): 
   return roundDisplayStat(Math.max(0, loggedHours - plannedHours))
 }
 
-/** True when logged / planned exceeds {@link PROJECT_OVERRUN_RISK_THRESHOLD}. */
-export function isProjectAtRisk(loggedHours: number, plannedHours: number): boolean {
-  if (plannedHours <= 0) return false
-  return loggedHours / plannedHours > PROJECT_OVERRUN_RISK_THRESHOLD
+/**
+ * Portfolio "at risk" — budget used exceeds budget by more than 15%
+ * ({@link PROJECT_BUDGET_AT_RISK_PCT} display percent).
+ */
+export function isProjectAtBudgetRisk(budgetUsedPct: number | null): boolean {
+  if (budgetUsedPct == null) return false
+  return budgetUsedPct > PROJECT_BUDGET_AT_RISK_PCT
 }
 
 /**

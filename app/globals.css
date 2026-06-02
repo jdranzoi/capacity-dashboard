@@ -187,4 +187,28 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  /* Pointer on all clearly interactive controls (links, buttons, tabs, etc.) */
+  :is(
+    a[href],
+    button:not(:disabled),
+    [role='button']:not([aria-disabled='true']),
+    [role='tab']:not([aria-disabled='true']),
+    [role='menuitem']:not([aria-disabled='true']),
+    [role='option']:not([aria-disabled='true']),
+    label[for],
+    select:not(:disabled),
+    summary,
+    input[type='checkbox']:not(:disabled),
+    input[type='radio']:not(:disabled),
+    input[type='submit']:not(:disabled),
+    input[type='button']:not(:disabled),
+    input[type='reset']:not(:disabled)
+  ) {
+    cursor: pointer;
+  }
+
+  :is(button:disabled, [aria-disabled='true']) {
+    cursor: not-allowed;
+  }
 }

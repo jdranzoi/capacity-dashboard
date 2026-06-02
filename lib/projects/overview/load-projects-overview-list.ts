@@ -1,7 +1,7 @@
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import { loggedVersusPlannedProductivityPct } from '@/lib/domain/workload-metrics'
 import {
-  isProjectAtRisk,
+  isProjectAtBudgetRisk,
   orgBurnRateHoursPerMonth,
   projectBurnRateHoursPerMonth,
   projectOverrunHours,
@@ -54,6 +54,7 @@ function buildOverviewRows(params: {
     }
 
     const monthlyLogged = params.burnByProject.get(project.id) ?? []
+    const budgetUsedPct = projectBudgetUsedPct(loggedHours, project.budget_hours)
     rows.push({
       projectId: project.id,
       projectKey: project.project_key,
@@ -65,9 +66,9 @@ function buildOverviewRows(params: {
       plannedHours,
       loggedHours,
       billableHours,
-      budgetUsedPct: projectBudgetUsedPct(loggedHours, project.budget_hours),
+      budgetUsedPct,
       overrunHours: projectOverrunHours(loggedHours, plannedHours),
-      atRisk: isProjectAtRisk(loggedHours, plannedHours),
+      atRisk: isProjectAtBudgetRisk(budgetUsedPct),
       burnRateHoursPerMonth: projectBurnRateHoursPerMonth(monthlyLogged),
     })
   }

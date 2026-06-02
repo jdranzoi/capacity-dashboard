@@ -50,7 +50,7 @@ export function ProjectsOverviewKpiSection({
           value={String(kpis.projectsAtRiskCount)}
           valueColorVar="--destructive"
           subline={
-            <KpiMetricSubline>Overrun &gt; 15% vs planned</KpiMetricSubline>
+            <KpiMetricSubline>Budget used &gt; 115%</KpiMetricSubline>
           }
         />
         <KpiMetricCard

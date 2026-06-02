@@ -1,12 +1,17 @@
 'use client'
 
 import { useMemo, useState, type ReactNode } from 'react'
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
+import { CircleHelp } from 'lucide-react'
 
 import {
   PlannedLoggedBarLegend,
   PlannedLoggedProgressBar,
 } from '@/components/projects/overview/planned-logged-progress-bar'
+import { PROJECTS_PROGRESS_COLUMN_TOOLTIPS } from '@/components/projects/overview/projects-progress-chart-tooltips'
+import {
+  SortableHeaderButton,
+  type SortableHeaderDirection,
+} from '@/components/ui/data-table/sortable-header-button'
 import { projectCardTitle, projectSortLabel } from '@/lib/teams/composition/teams-composition-utils'
 import { fmtHoursKpi, fmtPct } from '@/lib/overview/overview-metrics'
 import type { ProjectOverviewRow } from '@/lib/projects/overview/projects-types'
@@ -14,41 +19,6 @@ import { cn } from '@/lib/utils'
 import { dashboardSurfaceClass } from '@/lib/ui/dashboard-surface'
 
 type SortColumn = 'project' | 'planned' | 'logged' | 'budgetUsed'
-type SortDir = 'asc' | 'desc'
-
-function SortHeaderButton({
-  label,
-  active,
-  direction,
-  align = 'left',
-  onClick,
-}: {
-  label: string
-  active: boolean
-  direction: SortDir | null
-  align?: 'left' | 'right'
-  onClick: () => void
-}) {
-  const Icon =
-    direction === 'desc' ? ArrowDown : direction === 'asc' ? ArrowUp : ArrowUpDown
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'inline-flex max-w-full items-center gap-1 rounded px-1 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground',
-        align === 'right' && 'ms-auto w-full justify-end'
-      )}
-    >
-      <span className="truncate">{label}</span>
-      <Icon
-        className={cn('size-3 shrink-0 opacity-40', active && 'opacity-90')}
-        aria-hidden
-      />
-    </button>
-  )
-}
 
 export function ProjectsProgressChart({
   rows,
@@ -64,7 +34,7 @@ export function ProjectsProgressChart({
   headerAction?: ReactNode
 }) {
   const [sortColumn, setSortColumn] = useState<SortColumn>('budgetUsed')
-  const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [sortDir, setSortDir] = useState<SortableHeaderDirection>('desc')
 
   const toggleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -97,7 +67,7 @@ export function ProjectsProgressChart({
     return copy
   }, [rows, sortColumn, sortDir])
 
-  const sortDirectionFor = (column: SortColumn): SortDir | null =>
+  const sortDirectionFor = (column: SortColumn): SortableHeaderDirection | null =>
     sortColumn === column ? sortDir : null
 
   return (
@@ -122,21 +92,28 @@ export function ProjectsProgressChart({
           <thead>
             <tr className="border-b border-border text-left text-muted-foreground">
               <th className="pb-2 pr-2 font-medium">
-                <SortHeaderButton
+                <SortableHeaderButton
                   label="Project"
+                  title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.project}
                   active={sortColumn === 'project'}
                   direction={sortDirectionFor('project')}
                   onClick={() => toggleSort('project')}
                 />
               </th>
               <th className="pb-2 pr-2 font-medium">
-                <span className="text-[10px] font-medium uppercase tracking-wide">
-                  Progress
+                <span
+                  className="inline-flex max-w-full items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+                  title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.progress}
+                >
+                  <span>Progress</span>
+                  <CircleHelp className="size-3 shrink-0 opacity-50" aria-hidden />
+                  <span className="sr-only">{PROJECTS_PROGRESS_COLUMN_TOOLTIPS.progress}</span>
                 </span>
               </th>
               <th className="pb-2 pr-2 text-right font-medium">
-                <SortHeaderButton
+                <SortableHeaderButton
                   label="Planned (h)"
+                  title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.planned}
                   active={sortColumn === 'planned'}
                   direction={sortDirectionFor('planned')}
                   align="right"
@@ -144,8 +121,9 @@ export function ProjectsProgressChart({
                 />
               </th>
               <th className="pb-2 pr-2 text-right font-medium">
-                <SortHeaderButton
+                <SortableHeaderButton
                   label="Logged (h)"
+                  title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.logged}
                   active={sortColumn === 'logged'}
                   direction={sortDirectionFor('logged')}
                   align="right"
@@ -153,8 +131,9 @@ export function ProjectsProgressChart({
                 />
               </th>
               <th className="pb-2 text-right font-medium">
-                <SortHeaderButton
+                <SortableHeaderButton
                   label="Budget used"
+                  title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.budgetUsed}
                   active={sortColumn === 'budgetUsed'}
                   direction={sortDirectionFor('budgetUsed')}
                   align="right"
@@ -183,13 +162,16 @@ export function ProjectsProgressChart({
                     <button
                       type="button"
                       onClick={() => onSelectProject(row.projectKey)}
-                      className="block w-full truncate text-left font-medium text-foreground hover:underline"
+                      className="block w-full cursor-pointer truncate text-left font-medium text-foreground hover:underline"
                       title={title}
                     >
                       {title}
                     </button>
                   </td>
-                  <td className="py-2.5 pr-2">
+                  <td
+                    className="py-2.5 pr-2"
+                    title={`${fmtHoursKpi(row.loggedHours)} logged · ${fmtHoursKpi(row.plannedHours)} planned`}
+                  >
                     <PlannedLoggedProgressBar
                       plannedHours={row.plannedHours}
                       loggedHours={row.loggedHours}
@@ -197,10 +179,16 @@ export function ProjectsProgressChart({
                       trackClassName="h-2.5"
                     />
                   </td>
-                  <td className="py-2.5 pr-2 text-right tabular-nums text-muted-foreground">
+                  <td
+                    className="py-2.5 pr-2 text-right tabular-nums text-muted-foreground"
+                    title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.planned}
+                  >
                     {fmtHoursKpi(row.plannedHours)}
                   </td>
-                  <td className="py-2.5 pr-2 text-right tabular-nums text-foreground">
+                  <td
+                    className="py-2.5 pr-2 text-right tabular-nums text-foreground"
+                    title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.logged}
+                  >
                     {fmtHoursKpi(row.loggedHours)}
                   </td>
                   <td
@@ -208,6 +196,11 @@ export function ProjectsProgressChart({
                       'py-2.5 text-right tabular-nums font-medium',
                       row.atRisk ? 'text-destructive' : 'text-foreground'
                     )}
+                    title={
+                      row.budgetUsedPct != null
+                        ? `${fmtPct(row.budgetUsedPct)} of budget${row.atRisk ? ' — at risk (over 115%)' : ''}`
+                        : 'No budget hours on file'
+                    }
                   >
                     {row.budgetUsedPct != null ? fmtPct(row.budgetUsedPct) : '—'}
                   </td>

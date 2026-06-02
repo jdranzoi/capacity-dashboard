@@ -24,7 +24,7 @@ export async function ProjectsProjectDetailBlock({
     const monthParam = searchParams.month
     const monthStr = Array.isArray(monthParam) ? monthParam[0] : monthParam
 
-    const monthCtxRes = await getProjectsMonthContext(monthStr)
+    const monthCtxRes = await getProjectsMonthContext(monthStr, routeFilters.category)
     if (monthCtxRes.error) {
       return <ProjectsDataError message={`Could not load month context: ${monthCtxRes.error}`} />
     }

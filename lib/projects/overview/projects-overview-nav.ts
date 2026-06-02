@@ -1,3 +1,5 @@
+import { format, startOfMonth } from 'date-fns'
+
 import { DEFAULT_PROJECTS_CATEGORY } from '@/lib/projects/overview/projects-overview-constants'
 import {
   coerceViewForCategory,
@@ -19,6 +21,8 @@ function applyCategoryViewRules(
     next.delete('view')
   } else {
     next.set('view', 'monthly')
+    const currentMonthKey = format(startOfMonth(new Date()), 'yyyy-MM')
+    next.set('month', currentMonthKey)
   }
 }
 

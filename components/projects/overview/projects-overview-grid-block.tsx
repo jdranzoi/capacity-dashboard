@@ -9,10 +9,11 @@ import { perfSpan } from '@/lib/dev/perf-log'
 import { loadProjectsOverviewGlobal } from '@/lib/projects/overview/load-projects-global-list'
 import { loadProjectsOverviewMonthly } from '@/lib/projects/overview/load-projects-overview-list'
 import type { ProjectsListSearchParams } from '@/lib/projects/overview/projects-list-search-params'
+import { getProjectsMonthContext } from '@/lib/projects/overview/projects-page-cache'
 import {
-  getProjectsMonthContext,
-  getProjectsMonthSelection,
-} from '@/lib/projects/overview/projects-page-cache'
+  pickRecentMonthOptions,
+  usesProjectsProgressMonthPicker,
+} from '@/lib/projects/overview/projects-progress-month-options'
 import { parseProjectsRouteFilters } from '@/lib/projects/overview/projects-route-filters'
 
 export async function ProjectsOverviewGridBlock({
@@ -30,25 +31,15 @@ export async function ProjectsOverviewGridBlock({
       q: listParams.q,
     })
 
-    const [monthCtxRes, monthSelection] = await Promise.all([
-      getProjectsMonthContext(listParams.month),
-      getProjectsMonthSelection(listParams.month),
-    ])
+    const monthCtxRes = await getProjectsMonthContext(
+      listParams.month,
+      routeFilters.category
+    )
 
     if (monthCtxRes.error) {
       return <ProjectsDataError message={`Could not load month context: ${monthCtxRes.error}`} />
     }
     if (!monthCtxRes.data) {
-      return <ProjectsEmptyMonths />
-    }
-    if (monthSelection.error) {
-      return (
-        <ProjectsDataError
-          message={`Could not load month options: ${monthSelection.error}`}
-        />
-      )
-    }
-    if (!monthSelection.selected) {
       return <ProjectsEmptyMonths />
     }
 
@@ -72,13 +63,18 @@ export async function ProjectsOverviewGridBlock({
       return <ProjectsEmptyMonths />
     }
 
+    const showMonthPicker = usesProjectsProgressMonthPicker(routeFilters.category)
+    const progressMonthOptions = showMonthPicker
+      ? pickRecentMonthOptions(monthCtxRes.data.options)
+      : []
+
     return (
       <ProjectsOverviewGridBody
         payload={listRes.data}
-        view={routeFilters.view}
-        monthOptions={monthSelection.options}
-        selectedMonthKey={monthSelection.selected.monthKey}
-        monthLabel={monthSelection.selected.label}
+        category={routeFilters.category}
+        showMonthPicker={showMonthPicker}
+        monthOptions={progressMonthOptions}
+        selectedMonthKey={monthCtxRes.data.selected.monthKey}
       />
     )
   })

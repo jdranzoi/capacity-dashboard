@@ -4,23 +4,23 @@ import { useCallback } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { ProjectsProgressChart } from '@/components/projects/overview/projects-progress-chart'
-import { ProjectsProgressViewControl } from '@/components/projects/overview/projects-progress-view-control'
+import { ProjectsProgressMonthControl } from '@/components/projects/overview/projects-progress-month-control'
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
-import type { ProjectsViewMode } from '@/lib/projects/overview/projects-route-filters'
+import type { ProjectsCategoryFilter } from '@/lib/projects/overview/projects-route-filters'
 import type { ProjectsOverviewPayload } from '@/lib/projects/overview/projects-types'
 
 export function ProjectsOverviewGridBody({
   payload,
-  view,
+  category,
+  showMonthPicker,
   monthOptions,
   selectedMonthKey,
-  monthLabel,
 }: {
   payload: ProjectsOverviewPayload
-  view: ProjectsViewMode
+  category: ProjectsCategoryFilter
+  showMonthPicker: boolean
   monthOptions: OverviewMonthOption[]
   selectedMonthKey: string
-  monthLabel: string
 }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -29,9 +29,11 @@ export function ProjectsOverviewGridBody({
   const selectedProjectKey = searchParams.get('project')?.trim() || null
 
   const chartTitle =
-    payload.viewMode === 'monthly' && payload.monthLabel
-      ? `Project progress (${payload.monthLabel})`
-      : 'Project progress (lifetime)'
+    category === 'build'
+      ? 'Project progress (lifetime)'
+      : payload.viewMode === 'monthly' && payload.monthLabel
+        ? `Project progress (${payload.monthLabel})`
+        : 'Project progress'
 
   const onSelectProject = useCallback(
     (projectKey: string) => {
@@ -50,12 +52,12 @@ export function ProjectsOverviewGridBody({
         onSelectProject={onSelectProject}
         chartTitle={chartTitle}
         headerAction={
-          <ProjectsProgressViewControl
-            view={view}
-            monthOptions={monthOptions}
-            selectedMonthKey={selectedMonthKey}
-            monthLabel={monthLabel}
-          />
+          showMonthPicker ? (
+            <ProjectsProgressMonthControl
+              monthOptions={monthOptions}
+              selectedMonthKey={selectedMonthKey}
+            />
+          ) : undefined
         }
       />
 

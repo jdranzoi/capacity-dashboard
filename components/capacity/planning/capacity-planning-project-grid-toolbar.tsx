@@ -2,7 +2,7 @@
 
 import { PlanningGridToolbarShell } from '@/components/capacity/planning/planning-grid-toolbar-shell'
 import { PlanningMonthVisibilityControl } from '@/components/capacity/planning/planning-month-visibility-control'
-import { PlanningSegmentedControl } from '@/components/capacity/planning/planning-segmented-control'
+import { SegmentedControl } from '@/components/ui/segmented-control'
 import {
   PLANNING_PROJECT_TYPE_OPTIONS,
   PLANNING_ROLE_NAME_FILTER_WIDTH,
@@ -58,7 +58,7 @@ export function CapacityPlanningProjectGridToolbar({
   return (
     <PlanningGridToolbarShell
       trailing={
-        <PlanningSegmentedControl
+        <SegmentedControl
           label="Tree"
           value={treeExpansion}
           onChange={onTreeExpansionChange}
@@ -66,7 +66,7 @@ export function CapacityPlanningProjectGridToolbar({
         />
       }
     >
-      <PlanningSegmentedControl
+      <SegmentedControl
         label="Filter by"
         value={filterMode}
         onChange={onFilterModeChange}
@@ -99,7 +99,7 @@ export function CapacityPlanningProjectGridToolbar({
         )}
       </div>
 
-      <PlanningSegmentedControl
+      <SegmentedControl
         label="Project type"
         value={projectType}
         onChange={onProjectTypeChange}

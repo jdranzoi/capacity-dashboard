@@ -20,7 +20,7 @@ import {
 import { cn } from '@/lib/utils'
 
 const linkBase =
-  'flex items-center gap-3 rounded-md px-2 py-1.5 text-sm transition-colors duration-150'
+  'flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 text-sm transition-colors duration-150'
 
 function isOverviewActive(pathname: string): boolean {
   return pathname === '/'

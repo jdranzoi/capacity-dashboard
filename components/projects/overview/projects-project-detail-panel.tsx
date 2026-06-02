@@ -147,7 +147,7 @@ function ProjectDetailTabs({
             aria-selected={isActive}
             onClick={() => onChange(tab.id)}
             className={cn(
-              "-mb-px shrink-0 border-b-2 px-2.5 pb-2 pt-0.5 text-[0.7rem] font-medium leading-none transition-colors",
+              "-mb-px shrink-0 cursor-pointer border-b-2 px-2.5 pb-2 pt-0.5 text-[0.7rem] font-medium leading-none transition-colors",
               isActive
                 ? "border-[var(--overview-metric-planned)] text-[var(--overview-metric-planned)]"
                 : "border-transparent text-muted-foreground hover:text-foreground",

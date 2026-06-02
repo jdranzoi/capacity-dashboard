@@ -5,7 +5,7 @@ import { pagedQuery } from '@/lib/data/paged-query'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import { loggedVersusPlannedProductivityPct } from '@/lib/domain/workload-metrics'
 import {
-  isProjectAtRisk,
+  isProjectAtBudgetRisk,
   orgBurnRateHoursPerMonth,
   projectBurnRateHoursPerMonth,
   projectOverrunHours,
@@ -150,6 +150,7 @@ export async function loadProjectsOverviewGlobal(params: {
 
     if (plannedHours <= 0 && loggedHours <= 0) continue
 
+    const budgetUsedPct = projectBudgetUsedPct(loggedHours, meta.budget_hours)
     rows.push({
       projectId: meta.id,
       projectKey: meta.project_key,
@@ -161,9 +162,9 @@ export async function loadProjectsOverviewGlobal(params: {
       plannedHours,
       loggedHours,
       billableHours,
-      budgetUsedPct: projectBudgetUsedPct(loggedHours, meta.budget_hours),
+      budgetUsedPct,
       overrunHours: projectOverrunHours(loggedHours, plannedHours),
-      atRisk: isProjectAtRisk(loggedHours, plannedHours),
+      atRisk: isProjectAtBudgetRisk(budgetUsedPct),
       burnRateHoursPerMonth: projectBurnRateHoursPerMonth(burnByProject.get(meta.id) ?? []),
     })
   }

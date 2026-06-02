@@ -2,11 +2,12 @@
 
 import type { ReactNode } from 'react'
 
-import type { PlanningSegmentOption } from '@/components/capacity/planning/planning-segmented-control'
+import type { SegmentedControlOption } from '@/components/ui/segmented-control'
 import type { PlanningTreeExpansion } from '@/lib/capacity/planning/planning-grid-filters'
+import { TOOLBAR_FIELD_LABEL_CLASS } from '@/lib/ui/toolbar-field-label'
 import { cn } from '@/lib/utils'
 
-export const PLANNING_TREE_OPTIONS: readonly PlanningSegmentOption<PlanningTreeExpansion>[] = [
+export const PLANNING_TREE_OPTIONS: readonly SegmentedControlOption<PlanningTreeExpansion>[] = [
   { value: 'expand', label: 'Expand' },
   { value: 'collapse', label: 'Collapse' },
 ]
@@ -18,9 +19,6 @@ export const PLANNING_PROJECT_TYPE_OPTIONS = [
   { value: 'support' as const, label: 'Support' },
   { value: 'internal' as const, label: 'Internal' },
 ]
-
-export const PLANNING_TOOLBAR_LABEL_CLASS =
-  'block h-3.5 shrink-0 text-[10px] font-medium uppercase leading-none tracking-wide text-muted-foreground'
 
 /** Fixed slot for Role select vs person name search so toolbar layout does not shift. */
 export const PLANNING_ROLE_NAME_FILTER_WIDTH = 'w-44 shrink-0'
@@ -39,7 +37,7 @@ export function PlanningToolbarField({
 }) {
   return (
     <div className={cn('flex flex-col gap-1', className)}>
-      <span className={PLANNING_TOOLBAR_LABEL_CLASS}>{label}</span>
+      <span className={TOOLBAR_FIELD_LABEL_CLASS}>{label}</span>
       {children}
     </div>
   )

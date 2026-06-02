@@ -27,7 +27,10 @@ export async function ProjectsOverviewKpiBlock({
       q: listParams.q,
     })
 
-    const monthCtxRes = await getProjectsMonthContext(listParams.month)
+    const monthCtxRes = await getProjectsMonthContext(
+      listParams.month,
+      routeFilters.category
+    )
     if (monthCtxRes.error) {
       return <ProjectsDataError message={`Could not load month context: ${monthCtxRes.error}`} />
     }

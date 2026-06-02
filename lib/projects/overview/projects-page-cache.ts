@@ -1,28 +1,9 @@
 import { cache } from 'react'
 import { endOfMonth, format, parse } from 'date-fns'
 
-import {
-  loadOverviewMonthOptions,
-  resolveSelectedOverviewMonth,
-  type OverviewMonthOption,
-} from '@/lib/overview/overview-month-options'
-
-export type ProjectsMonthSelectionResult = {
-  options: OverviewMonthOption[]
-  selected: OverviewMonthOption | null
-  error: string | null
-}
-
-export const getProjectsMonthSelection = cache(
-  async (monthStr: string | undefined): Promise<ProjectsMonthSelectionResult> => {
-    const { options, error } = await loadOverviewMonthOptions()
-    if (error) {
-      return { options: [], selected: null, error }
-    }
-    const selected = resolveSelectedOverviewMonth(options, monthStr)
-    return { options, selected, error: null }
-  }
-)
+import { loadOverviewMonthOptions, type OverviewMonthOption } from '@/lib/overview/overview-month-options'
+import { resolveMonthForProjectsCategory } from '@/lib/projects/overview/projects-progress-month-options'
+import type { ProjectsCategoryFilter } from '@/lib/projects/overview/projects-route-filters'
 
 export type ProjectsMonthContext = {
   options: OverviewMonthOption[]
@@ -35,12 +16,14 @@ export type ProjectsMonthContext = {
 
 export const getProjectsMonthContext = cache(
   async (
-    monthStr: string | undefined
+    monthStr: string | undefined,
+    category: ProjectsCategoryFilter = 'build'
   ): Promise<{ data: ProjectsMonthContext | null; error: string | null }> => {
-    const { options, selected, error } = await getProjectsMonthSelection(monthStr)
+    const { options, error } = await loadOverviewMonthOptions()
     if (error) {
       return { data: null, error }
     }
+    const selected = resolveMonthForProjectsCategory(options, monthStr, category)
     if (!selected) {
       return { data: null, error: null }
     }
