@@ -56,6 +56,28 @@ export function TeamsCompositionGridSkeleton() {
   )
 }
 
+export function TeamsCollaborationSkeleton() {
+  return (
+    <div className="flex flex-col gap-8">
+      <TeamsKpiRowSkeleton count={5} />
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Skeleton className="aspect-[88/58] rounded-xl border border-border lg:col-span-2" />
+        <Skeleton className="h-[28rem] rounded-xl border border-border" />
+      </div>
+      <Skeleton className="h-64 rounded-xl border border-border" />
+    </div>
+  )
+}
+
+export function TeamsCollaborationPageSkeleton() {
+  return (
+    <div className="flex flex-col gap-8">
+      <DashboardSectionHeaderSkeleton filterCount={3} />
+      <TeamsCollaborationSkeleton />
+    </div>
+  )
+}
+
 export function TeamsPageSkeleton({ variant = 'overview' }: { variant?: 'overview' | 'composition' }) {
   return (
     <div className="flex flex-col gap-8">
