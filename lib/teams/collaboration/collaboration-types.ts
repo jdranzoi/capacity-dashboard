@@ -1,3 +1,4 @@
+import type { CollaborationEdgeRelationshipMetrics } from '@/lib/teams/collaboration/collaboration-relationship-metrics'
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
 
 /**
@@ -30,18 +31,11 @@ export type CollaborationNode = {
 }
 
 export type CollaborationEdge = {
-  /** Lower person id (stable ordering). */
   source: string
-  /** Higher person id. */
   target: string
   sharedProjects: number
-  /** Shared projects with a plan in the anchor month. */
-  currentProjects: number
-  /** Approx earliest date both were present on a shared project (`yyyy-MM-dd`). */
-  firstCollaboration: string | null
-  /** Approx latest date both were present on a shared project (`yyyy-MM-dd`). */
-  lastCollaboration: string | null
   projectIds: string[]
+  relationshipMetrics: CollaborationEdgeRelationshipMetrics
 }
 
 export type CollaborationProjectRef = {

@@ -6,7 +6,6 @@ import {
   TL_ROLE_KEY,
 } from '@/lib/teams/collaboration/collaboration-ui-utils'
 import type {
-  CollaborationEdge,
   CollaborationInsights,
   CollaborationKpis,
   CollaborationMatrix,
@@ -17,16 +16,9 @@ import type {
 
 export { PM_ROLE_KEY, TL_ROLE_KEY } from '@/lib/teams/collaboration/collaboration-ui-utils'
 
-/** One person's footprint on one project within the range. */
 export type ParticipationRecord = {
   personId: string
   projectId: string
-  /** Earliest `month_date` with a plan assignment (`yyyy-MM-dd`). */
-  firstLog: string
-  /** Latest `month_date` with a plan assignment (`yyyy-MM-dd`). */
-  lastLog: string
-  /** True when the person is planned on this project in the anchor month. */
-  loggedInAnchorMonth: boolean
 }
 
 export type PersonMeta = {
@@ -80,9 +72,16 @@ function buildProjectKpis(
   return { totalProjects: projectIds.size, projectsByType }
 }
 
+export type BuiltCollaborationEdge = {
+  source: string
+  target: string
+  sharedProjects: number
+  projectIds: string[]
+}
+
 export type CollaborationGraphResult = {
   nodes: CollaborationNode[]
-  edges: CollaborationEdge[]
+  edges: BuiltCollaborationEdge[]
   projects: Record<string, CollaborationProjectRef>
   matrix: CollaborationMatrix
   kpis: CollaborationKpis
@@ -93,17 +92,11 @@ type EdgeAccumulator = {
   source: string
   target: string
   projectIds: string[]
-  currentProjects: number
-  firstCollaboration: string | null
-  lastCollaboration: string | null
 }
 
 /**
- * Builds the collaboration graph from per-(person, project) participation records.
- *
- * Pure: no I/O. Edge strength is shared-project count only (hours excluded by design).
- * First/last collaboration are approximated per shared project as the overlap of each
- * person's first/last log dates, then reduced across shared projects.
+ * Builds the collaboration graph from per-(person, project) participation in the anchor month.
+ * Edge weight is shared-project count in that month (planned hours excluded by design).
  */
 export function buildCollaborationGraph(
   input: BuildCollaborationGraphInput
@@ -123,8 +116,6 @@ export function buildCollaborationGraph(
     return project.type === category
   }
 
-  const recordKey = (personId: string, projectId: string) => `${personId}|${projectId}`
-  const recordIndex = new Map<string, ParticipationRecord>()
   const projectMembers = new Map<string, string[]>()
   const rosterPersonIds = new Set<string>()
   const scopedProjectsByPerson = new Map<string, Set<string>>()
@@ -136,7 +127,6 @@ export function buildCollaborationGraph(
     if (!projectsById.has(record.projectId)) continue
 
     rosterPersonIds.add(record.personId)
-    recordIndex.set(recordKey(record.personId, record.projectId), record)
 
     const allProjects = totalProjectsByPerson.get(record.personId)
     if (allProjects) {
@@ -172,32 +162,16 @@ export function buildCollaborationGraph(
       for (let j = i + 1; j < unique.length; j += 1) {
         const a = unique[i]!
         const b = unique[j]!
-        const recA = recordIndex.get(recordKey(a, projectId))!
-        const recB = recordIndex.get(recordKey(b, projectId))!
-
-        const coStart = recA.firstLog > recB.firstLog ? recA.firstLog : recB.firstLog
-        const coEnd = recA.lastLog < recB.lastLog ? recA.lastLog : recB.lastLog
-        const bothCurrent = recA.loggedInAnchorMonth && recB.loggedInAnchorMonth
 
         const key = collaborationEdgeKey(a, b)
         const existing = edges.get(key)
         if (existing) {
           existing.projectIds.push(projectId)
-          if (bothCurrent) existing.currentProjects += 1
-          if (existing.firstCollaboration == null || coStart < existing.firstCollaboration) {
-            existing.firstCollaboration = coStart
-          }
-          if (existing.lastCollaboration == null || coEnd > existing.lastCollaboration) {
-            existing.lastCollaboration = coEnd
-          }
         } else {
           edges.set(key, {
             source: a,
             target: b,
             projectIds: [projectId],
-            currentProjects: bothCurrent ? 1 : 0,
-            firstCollaboration: coStart,
-            lastCollaboration: coEnd,
           })
         }
       }
@@ -235,14 +209,11 @@ export function buildCollaborationGraph(
   }
   nodes.sort((a, b) => b.collaborators - a.collaborators || a.name.localeCompare(b.name, 'en'))
 
-  const edgeList: CollaborationEdge[] = Array.from(edges.values())
+  const edgeList: BuiltCollaborationEdge[] = Array.from(edges.values())
     .map((acc) => ({
       source: acc.source,
       target: acc.target,
       sharedProjects: acc.projectIds.length,
-      currentProjects: acc.currentProjects,
-      firstCollaboration: acc.firstCollaboration,
-      lastCollaboration: acc.lastCollaboration,
       projectIds: acc.projectIds,
     }))
     .sort((a, b) => b.sharedProjects - a.sharedProjects)
@@ -307,7 +278,7 @@ function buildMatrix(
 
 function buildKpis(
   nodes: CollaborationNode[],
-  edges: CollaborationEdge[]
+  edges: BuiltCollaborationEdge[]
 ): Omit<CollaborationKpis, 'totalProjects' | 'projectsByType'> {
   const activeCollaborators = nodes.length
   const totalDegree = nodes.reduce((sum, node) => sum + node.collaborators, 0)
@@ -345,7 +316,7 @@ function mostConnectedTlNode(
 
 function buildInsights(
   nodes: CollaborationNode[],
-  edges: CollaborationEdge[],
+  edges: BuiltCollaborationEdge[],
   matrix: CollaborationMatrix
 ): CollaborationInsights {
   const nameById = new Map(nodes.map((node) => [node.id, node.name]))

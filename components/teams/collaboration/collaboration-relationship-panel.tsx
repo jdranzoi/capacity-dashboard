@@ -120,9 +120,18 @@ export function CollaborationRelationshipPanel({
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-2">
-        <MetricCell label="Shared" value={edge.sharedProjects} />
-        <MetricCell label="Current" value={edge.currentProjects} />
-        <MetricCell label="Since" value={formatDate(edge.firstCollaboration)} />
+        <MetricCell
+          label={edge.relationshipMetrics.isFutureFilter ? "From" : "Since"}
+          value={formatDate(edge.relationshipMetrics.periodStartDate)}
+        />
+        <MetricCell
+          label="Shared"
+          value={edge.relationshipMetrics.sharedProjectsInRange}
+        />
+        <MetricCell
+          label="Current"
+          value={edge.relationshipMetrics.currentMonthProjects}
+        />
       </div>
 
       <div className="mt-4">

@@ -1,11 +1,10 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { endOfMonth, format, parse, startOfMonth, subMonths } from 'date-fns'
+import { endOfMonth, format, parse } from 'date-fns'
 
 import { CACHE_TAG_OVERVIEW_MONTHS } from '@/lib/data/cache-tags'
 import {
   loadFragmentationByPerson,
-  type FragmentationFactRow,
 } from '@/lib/data/load-fragmentation-by-person'
 import {
   loadOverviewMonthOptions,
@@ -20,6 +19,14 @@ import {
   type ParticipationRecord,
   type PersonMeta,
 } from '@/lib/teams/collaboration/build-collaboration-graph'
+import { COLLABORATION_MONTH_HORIZON } from '@/lib/teams/collaboration/collaboration-month-horizon'
+import {
+  buildMonthProjectMembers,
+  calendarCurrentMonthKey,
+  collectRelationshipMetricsMonthKeys,
+  collaborationHorizonEndMonthKey,
+  computeEdgeRelationshipMetrics,
+} from '@/lib/teams/collaboration/collaboration-relationship-metrics'
 import {
   COLLABORATION_CATEGORY_ALL,
   type CollaborationRouteFilters,
@@ -33,29 +40,12 @@ import type {
 
 const PAGE = 1000
 const BATCH = 200
-const MONTH_PICKER_LIMIT = 12
-
-/** Last 12 calendar months that have a row in `v_dashboard_month_options`. */
-function monthPickerOptions(options: OverviewMonthOption[]): OverviewMonthOption[] {
-  const allowed = new Set(
-    Array.from({ length: MONTH_PICKER_LIMIT }, (_, i) =>
-      format(subMonths(startOfMonth(new Date()), i), 'yyyy-MM')
-    )
-  )
-  return options.filter((option) => allowed.has(option.monthKey))
-}
 
 type PlanRow = {
   person_id: string
   project_id: string
   month_date: string
   role_id: string | null
-}
-
-type PersonProjectAgg = {
-  firstMonth: string
-  lastMonth: string
-  activeInAnchorMonth: boolean
 }
 
 type CachedGraph = {
@@ -96,50 +86,97 @@ async function pagedPlansForMonth(
   return { rows, error: null }
 }
 
+async function loadPlansForMonthKeys(
+  supabase: SupabaseClient<Database>,
+  monthOptionByKey: Map<string, OverviewMonthOption>,
+  monthKeys: string[]
+): Promise<{ plansByMonth: Map<string, PlanRow[]>; error: string | null }> {
+  const plansByMonth = new Map<string, PlanRow[]>()
+  const results = await Promise.all(
+    monthKeys.map(async (monthKey) => {
+      const option = monthOptionByKey.get(monthKey)
+      if (!option) return { monthKey, rows: [] as PlanRow[], error: null as string | null }
+      const result = await pagedPlansForMonth(supabase, option.snapshotId, option.monthStartStr)
+      return { monthKey, rows: result.rows, error: result.error }
+    })
+  )
+
+  for (const result of results) {
+    if (result.error) return { plansByMonth, error: result.error }
+    plansByMonth.set(result.monthKey, result.rows)
+  }
+
+  return { plansByMonth, error: null }
+}
+
+function ingestAnchorPlanRows(
+  rows: PlanRow[],
+  anchorPersonProjects: Set<string>,
+  personIds: Set<string>,
+  projectIds: Set<string>,
+  stampedRoleIdByPerson: Map<string, string>
+): void {
+  for (const row of rows) {
+    if (!row.person_id || !row.project_id) continue
+    personIds.add(row.person_id)
+    projectIds.add(row.project_id)
+    anchorPersonProjects.add(`${row.person_id}|${row.project_id}`)
+
+    if (row.role_id) {
+      stampedRoleIdByPerson.set(row.person_id, row.role_id)
+    }
+  }
+}
+
 async function loadCollaborationGraphData(
   selected: OverviewMonthOption,
-  category: string
+  category: string,
+  monthOptions: OverviewMonthOption[]
 ): Promise<{ data: CachedGraph | null; error: string | null }> {
   'use cache'
   cacheLife({ stale: 120, revalidate: 300 })
   cacheTag(CACHE_TAG_OVERVIEW_MONTHS)
 
   const supabase = createServiceClientCached()
-  const aggByPersonProject = new Map<string, PersonProjectAgg>()
+  const monthOptionByKey = new Map(monthOptions.map((option) => [option.monthKey, option]))
+  const availableMonthKeys = new Set(monthOptions.map((option) => option.monthKey))
+  const currentMonthKey = calendarCurrentMonthKey()
+  const horizonEndMonthKey = collaborationHorizonEndMonthKey(
+    new Date(),
+    COLLABORATION_MONTH_HORIZON.monthsAfter
+  )
+  const metricsMonthKeys = collectRelationshipMetricsMonthKeys({
+    filterMonthKey: selected.monthKey,
+    currentMonthKey,
+    horizonEndMonthKey,
+    availableMonthKeys,
+  })
+
+  const plansResult = await loadPlansForMonthKeys(supabase, monthOptionByKey, metricsMonthKeys)
+  if (plansResult.error) {
+    return { data: null, error: `fact_plans: ${plansResult.error}` }
+  }
+
+  const anchorPersonProjects = new Set<string>()
   const personIds = new Set<string>()
   const projectIds = new Set<string>()
   const stampedRoleIdByPerson = new Map<string, string>()
 
-  const planResult = await pagedPlansForMonth(
-    supabase,
-    selected.snapshotId,
-    selected.monthStartStr
+  const anchorRows = plansResult.plansByMonth.get(selected.monthKey) ?? []
+  ingestAnchorPlanRows(
+    anchorRows,
+    anchorPersonProjects,
+    personIds,
+    projectIds,
+    stampedRoleIdByPerson
   )
-  if (planResult.error) {
-    return { data: null, error: `fact_plans: ${planResult.error}` }
-  }
 
-  for (const row of planResult.rows) {
-    if (!row.person_id || !row.project_id) continue
-    personIds.add(row.person_id)
-    projectIds.add(row.project_id)
-
-    if (row.role_id) {
-      stampedRoleIdByPerson.set(row.person_id, row.role_id)
-    }
-
-    const key = `${row.person_id}|${row.project_id}`
-    const existing = aggByPersonProject.get(key)
-    if (existing) {
-      if (row.month_date < existing.firstMonth) existing.firstMonth = row.month_date
-      if (row.month_date > existing.lastMonth) existing.lastMonth = row.month_date
-      existing.activeInAnchorMonth = true
-    } else {
-      aggByPersonProject.set(key, {
-        firstMonth: row.month_date,
-        lastMonth: row.month_date,
-        activeInAnchorMonth: true,
-      })
+  for (const [monthKey, rows] of plansResult.plansByMonth) {
+    if (monthKey === selected.monthKey) continue
+    for (const row of rows) {
+      if (!row.person_id || !row.project_id) continue
+      projectIds.add(row.project_id)
+      if (row.role_id) stampedRoleIdByPerson.set(row.person_id, row.role_id)
     }
   }
 
@@ -181,16 +218,10 @@ async function loadCollaborationGraphData(
   ]
 
   const participations: ParticipationRecord[] = []
-  for (const [key, agg] of aggByPersonProject) {
+  for (const key of anchorPersonProjects) {
     const [personId, projectId] = key.split('|') as [string, string]
     if (!projectsById.map.has(projectId)) continue
-    participations.push({
-      personId,
-      projectId,
-      firstLog: agg.firstMonth,
-      lastLog: agg.lastMonth,
-      loggedInAnchorMonth: agg.activeInAnchorMonth,
-    })
+    participations.push({ personId, projectId })
   }
 
   const fragResult = await loadFragmentationByPerson(
@@ -209,10 +240,25 @@ async function loadCollaborationGraphData(
     fragmentationByPerson: fragResult.byPerson,
   })
 
+  const membersByMonth = buildMonthProjectMembers(plansResult.plansByMonth)
+  const enrichedEdges = graph.edges.map((edge) => ({
+    ...edge,
+    relationshipMetrics: computeEdgeRelationshipMetrics({
+      personA: edge.source,
+      personB: edge.target,
+      membersByMonth,
+      projectsById: projectsById.map,
+      category,
+      filterMonthKey: selected.monthKey,
+      currentMonthKey,
+      horizonEndMonthKey,
+    }),
+  }))
+
   return {
     data: {
       nodes: graph.nodes,
-      edges: graph.edges,
+      edges: enrichedEdges,
       projects: graph.projects,
       matrix: graph.matrix,
       kpis: graph.kpis,
@@ -317,16 +363,18 @@ export async function loadCollaborationNetwork(
 ): Promise<{ data: CollaborationNetworkPayload | null; error: string | null }> {
   const { monthParam, category, personQuery } = filters
 
-  const { options, error: monthsError } = await loadOverviewMonthOptions()
+  const { options, error: monthsError } = await loadOverviewMonthOptions(
+    COLLABORATION_MONTH_HORIZON
+  )
   if (monthsError) return { data: null, error: monthsError }
 
-  const monthOptions = monthPickerOptions(options)
+  const monthOptions = options
   if (monthOptions.length === 0) return { data: null, error: null }
 
   const selected = resolveSelectedOverviewMonth(monthOptions, monthParam)
   if (!selected) return { data: null, error: null }
 
-  const graphResult = await loadCollaborationGraphData(selected, category)
+  const graphResult = await loadCollaborationGraphData(selected, category, monthOptions)
   if (graphResult.error) return { data: null, error: graphResult.error }
   if (!graphResult.data) return { data: null, error: null }
 
