@@ -13,8 +13,6 @@ import type {
 } from '@/lib/teams/collaboration/collaboration-ui-utils'
 import type { CollaborationNode } from '@/lib/teams/collaboration/collaboration-types'
 
-import { formatFragmentationFlagged } from '@/lib/format/fragmentation-display'
-
 function MetricCell({
   label,
   value,
@@ -77,7 +75,10 @@ export function CollaborationPersonDrawer({
 
   return (
     <div
-      className={cn('flex flex-col rounded-xl bg-card p-4 ring-1 ring-foreground/10', className)}
+      className={cn(
+        "flex flex-col rounded-xl bg-card p-4 ring-1 ring-foreground/10",
+        className,
+      )}
       data-slot="collaboration-person"
     >
       <div className="mb-3 flex items-start justify-between gap-2">
@@ -87,7 +88,7 @@ export function CollaborationPersonDrawer({
           </RoleBadge>
           <p className="text-[0.7rem] text-muted-foreground">
             {node.roleLabel}
-            {node.zoneLabel ? ` · ${node.zoneLabel}` : ''}
+            {node.zoneLabel ? ` · ${node.zoneLabel}` : ""}
           </p>
         </div>
         <button
@@ -106,10 +107,12 @@ export function CollaborationPersonDrawer({
           value={node.totalProjects}
           href={teamsCompositionPersonHref(node.name, monthKey)}
         />
-        <MetricCell label="Collaborators" value={node.collaborators} />
+        <MetricCell label="Collaboratorsss" value={node.collaborators} />
         <MetricCell
           label="Fragmentation"
-          value={formatFragmentationFlagged(node.fragmentationFlagged)}
+          value={
+            node.fragmentationFlagged == null ? '—' : String(node.fragmentationFlagged)
+          }
         />
       </div>
 
@@ -123,7 +126,10 @@ export function CollaborationPersonDrawer({
               <span
                 key={slice.roleKey}
                 className="h-full"
-                style={{ width: `${slice.pct}%`, backgroundColor: roleColorVar(slice.roleKey) }}
+                style={{
+                  width: `${slice.pct}%`,
+                  backgroundColor: roleColorVar(slice.roleKey),
+                }}
                 title={`${slice.roleLabel}: ${slice.pct}%`}
               />
             ))}
@@ -151,7 +157,10 @@ export function CollaborationPersonDrawer({
                   onClick={() => onSelectNode(link.node.id)}
                   className="flex w-full items-center justify-between gap-2 rounded-md bg-muted/20 px-2.5 py-1.5 text-xs hover:bg-muted/50"
                 >
-                  <RoleBadge roleKey={link.node.roleKey} className="min-w-0 flex-1">
+                  <RoleBadge
+                    roleKey={link.node.roleKey}
+                    className="min-w-0 flex-1"
+                  >
                     {link.node.name}
                   </RoleBadge>
                   <span className="shrink-0 tabular-nums text-muted-foreground">
@@ -162,9 +171,11 @@ export function CollaborationPersonDrawer({
             ))}
           </ul>
         ) : (
-          <p className="text-xs text-muted-foreground">No collaborators this month.</p>
+          <p className="text-xs text-muted-foreground">
+            No collaborators this month.
+          </p>
         )}
       </div>
     </div>
-  )
+  );
 }

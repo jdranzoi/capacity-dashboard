@@ -6,6 +6,7 @@ import {
   resolveSelectedOverviewMonth,
   type OverviewMonthOption,
 } from '@/lib/overview/overview-month-options'
+import { TEAMS_MONTH_HORIZON } from '@/lib/teams/shared/teams-month-horizon'
 
 export type TeamsMonthSelectionResult = {
   options: OverviewMonthOption[]
@@ -15,7 +16,7 @@ export type TeamsMonthSelectionResult = {
 
 export const getTeamsMonthSelection = cache(
   async (monthStr: string | undefined): Promise<TeamsMonthSelectionResult> => {
-    const { options, error } = await loadOverviewMonthOptions()
+    const { options, error } = await loadOverviewMonthOptions(TEAMS_MONTH_HORIZON)
     if (error) {
       return { options: [], selected: null, error }
     }

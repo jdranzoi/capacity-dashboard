@@ -1,11 +1,19 @@
 'use client'
 
-import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
-import { useOverviewRoutePending } from '@/components/overview/overview-route-pending-shell'
-import { cn } from '@/lib/utils'
-import { ChevronDown, Loader2 } from 'lucide-react'
+import { format, startOfMonth } from 'date-fns'
+import { Check, ChevronDown, Loader2 } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useCallback } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+
+import { useOverviewRoutePending } from '@/components/overview/overview-route-pending-shell'
+import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
+import { cn } from '@/lib/utils'
+
+const triggerClassName = cn(
+  'flex h-9 w-full min-w-[11.5rem] items-center justify-between gap-2 rounded-lg border border-border bg-muted/25 py-1.5 pr-2 pl-3 text-sm text-foreground',
+  'ring-1 ring-foreground/10',
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+)
 
 export function OverviewMonthPicker({
   options,
@@ -27,6 +35,10 @@ export function OverviewMonthPicker({
   const searchParams = useSearchParams()
   const routePending = useOverviewRoutePending()
   const effectivePending = pendingNavigation ?? routePending
+  const listboxId = useId()
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  const [open, setOpen] = useState(false)
 
   const onChange = useCallback(
     (monthKey: string) => {
@@ -48,43 +60,99 @@ export function OverviewMonthPicker({
   )
 
   const isPending = effectivePending?.isPending ?? false
+  const currentMonthKey = useMemo(() => format(startOfMonth(new Date()), 'yyyy-MM'), [])
+  const selectedOption =
+    options.find((option) => option.monthKey === selectedMonthKey) ?? options[0] ?? null
+
+  useEffect(() => {
+    if (!open) return
+    const onPointerDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    return () => document.removeEventListener('mousedown', onPointerDown)
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open])
 
   if (options.length === 0) {
     return null
   }
 
   return (
-    <div className={cn('relative inline-flex', className)}>
-      <select
-        aria-label="Reference month"
+    <div ref={rootRef} className={cn('relative inline-flex', className)}>
+      <button
+        type="button"
+        id={`${listboxId}-trigger`}
+        aria-label="Period"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={listboxId}
         aria-busy={isPending}
-        value={selectedMonthKey}
         disabled={isPending}
-        onChange={(e) => onChange(e.target.value)}
-        className={cn(
-          'h-9 w-full min-w-[11.5rem] appearance-none rounded-lg border border-border bg-muted/25 py-1.5 pr-8 pl-3 text-sm text-foreground',
-          'ring-1 ring-foreground/10',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-          isPending ? 'cursor-wait opacity-80' : 'cursor-pointer'
-        )}
+        onClick={() => setOpen((value) => !value)}
+        className={cn(triggerClassName, isPending ? 'cursor-wait opacity-80' : 'cursor-pointer')}
       >
-        {options.map((o) => (
-          <option key={o.monthKey} value={o.monthKey}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-      {isPending ? (
-        <Loader2
-          aria-hidden
-          className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground"
-        />
-      ) : (
-        <ChevronDown
-          aria-hidden
-          className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-        />
-      )}
+        <span className="truncate">{selectedOption?.label ?? selectedMonthKey}</span>
+        {isPending ? (
+          <Loader2 aria-hidden className="size-4 shrink-0 animate-spin text-muted-foreground" />
+        ) : (
+          <ChevronDown
+            aria-hidden
+            className={cn(
+              'size-4 shrink-0 text-muted-foreground transition-transform duration-150',
+              open && 'rotate-180'
+            )}
+          />
+        )}
+      </button>
+
+      {open ? (
+        <ul
+          id={listboxId}
+          role="listbox"
+          aria-labelledby={`${listboxId}-trigger`}
+          className="absolute top-[calc(100%+0.25rem)] z-50 max-h-64 w-full min-w-full overflow-y-auto rounded-lg border border-border bg-popover py-1 text-popover-foreground shadow-lg"
+        >
+          {options.map((option) => {
+            const isSelected = option.monthKey === selectedMonthKey
+            const isCurrentMonth = option.monthKey === currentMonthKey
+            return (
+              <li key={option.monthKey} role="presentation">
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => {
+                    onChange(option.monthKey)
+                    setOpen(false)
+                  }}
+                  className={cn(
+                    'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm transition-colors hover:bg-muted/40',
+                    isCurrentMonth && 'bg-muted/55',
+                    isSelected && 'font-medium'
+                  )}
+                >
+                  <Check
+                    aria-hidden
+                    className={cn('size-3.5 shrink-0', isSelected ? 'opacity-100' : 'opacity-0')}
+                  />
+                  <span className="truncate">{option.label}</span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      ) : null}
     </div>
   )
 }

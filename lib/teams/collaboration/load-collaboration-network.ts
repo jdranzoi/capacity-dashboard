@@ -19,7 +19,7 @@ import {
   type ParticipationRecord,
   type PersonMeta,
 } from '@/lib/teams/collaboration/build-collaboration-graph'
-import { COLLABORATION_MONTH_HORIZON } from '@/lib/teams/collaboration/collaboration-month-horizon'
+import { TEAMS_MONTH_HORIZON } from '@/lib/teams/shared/teams-month-horizon'
 import {
   buildMonthProjectMembers,
   calendarCurrentMonthKey,
@@ -142,7 +142,7 @@ async function loadCollaborationGraphData(
   const currentMonthKey = calendarCurrentMonthKey()
   const horizonEndMonthKey = collaborationHorizonEndMonthKey(
     new Date(),
-    COLLABORATION_MONTH_HORIZON.monthsAfter
+    TEAMS_MONTH_HORIZON.monthsAfter
   )
   const metricsMonthKeys = collectRelationshipMetricsMonthKeys({
     filterMonthKey: selected.monthKey,
@@ -361,9 +361,7 @@ export async function loadCollaborationNetwork(
 ): Promise<{ data: CollaborationNetworkPayload | null; error: string | null }> {
   const { monthParam, category, personQuery } = filters
 
-  const { options, error: monthsError } = await loadOverviewMonthOptions(
-    COLLABORATION_MONTH_HORIZON
-  )
+  const { options, error: monthsError } = await loadOverviewMonthOptions(TEAMS_MONTH_HORIZON)
   if (monthsError) return { data: null, error: monthsError }
 
   const monthOptions = options

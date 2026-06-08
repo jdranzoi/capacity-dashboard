@@ -92,7 +92,7 @@ export function CollaborationFilters({
 
   return (
     <div className="flex flex-wrap items-end gap-3" data-slot="collaboration-filters">
-      <DashboardFilterField label="Month">
+      <DashboardFilterField label="Period">
         <TeamsMonthPicker options={data.monthOptions} selectedMonthKey={data.monthKey} />
       </DashboardFilterField>
       <DashboardFilterField label="Project category">
