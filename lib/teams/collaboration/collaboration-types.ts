@@ -84,22 +84,6 @@ export type CollaborationKpis = {
   stableSquads: number | null
 }
 
-export type CollaborationInsights = {
-  strongestPmTlPair: {
-    pm: CollaborationMatrixAxis
-    tl: CollaborationMatrixAxis
-    sharedProjects: number
-  } | null
-  highestFragmentation: {
-    id: string
-    name: string
-    totalCount: number
-    flagged: boolean
-  } | null
-  mostConnectedTl: { id: string; name: string; connections: number } | null
-  isolatedResources: number
-}
-
 export type CollaborationCategoryOption = {
   value: string
   label: string
@@ -119,6 +103,5 @@ export type CollaborationNetworkPayload = {
   projects: Record<string, CollaborationProjectRef>
   matrix: CollaborationMatrix
   kpis: CollaborationKpis
-  insights: CollaborationInsights
   syncCreatedAt: string | null
 }

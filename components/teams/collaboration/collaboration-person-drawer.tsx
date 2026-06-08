@@ -1,9 +1,11 @@
 'use client'
 
-import { X } from 'lucide-react'
+import { X, Link2 } from 'lucide-react'
+import Link from 'next/link'
 
-import { CollaborationRoleDot } from '@/components/teams/collaboration/collaboration-role-dot'
+import { RoleBadge } from '@/components/ui/role-badge'
 import { roleColorVar } from '@/lib/ui/collaboration-role-colors'
+import { teamsCompositionPersonHref } from '@/lib/teams/composition/teams-composition-utils'
 import { cn } from '@/lib/utils'
 import type {
   NeighborLink,
@@ -13,19 +15,52 @@ import type { CollaborationNode } from '@/lib/teams/collaboration/collaboration-
 
 import { formatFragmentationFlagged } from '@/lib/format/fragmentation-display'
 
-function MetricCell({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="rounded-lg bg-muted/30 px-3 py-2">
+function MetricCell({
+  label,
+  value,
+  href,
+}: {
+  label: string
+  value: string | number
+  href?: string
+}) {
+  const content = (
+    <>
       <p className="text-[0.65rem] uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-base font-semibold tabular-nums">{value}</p>
-    </div>
+      <p className="mt-0.5 flex items-center gap-1 text-base font-semibold tabular-nums">
+        <span>{value}</span>
+        {href ? (
+          <Link2
+            className="size-3 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-muted-foreground"
+            aria-hidden="true"
+          />
+        ) : null}
+      </p>
+    </>
   )
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`${label}: ${value}. Opens team composition in a new tab.`}
+        className="group rounded-lg bg-muted/30 px-3 py-2 transition-colors hover:bg-muted/50"
+      >
+        {content}
+      </Link>
+    )
+  }
+
+  return <div className="rounded-lg bg-muted/30 px-3 py-2">{content}</div>
 }
 
 export function CollaborationPersonDrawer({
   node,
   neighbors,
   distribution,
+  monthKey,
   onClose,
   onSelectNode,
   className,
@@ -33,6 +68,7 @@ export function CollaborationPersonDrawer({
   node: CollaborationNode
   neighbors: NeighborLink[]
   distribution: RoleDistributionSlice[]
+  monthKey: string
   onClose: () => void
   onSelectNode: (id: string) => void
   className?: string
@@ -46,10 +82,9 @@ export function CollaborationPersonDrawer({
     >
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <CollaborationRoleDot roleKey={node.roleKey} />
-            <p className="truncate text-sm font-medium">{node.name}</p>
-          </div>
+          <RoleBadge roleKey={node.roleKey} className="text-sm">
+            {node.name}
+          </RoleBadge>
           <p className="text-[0.7rem] text-muted-foreground">
             {node.roleLabel}
             {node.zoneLabel ? ` · ${node.zoneLabel}` : ''}
@@ -66,7 +101,11 @@ export function CollaborationPersonDrawer({
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        <MetricCell label="Projects" value={node.totalProjects} />
+        <MetricCell
+          label="Projects"
+          value={node.totalProjects}
+          href={teamsCompositionPersonHref(node.name, monthKey)}
+        />
         <MetricCell label="Collaborators" value={node.collaborators} />
         <MetricCell
           label="Fragmentation"
@@ -91,10 +130,9 @@ export function CollaborationPersonDrawer({
           </div>
           <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[0.7rem] text-muted-foreground">
             {distribution.map((slice) => (
-              <span key={slice.roleKey} className="flex items-center gap-1.5">
-                <CollaborationRoleDot roleKey={slice.roleKey} />
+              <RoleBadge key={slice.roleKey} roleKey={slice.roleKey}>
                 {slice.roleLabel} {slice.pct}%
-              </span>
+              </RoleBadge>
             ))}
           </div>
         </div>
@@ -113,10 +151,9 @@ export function CollaborationPersonDrawer({
                   onClick={() => onSelectNode(link.node.id)}
                   className="flex w-full items-center justify-between gap-2 rounded-md bg-muted/20 px-2.5 py-1.5 text-xs hover:bg-muted/50"
                 >
-                  <span className="flex min-w-0 items-center gap-1.5">
-                    <CollaborationRoleDot roleKey={link.node.roleKey} />
-                    <span className="truncate">{link.node.name}</span>
-                  </span>
+                  <RoleBadge roleKey={link.node.roleKey} className="min-w-0 flex-1">
+                    {link.node.name}
+                  </RoleBadge>
                   <span className="shrink-0 tabular-nums text-muted-foreground">
                     {link.sharedProjects} shared
                   </span>

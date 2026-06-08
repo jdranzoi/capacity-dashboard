@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { formatFragmentationFlagged } from '@/lib/format/fragmentation-display'
 import { roleColorVar } from '@/lib/ui/collaboration-role-colors'
-import { computeCollaborationLayout } from '@/lib/teams/collaboration/collaboration-graph-layout'
+import { computeCollaborationLayout, collaborationGraphViewBox } from '@/lib/teams/collaboration/collaboration-graph-layout'
 import { collaborationEdgeKey } from '@/lib/teams/collaboration/collaboration-ui-utils'
 import type {
   CollaborationEdge,
@@ -16,7 +16,7 @@ const VIEW_W = 880
 const VIEW_H = 580
 
 function nodeRadius(activeProjects: number): number {
-  return Math.max(5, Math.min(18, 5 + Math.sqrt(activeProjects) * 2.4))
+  return Math.max(6, Math.min(20, 6 + Math.sqrt(activeProjects) * 2.6))
 }
 
 function edgeWidth(sharedProjects: number): number {
@@ -72,18 +72,37 @@ export function CollaborationNetworkGraph({
 
   const hasFocus = Boolean(activeNodeId || selectedEdgeKey)
   const hoveredNode = hoveredNodeId ? nodeById.get(hoveredNodeId) ?? null : null
-  const hoveredPoint = hoveredNodeId ? layout.get(hoveredNodeId) ?? null : null
+
+  const shouldShowLabel = (node: CollaborationNode) =>
+    nodes.length <= 32 ||
+    node.collaborators >= 3 ||
+    node.id === activeNodeId ||
+    node.id === selectedNodeId
+
+  const viewBox = useMemo(
+    () =>
+      collaborationGraphViewBox(
+        layout,
+        nodes.map((node) => ({
+          id: node.id,
+          radius: nodeRadius(node.activeProjects),
+          showLabel: shouldShowLabel(node),
+        })),
+        { x: 24, top: 16, bottom: 20 }
+      ),
+    [layout, nodes, activeNodeId, selectedNodeId]
+  )
 
   return (
     <div
       className={cn(
-        'relative aspect-[88/58] w-full overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10',
+        'relative min-h-0 w-full flex-1 overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10',
         className
       )}
       data-slot="collaboration-graph"
     >
       <svg
-        viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+        viewBox={viewBox}
         preserveAspectRatio="xMidYMid meet"
         className="absolute inset-0 size-full"
         role="img"
@@ -126,11 +145,7 @@ export function CollaborationNetworkGraph({
             const inNeighborhood = neighborIds?.has(node.id) ?? true
             const dimmed = hasFocus && !inNeighborhood && !isSelected
             const r = nodeRadius(node.activeProjects)
-            const showLabel =
-              nodes.length <= 28 ||
-              node.collaborators >= 4 ||
-              node.id === activeNodeId ||
-              isSelected
+            const showLabel = shouldShowLabel(node)
             return (
               <g
                 key={node.id}
@@ -154,7 +169,7 @@ export function CollaborationNetworkGraph({
                     x={p.x}
                     y={p.y + r + 9}
                     textAnchor="middle"
-                    className="pointer-events-none fill-foreground/70 text-[9px]"
+                    className="pointer-events-none fill-foreground/70 text-[10px]"
                   >
                     {node.name}
                   </text>
@@ -165,14 +180,9 @@ export function CollaborationNetworkGraph({
         </g>
       </svg>
 
-      {hoveredNode && hoveredPoint ? (
+      {hoveredNode ? (
         <div
-          className="pointer-events-none absolute z-10 w-48 rounded-lg border border-border bg-popover/90 px-3 py-2 text-popover-foreground shadow-lg backdrop-blur-sm"
-          style={{
-            left: `${(hoveredPoint.x / VIEW_W) * 100}%`,
-            top: `${(hoveredPoint.y / VIEW_H) * 100}%`,
-            transform: `translate(-50%, calc(-100% - ${nodeRadius(hoveredNode.activeProjects) + 22}px))`,
-          }}
+          className="pointer-events-none absolute left-3 top-3 z-10 w-48 rounded-lg border border-border bg-popover/90 px-3 py-2 text-popover-foreground shadow-lg backdrop-blur-sm"
         >
           <p className="truncate text-sm font-medium">{hoveredNode.name}</p>
           <p className="text-[0.7rem] text-muted-foreground">{hoveredNode.roleLabel}</p>

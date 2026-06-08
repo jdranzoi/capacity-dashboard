@@ -31,7 +31,7 @@ export async function CollaborationNetworkBlock({
       .sort((a, b) => a.label.localeCompare(b.label, 'en'))
 
     return (
-      <div className="flex flex-col gap-8">
+      <div className="flex min-w-0 flex-col gap-8">
         <DashboardSectionHeader
           title="Collaboration network"
           subtitle={`Planned staffing relationships across projects · ${data.monthLabel}`}

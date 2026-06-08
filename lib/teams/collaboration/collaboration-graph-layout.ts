@@ -46,7 +46,7 @@ export function computeCollaborationLayout(
     return positions
   }
 
-  const radius = Math.min(width, height) * 0.4
+  const radius = Math.min(width, height) * 0.32
   nodes.forEach((node, index) => {
     const seed = hashSeed(node.id)
     const angle = (index / n) * Math.PI * 2 + seed * 0.6
@@ -58,7 +58,7 @@ export function computeCollaborationLayout(
   })
 
   const area = width * height
-  const k = Math.sqrt(area / n) * 0.62
+  const k = Math.sqrt(area / n) * 0.5
   const k2 = k * k
   let temperature = Math.min(width, height) * 0.18
 
@@ -101,7 +101,7 @@ export function computeCollaborationLayout(
       const dy = pa.y - pb.y
       const dist = Math.sqrt(dx * dx + dy * dy) || 0.01
       const strength = 1 + Math.log2(1 + edge.weight)
-      const force = ((dist * dist) / k) * strength * 0.04
+      const force = ((dist * dist) / k) * strength * 0.065
       const fx = (dx / dist) * force
       const fy = (dy / dist) * force
       const da = disp.get(edge.source)!
@@ -127,8 +127,51 @@ export function computeCollaborationLayout(
     temperature *= 0.985
   }
 
-  fitToBounds(positions, width, height, 48)
+  fitToBounds(positions, width, height, 28)
   return positions
+}
+
+export type CollaborationGraphViewBoxPadding = {
+  x: number
+  top: number
+  bottom: number
+}
+
+/** Tight SVG viewBox around laid-out nodes (includes label clearance below each node). */
+export function collaborationGraphViewBox(
+  layout: Map<string, LayoutPoint>,
+  nodeExtents: ReadonlyArray<{ id: string; radius: number; showLabel: boolean }>,
+  padding: CollaborationGraphViewBoxPadding = { x: 28, top: 20, bottom: 24 },
+  fallbackWidth = 880,
+  fallbackHeight = 580
+): string {
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+
+  for (const node of nodeExtents) {
+    const p = layout.get(node.id)
+    if (!p) continue
+    const labelClearance = node.showLabel ? 14 : 0
+    minX = Math.min(minX, p.x - node.radius)
+    maxX = Math.max(maxX, p.x + node.radius)
+    minY = Math.min(minY, p.y - node.radius)
+    maxY = Math.max(maxY, p.y + node.radius + labelClearance)
+  }
+
+  if (!Number.isFinite(minX)) {
+    return `0 0 ${fallbackWidth} ${fallbackHeight}`
+  }
+
+  minX -= padding.x
+  maxX += padding.x
+  minY -= padding.top
+  maxY += padding.bottom
+
+  const width = Math.max(maxX - minX, 1)
+  const height = Math.max(maxY - minY, 1)
+  return `${minX} ${minY} ${width} ${height}`
 }
 
 function fitToBounds(

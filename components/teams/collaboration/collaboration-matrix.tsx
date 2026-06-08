@@ -35,7 +35,7 @@ export function CollaborationMatrix({
     return (
       <div
         className={cn(
-          'rounded-xl bg-card p-6 text-sm text-muted-foreground ring-1 ring-foreground/10',
+          'flex h-full min-h-0 items-center rounded-xl bg-card p-6 text-sm text-muted-foreground ring-1 ring-foreground/10',
           className
         )}
       >
@@ -46,17 +46,20 @@ export function CollaborationMatrix({
 
   return (
     <div
-      className={cn('rounded-xl bg-card p-4 ring-1 ring-foreground/10', className)}
+      className={cn(
+        'flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-card p-4 ring-1 ring-foreground/10',
+        className
+      )}
       data-slot="collaboration-matrix"
     >
-      <div className="mb-3 space-y-0.5">
+      <div className="mb-3 shrink-0 space-y-0.5">
         <h3 className="text-sm font-medium">PM ↔ TL collaboration matrix</h3>
         <p className="text-[0.7rem] text-muted-foreground">
           TL rows × PM columns · shared projects per pair
         </p>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full border-separate border-spacing-1 text-[0.72rem]">
+      <div className="min-h-0 flex-1 overflow-auto">
+        <table className="w-full border-separate border-spacing-0.5 text-[0.72rem]">
           <thead>
             <tr>
               <th className="sticky left-0 z-10 bg-card px-2 py-1 text-left font-medium text-muted-foreground">
@@ -65,9 +68,14 @@ export function CollaborationMatrix({
               {matrix.pms.map((pm) => (
                 <th
                   key={pm.id}
-                  className="px-2 py-1 text-left align-bottom font-medium text-muted-foreground"
+                  className="px-0.5 pb-1 align-bottom font-medium text-muted-foreground"
                 >
-                  <span className="block max-w-[6.5rem] truncate">{pm.name}</span>
+                  <span
+                    className="inline-block max-h-[5.5rem] truncate [writing-mode:vertical-rl] rotate-180"
+                    title={pm.name}
+                  >
+                    {pm.name}
+                  </span>
                 </th>
               ))}
             </tr>
@@ -75,7 +83,7 @@ export function CollaborationMatrix({
           <tbody>
             {matrix.tls.map((tl) => (
               <tr key={tl.id}>
-                <th className="sticky left-0 z-10 max-w-[8rem] truncate bg-card px-2 py-1 text-left font-medium">
+                <th className="sticky left-0 z-10 max-w-[7rem] truncate bg-card px-2 py-1 text-left font-medium">
                   {tl.name}
                 </th>
                 {matrix.pms.map((pm) => {
@@ -90,7 +98,7 @@ export function CollaborationMatrix({
                         onClick={() => onSelectCell(key)}
                         style={{ backgroundColor: heatBackground(value, matrix.maxValue) }}
                         className={cn(
-                          'flex h-8 w-full min-w-[2.75rem] items-center justify-center rounded-md tabular-nums transition-colors',
+                          'flex h-7 w-full min-w-[1.75rem] items-center justify-center rounded-md tabular-nums transition-colors',
                           value > 0
                             ? 'cursor-pointer text-foreground hover:ring-1 hover:ring-foreground/30'
                             : 'cursor-default text-muted-foreground/40',

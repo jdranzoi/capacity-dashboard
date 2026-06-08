@@ -76,6 +76,7 @@ export function CollaborationDetailAside({
         node={selectedNode}
         neighbors={neighborsOf(selectedNode.id, data.edges, nodeById)}
         distribution={roleDistribution(selectedNode.id, data.edges, nodeById)}
+        monthKey={data.monthKey}
         onClose={onClose}
         onSelectNode={onSelectNode}
         className={className}
@@ -100,7 +101,7 @@ function AsidePlaceholder({
   return (
     <div
       className={cn(
-        'rounded-xl bg-card p-4 text-sm text-muted-foreground ring-1 ring-foreground/10',
+        'flex h-full min-h-0 items-center rounded-xl bg-card p-4 text-sm text-muted-foreground ring-1 ring-foreground/10',
         className
       )}
     >

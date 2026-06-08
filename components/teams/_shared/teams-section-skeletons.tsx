@@ -59,12 +59,12 @@ export function TeamsCompositionGridSkeleton() {
 export function TeamsCollaborationSkeleton() {
   return (
     <div className="flex flex-col gap-8">
-      <TeamsKpiRowSkeleton count={5} />
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Skeleton className="aspect-[88/58] rounded-xl border border-border lg:col-span-2" />
-        <Skeleton className="h-[28rem] rounded-xl border border-border" />
+      <TeamsKpiRowSkeleton count={6} />
+      <div className="grid min-w-0 gap-4 lg:h-[min(42rem,calc(100vh-11rem))] lg:grid-cols-[minmax(0,3fr)_minmax(0,4fr)_minmax(0,3fr)]">
+        <Skeleton className="h-72 rounded-xl border border-border lg:h-auto" />
+        <Skeleton className="h-72 rounded-xl border border-border lg:h-auto" />
+        <Skeleton className="h-72 rounded-xl border border-border lg:h-auto" />
       </div>
-      <Skeleton className="h-64 rounded-xl border border-border" />
     </div>
   )
 }

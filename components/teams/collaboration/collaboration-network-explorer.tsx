@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { CollaborationDetailAside } from '@/components/teams/collaboration/collaboration-detail-aside'
-import { CollaborationInsightsPanel } from '@/components/teams/collaboration/collaboration-insights-panel'
 import { CollaborationMatrix } from '@/components/teams/collaboration/collaboration-matrix'
 import { CollaborationNetworkGraph } from '@/components/teams/collaboration/collaboration-network-graph'
 import { CollaborationRoleLegend } from '@/components/teams/collaboration/collaboration-role-legend'
@@ -56,67 +55,59 @@ export function CollaborationNetworkExplorer({ data }: { data: CollaborationNetw
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-        <CollaborationMatrix
-          matrix={data.matrix}
-          selectedEdgeKey={selectedEdgeKey}
-          onSelectCell={selectEdge}
-          className="min-w-0"
-        />
-        <CollaborationDetailAside
-          data={data}
-          selectedNodeId={selectedNodeId}
-          selectedEdgeKey={selectedEdgeKey}
-          onClose={clearSelection}
-          onSelectNode={selectNode}
-          className="min-w-0 lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto"
-        />
-      </div>
+    <div className="grid min-w-0 gap-4 lg:h-[min(42rem,calc(100vh-11rem))] lg:grid-cols-[minmax(0,3fr)_minmax(0,4fr)_minmax(0,3fr)] lg:items-stretch">
+      <CollaborationMatrix
+        matrix={data.matrix}
+        selectedEdgeKey={selectedEdgeKey}
+        onSelectCell={selectEdge}
+        className="h-full min-h-0"
+      />
 
-      <div className="grid gap-4 lg:grid-cols-3 lg:items-stretch">
-        <div className="flex min-h-0 flex-col gap-2 lg:col-span-2">
-          <CollaborationRoleLegend
-            roles={legendRoles}
-            visibleRoleKeys={visibleRoleKeys}
-            onToggleRole={(roleKey) => {
-              setVisibleRoleKeys((prev) => {
-                const next = new Set(prev)
-                if (next.has(roleKey)) {
-                  if (next.size <= 1) return prev
-                  next.delete(roleKey)
-                } else {
-                  next.add(roleKey)
-                }
-                return next
-              })
-            }}
-            onShowAll={() => setVisibleRoleKeys(new Set(legendRoles.map((r) => r.key)))}
-            onHideAll={() => setVisibleRoleKeys(defaultVisibleRoleKeys(legendRoles))}
+      <div className="flex h-full min-h-0 flex-col gap-2">
+        <CollaborationRoleLegend
+          roles={legendRoles}
+          visibleRoleKeys={visibleRoleKeys}
+          onToggleRole={(roleKey) => {
+            setVisibleRoleKeys((prev) => {
+              const next = new Set(prev)
+              if (next.has(roleKey)) {
+                if (next.size <= 1) return prev
+                next.delete(roleKey)
+              } else {
+                next.add(roleKey)
+              }
+              return next
+            })
+          }}
+          onShowAll={() => setVisibleRoleKeys(new Set(legendRoles.map((r) => r.key)))}
+          onHideAll={() => setVisibleRoleKeys(defaultVisibleRoleKeys(legendRoles))}
+          className="shrink-0"
+        />
+        {visibleNodes.length === 0 ? (
+          <div className="flex min-h-[clamp(13rem,32vh,22rem)] flex-1 items-center justify-center rounded-xl bg-card p-6 text-center text-sm text-muted-foreground ring-1 ring-foreground/10 lg:min-h-0">
+            Select at least one role to display the network.
+          </div>
+        ) : (
+          <CollaborationNetworkGraph
+            nodes={visibleNodes}
+            edges={visibleEdges}
+            selectedNodeId={selectedNodeId}
+            selectedEdgeKey={selectedEdgeKey}
+            onSelectNode={selectNode}
+            onSelectEdge={selectEdge}
+            className="min-h-[clamp(13rem,32vh,22rem)] flex-1 lg:min-h-0"
           />
-          {visibleNodes.length === 0 ? (
-            <div className="flex aspect-[88/58] w-full items-center justify-center rounded-xl bg-card text-sm text-muted-foreground ring-1 ring-foreground/10">
-              Select at least one role to display the network.
-            </div>
-          ) : (
-            <CollaborationNetworkGraph
-              nodes={visibleNodes}
-              edges={visibleEdges}
-              selectedNodeId={selectedNodeId}
-              selectedEdgeKey={selectedEdgeKey}
-              onSelectNode={selectNode}
-              onSelectEdge={selectEdge}
-            />
-          )}
-        </div>
-
-        <CollaborationInsightsPanel
-          insights={data.insights}
-          onSelectNode={selectNode}
-          onSelectEdge={selectEdge}
-          className="min-h-0 lg:col-start-3 lg:h-full"
-        />
+        )}
       </div>
+
+      <CollaborationDetailAside
+        data={data}
+        selectedNodeId={selectedNodeId}
+        selectedEdgeKey={selectedEdgeKey}
+        onClose={clearSelection}
+        onSelectNode={selectNode}
+        className="h-full min-h-0 overflow-y-auto"
+      />
     </div>
   )
 }

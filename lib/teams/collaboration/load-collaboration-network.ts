@@ -54,7 +54,6 @@ type CachedGraph = {
   projects: CollaborationNetworkPayload['projects']
   matrix: CollaborationNetworkPayload['matrix']
   kpis: CollaborationNetworkPayload['kpis']
-  insights: CollaborationNetworkPayload['insights']
   categoryOptions: CollaborationCategoryOption[]
 }
 
@@ -262,7 +261,6 @@ async function loadCollaborationGraphData(
       projects: graph.projects,
       matrix: graph.matrix,
       kpis: graph.kpis,
-      insights: graph.insights,
       categoryOptions,
     },
     error: null,
@@ -395,7 +393,6 @@ export async function loadCollaborationNetwork(
       projects: graph.projects,
       matrix: graph.matrix,
       kpis: graph.kpis,
-      insights: graph.insights,
       syncCreatedAt: selected.syncCreatedAt,
     },
     error: null,

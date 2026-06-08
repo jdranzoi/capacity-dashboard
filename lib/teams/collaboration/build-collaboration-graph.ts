@@ -6,7 +6,6 @@ import {
   TL_ROLE_KEY,
 } from '@/lib/teams/collaboration/collaboration-ui-utils'
 import type {
-  CollaborationInsights,
   CollaborationKpis,
   CollaborationMatrix,
   CollaborationMatrixCell,
@@ -85,7 +84,6 @@ export type CollaborationGraphResult = {
   projects: Record<string, CollaborationProjectRef>
   matrix: CollaborationMatrix
   kpis: CollaborationKpis
-  insights: CollaborationInsights
 }
 
 type EdgeAccumulator = {
@@ -227,9 +225,8 @@ export function buildCollaborationGraph(
   const matrix = buildMatrix(peopleById, projectMembers)
   const projectKpis = buildProjectKpis(participations, peopleById, projectsById)
   const kpis = { ...buildKpis(nodes, edgeList), ...projectKpis }
-  const insights = buildInsights(nodes, edgeList, matrix)
 
-  return { nodes, edges: edgeList, projects, matrix, kpis, insights }
+  return { nodes, edges: edgeList, projects, matrix, kpis }
 }
 
 function buildMatrix(
@@ -312,53 +309,4 @@ function mostConnectedTlNode(
     if (!best || node.collaborators > best.collaborators) best = node
   }
   return best ? { id: best.id, name: best.name, connections: best.collaborators } : null
-}
-
-function buildInsights(
-  nodes: CollaborationNode[],
-  edges: BuiltCollaborationEdge[],
-  matrix: CollaborationMatrix
-): CollaborationInsights {
-  const nameById = new Map(nodes.map((node) => [node.id, node.name]))
-
-  let strongest: CollaborationMatrixCell | null = null
-  for (const cell of matrix.cells) {
-    if (!strongest || cell.sharedProjects > strongest.sharedProjects) strongest = cell
-  }
-  const strongestPmTlPair =
-    strongest && nameById.has(strongest.pmId) && nameById.has(strongest.tlId)
-      ? {
-          pm: { id: strongest.pmId, name: nameById.get(strongest.pmId)! },
-          tl: { id: strongest.tlId, name: nameById.get(strongest.tlId)! },
-          sharedProjects: strongest.sharedProjects,
-        }
-      : null
-
-  let fragmented: CollaborationNode | null = null
-  for (const node of nodes) {
-    if (node.fragmentationTotalCount == null) continue
-    if (
-      !fragmented ||
-      node.fragmentationTotalCount > (fragmented.fragmentationTotalCount ?? -1)
-    ) {
-      fragmented = node
-    }
-  }
-  const highestFragmentation = fragmented
-    ? {
-        id: fragmented.id,
-        name: fragmented.name,
-        totalCount: fragmented.fragmentationTotalCount ?? 0,
-        flagged: fragmented.fragmentationFlagged ?? false,
-      }
-    : null
-
-  const isolatedResources = nodes.filter((node) => node.collaborators <= 1).length
-
-  return {
-    strongestPmTlPair,
-    highestFragmentation,
-    mostConnectedTl: mostConnectedTlNode(nodes),
-    isolatedResources,
-  }
 }

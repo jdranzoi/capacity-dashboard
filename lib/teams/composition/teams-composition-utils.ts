@@ -241,3 +241,8 @@ export function buildTypeGroup(
 export function compositionSectionId(projectType: CompositionProjectType): string {
   return `teams-composition-${projectType}`
 }
+
+export function teamsCompositionPersonHref(personName: string, monthKey: string): string {
+  const params = new URLSearchParams({ q: personName, month: monthKey })
+  return `/teams/composition?${params.toString()}`
+}

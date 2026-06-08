@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { X } from "lucide-react";
 
-import { CollaborationRoleDot } from "@/components/teams/collaboration/collaboration-role-dot";
+import { RoleBadge } from "@/components/ui/role-badge";
 import { PM_ROLE_KEY, TL_ROLE_KEY } from '@/lib/teams/collaboration/collaboration-ui-utils'
 import { cn } from "@/lib/utils";
 import type {
@@ -19,14 +19,26 @@ function formatDate(value: string | null): string {
   return parsed.toLocaleDateString("en", { month: "short", year: "numeric" });
 }
 
-function PersonHeading({ node }: { node: CollaborationNode }) {
+function PersonHeading({
+  node,
+  onSelectNode,
+}: {
+  node: CollaborationNode
+  onSelectNode: (id: string) => void
+}) {
   const projectLabel = node.totalProjects === 1 ? "project" : "projects";
   return (
     <div className="min-w-0">
-      <div className="flex items-center gap-1.5">
-        <CollaborationRoleDot roleKey={node.roleKey} />
-        <p className="truncate text-sm font-medium">{node.name}</p>
-      </div>
+      <button
+        type="button"
+        onClick={() => onSelectNode(node.id)}
+        className="max-w-full hover:opacity-80"
+        aria-label={`View ${node.name} details`}
+      >
+        <RoleBadge roleKey={node.roleKey} className="text-sm">
+          {node.name}
+        </RoleBadge>
+      </button>
       <p className="text-[0.7rem] text-muted-foreground">{node.roleLabel}</p>
       <p className="text-[0.7rem] tabular-nums text-muted-foreground">
         {node.totalProjects} {projectLabel}
@@ -114,9 +126,9 @@ export function CollaborationRelationshipPanel({
       </div>
 
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-        <PersonHeading node={pm} />
+        <PersonHeading node={pm} onSelectNode={onSelectNode} />
         <span className="text-muted-foreground">↔</span>
-        <PersonHeading node={tl} />
+        <PersonHeading node={tl} onSelectNode={onSelectNode} />
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-2">
@@ -168,10 +180,11 @@ export function CollaborationRelationshipPanel({
                 key={member.id}
                 type="button"
                 onClick={() => onSelectNode(member.id)}
-                className="flex items-center gap-1.5 rounded-full bg-muted/40 px-2.5 py-1 text-[0.72rem] hover:bg-muted/70"
+                className="hover:opacity-80"
               >
-                <CollaborationRoleDot roleKey={member.roleKey} />
-                <span className="max-w-[8rem] truncate">{member.name}</span>
+                <RoleBadge roleKey={member.roleKey} className="max-w-[8rem]">
+                  {member.name}
+                </RoleBadge>
               </button>
             ))}
           </div>

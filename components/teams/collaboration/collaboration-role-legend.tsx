@@ -1,6 +1,6 @@
 'use client'
 
-import { CollaborationRoleDot } from '@/components/teams/collaboration/collaboration-role-dot'
+import { RoleBadge } from '@/components/ui/role-badge'
 import { cn } from '@/lib/utils'
 
 export function CollaborationRoleLegend({
@@ -9,12 +9,14 @@ export function CollaborationRoleLegend({
   onToggleRole,
   onShowAll,
   onHideAll,
+  className,
 }: {
   roles: { key: string; label: string }[]
   visibleRoleKeys: ReadonlySet<string>
   onToggleRole: (roleKey: string) => void
   onShowAll: () => void
   onHideAll: () => void
+  className?: string
 }) {
   if (roles.length === 0) return null
 
@@ -23,7 +25,10 @@ export function CollaborationRoleLegend({
 
   return (
     <div
-      className="flex flex-col gap-2 rounded-lg border border-border px-3 py-2 text-[var(--collab-role-legend-fg)]"
+      className={cn(
+        'flex flex-col gap-2 rounded-lg border border-border px-3 py-2 text-[var(--collab-role-legend-fg)]',
+        className
+      )}
       style={{ backgroundColor: 'var(--collab-role-legend-bg)' }}
       data-slot="collaboration-role-legend"
     >
@@ -57,10 +62,8 @@ export function CollaborationRoleLegend({
             <label
               key={role.key}
               className={cn(
-                'flex cursor-pointer items-center gap-2 text-[0.72rem] transition-opacity',
-                checked
-                  ? 'text-[var(--collab-role-legend-fg)]'
-                  : 'text-[var(--collab-role-legend-muted)] opacity-55'
+                'flex cursor-pointer items-center gap-2 transition-opacity',
+                !checked && 'opacity-55'
               )}
             >
               <input
@@ -69,8 +72,7 @@ export function CollaborationRoleLegend({
                 onChange={() => onToggleRole(role.key)}
                 className="size-3.5 rounded border-border accent-foreground"
               />
-              <CollaborationRoleDot roleKey={role.key} />
-              <span>{role.label}</span>
+              <RoleBadge roleKey={role.key}>{role.label}</RoleBadge>
             </label>
           )
         })}
