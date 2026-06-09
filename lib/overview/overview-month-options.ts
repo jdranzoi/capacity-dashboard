@@ -1,6 +1,6 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import { createServiceClientCached } from '@/lib/supabase/server'
-import { endOfMonth, format, parseISO, startOfMonth } from 'date-fns'
+import { addMonths, endOfMonth, format, parseISO, startOfMonth, subMonths } from 'date-fns'
 
 import { CACHE_TAG_OVERVIEW_MONTHS } from '@/lib/data/cache-tags'
 import { formatMonthLabel } from '@/lib/overview/working-days'
@@ -40,14 +40,28 @@ type DashboardMonthOptionRow = {
 }
 
 /** `through-current` — overview/historical pickers. `from-current-forward` — planning horizon. */
-export type OverviewMonthWindow = 'through-current' | 'from-current-forward'
+export type OverviewMonthWindow =
+  | 'through-current'
+  | 'from-current-forward'
+  | { monthsBefore: number; monthsAfter: number }
 
 function filterDashboardMonthRows(
   rows: DashboardMonthOptionRow[],
   window: OverviewMonthWindow
 ): DashboardMonthOptionRow[] {
-  const currentKey = format(startOfMonth(new Date()), 'yyyy-MM')
-  const ceiling = format(endOfMonth(new Date()), 'yyyy-MM-dd')
+  const anchor = startOfMonth(new Date())
+  const currentKey = format(anchor, 'yyyy-MM')
+
+  if (typeof window === 'object') {
+    const minKey = format(subMonths(anchor, window.monthsBefore), 'yyyy-MM')
+    const maxKey = format(addMonths(anchor, window.monthsAfter), 'yyyy-MM')
+    return rows.filter((row) => {
+      const key = row.month_date.slice(0, 7)
+      return key >= minKey && key <= maxKey
+    })
+  }
+
+  const ceiling = format(endOfMonth(anchor), 'yyyy-MM-dd')
   if (window === 'from-current-forward') {
     return rows.filter((row) => row.month_date.slice(0, 7) >= currentKey)
   }

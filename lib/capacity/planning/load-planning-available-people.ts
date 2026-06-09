@@ -1,5 +1,3 @@
-import { cacheLife, cacheTag } from 'next/cache'
-
 import { fragmentationLabelFromFacts } from '@/lib/capacity/planning/planning-metrics'
 import { loadMonthFacts } from '@/lib/capacity/planning/load-planning-workspace'
 import { resolvePlanningPeriod } from '@/lib/capacity/planning/planning-route-period'
@@ -7,27 +5,20 @@ import type {
   PlanningAvailablePerson,
   PlanningMonthPersonFact,
 } from '@/lib/capacity/planning/planning-types'
-import { pagedQuery } from '@/lib/data/paged-query'
-import { CACHE_TAG_MONTH_FACTS, cacheTagSnapshot } from '@/lib/data/cache-tags'
+import {
+  loadFragmentationByPerson,
+  type FragmentationFactRow,
+} from '@/lib/data/load-fragmentation-by-person'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import { loadPlanningMonthOptions } from '@/lib/capacity/planning/load-planning-month-options'
 import {
   DEFAULT_PLANNING_MIN_AVAILABILITY,
   parsePlanningMinAvailabilityParam,
 } from '@/lib/capacity/planning/planning-available-people-filters'
-import { createServiceClientCached } from '@/lib/supabase/server'
-
-const PAGE = 1000
-
-type FragRow = {
-  person_id: string
-  flagged: boolean
-  total_count: number
-}
 
 export function selectAvailablePeopleFromMonthFacts(
   people: PlanningMonthPersonFact[],
-  fragByPerson: Map<string, FragRow>,
+  fragByPerson: Map<string, FragmentationFactRow>,
   params: { minAvailability: number; roleFilter: string | null }
 ): PlanningAvailablePerson[] {
   return people
@@ -50,28 +41,6 @@ export function selectAvailablePeopleFromMonthFacts(
     })
     .filter((row): row is PlanningAvailablePerson => row != null)
     .sort((a, b) => b.availableHours - a.availableHours)
-}
-
-async function loadFragmentationByPerson(
-  snapshotId: string,
-  monthStartStr: string
-): Promise<{ fragByPerson: Map<string, FragRow>; error: string | null }> {
-  'use cache'
-  cacheLife({ stale: 120, revalidate: 300 })
-  cacheTag(CACHE_TAG_MONTH_FACTS, cacheTagSnapshot(snapshotId))
-
-  const supabase = createServiceClientCached()
-  const fragRes = await pagedQuery<FragRow>(async (from) =>
-    supabase
-      .from('fact_fragmentation')
-      .select('person_id, flagged, total_count')
-      .eq('snapshot_id', snapshotId)
-      .eq('month_date', monthStartStr)
-      .range(from, from + PAGE - 1)
-  )
-
-  if (fragRes.error) return { fragByPerson: new Map(), error: fragRes.error }
-  return { fragByPerson: new Map(fragRes.rows.map((r) => [r.person_id, r])), error: null }
 }
 
 /**
@@ -191,7 +160,7 @@ export async function loadPlanningAvailablePeople(params: {
     }
   }
 
-  const people = selectAvailablePeopleFromMonthFacts(monthResult.data.people, fragResult.fragByPerson, {
+  const people = selectAvailablePeopleFromMonthFacts(monthResult.data.people, fragResult.byPerson, {
     minAvailability,
     roleFilter: selectedRole || null,
   })

@@ -3,14 +3,21 @@
 import { useMemo } from 'react'
 
 import { useTeamsRoutePending } from '@/components/teams/_shared/teams-route-pending-shell'
+import { TeamsMonthPicker } from '@/components/teams/_shared/teams-month-picker'
 import { FilterSuggestInput } from '@/components/ui/filter-suggest-input'
+import { DashboardFilterField } from '@/components/layout/dashboard-filter-field'
+import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
 import type { CompositionFilterSuggestions } from '@/lib/teams/composition/load-composition-filter-suggestions'
 import type { TeamsRouteFilters } from '@/lib/teams/shared/teams-route-filters'
 
 export function TeamsCompositionFilters({
+  monthOptions,
+  monthKey,
   routeFilters,
   suggestions,
 }: {
+  monthOptions: OverviewMonthOption[]
+  monthKey: string
   routeFilters: TeamsRouteFilters
   suggestions: CompositionFilterSuggestions
 }) {
@@ -29,7 +36,10 @@ export function TeamsCompositionFilters({
   )
 
   return (
-    <>
+    <div className="flex flex-wrap items-end gap-3" data-slot="teams-composition-filters">
+      <DashboardFilterField label="Period">
+        <TeamsMonthPicker options={monthOptions} selectedMonthKey={monthKey} />
+      </DashboardFilterField>
       <FilterSuggestInput
         paramKey="q"
         label="Name"
@@ -52,6 +62,6 @@ export function TeamsCompositionFilters({
         pendingNavigation={teamsPending}
         containerClassName="min-w-[12rem] sm:max-w-md"
       />
-    </>
+    </div>
   )
 }

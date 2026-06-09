@@ -196,6 +196,12 @@ export const NAV_DOMAINS: NavigationDomainConfig[] = [
       ),
       domainItem(
         'Teams',
+        'Collaboration network',
+        '/teams/collaboration-network',
+        'How people collaborate across projects. Co-participation graph, PM/TL matrix, stable groups, fragmentation, and concentration risk.'
+      ),
+      domainItem(
+        'Teams',
         'Dependencies',
         '/teams/dependencies',
         'Inter-team operational relationships. Shared resources, delivery dependencies, leadership overlap, collaboration patterns.',

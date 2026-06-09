@@ -112,6 +112,30 @@
   --search-highlight: oklch(0.84 0.16 92);
   --search-highlight-foreground: oklch(0.12 0 0);
   --search-highlight-ring: oklch(0.62 0.14 85);
+  /* Collaboration network role node colors (categorical encoding by dim_role.key) */
+  --collab-role-pm: oklch(0.55 0.19 252);
+  --collab-role-tl: oklch(0.52 0.2 305);
+  --collab-role-fsd: oklch(0.49 0.16 145);
+  --collab-role-fed: oklch(0.55 0.13 215);
+  --collab-role-qa: oklch(0.62 0.18 72);
+  --collab-role-ux: oklch(0.6 0.18 350);
+  --collab-role-analytics: oklch(0.54 0.12 190);
+  --collab-role-em: oklch(0.5 0.04 280);
+  --collab-role-unassigned: oklch(0.6 0 0);
+  /* Fallback palette for dim_role keys without a dedicated --collab-role-* token */
+  --collab-palette-0: oklch(0.58 0.17 35);
+  --collab-palette-1: oklch(0.52 0.14 165);
+  --collab-palette-2: oklch(0.56 0.16 15);
+  --collab-palette-3: oklch(0.5 0.15 120);
+  --collab-palette-4: oklch(0.54 0.14 270);
+  --collab-palette-5: oklch(0.57 0.13 200);
+  --collab-palette-6: oklch(0.6 0.16 85);
+  --collab-palette-7: oklch(0.48 0.12 230);
+  --collab-edge: oklch(0.45 0 0);
+  --collab-edge-strong: oklch(0.52 0.2 305);
+  --collab-role-legend-bg: oklch(1 0 0);
+  --collab-role-legend-fg: oklch(0.12 0 0);
+  --collab-role-legend-muted: oklch(0.48 0 0);
   /* sidebar geometry */
   --sidebar-w: 240px;
   --sidebar-w-collapsed: 52px;
@@ -171,6 +195,28 @@
   --search-highlight: oklch(0.72 0.17 88);
   --search-highlight-foreground: oklch(0.1 0 0);
   --search-highlight-ring: oklch(0.82 0.14 92);
+  --collab-role-pm: oklch(0.74 0.14 252);
+  --collab-role-tl: oklch(0.76 0.16 305);
+  --collab-role-fsd: oklch(0.7 0.14 145);
+  --collab-role-fed: oklch(0.74 0.11 215);
+  --collab-role-qa: oklch(0.8 0.14 72);
+  --collab-role-ux: oklch(0.76 0.15 350);
+  --collab-role-analytics: oklch(0.74 0.1 190);
+  --collab-role-em: oklch(0.72 0.04 280);
+  --collab-role-unassigned: oklch(0.6 0 0);
+  --collab-palette-0: oklch(0.78 0.14 35);
+  --collab-palette-1: oklch(0.72 0.12 165);
+  --collab-palette-2: oklch(0.76 0.14 15);
+  --collab-palette-3: oklch(0.7 0.13 120);
+  --collab-palette-4: oklch(0.74 0.12 270);
+  --collab-palette-5: oklch(0.75 0.11 200);
+  --collab-palette-6: oklch(0.8 0.14 85);
+  --collab-palette-7: oklch(0.68 0.1 230);
+  --collab-edge: oklch(1 0 0 / 22%);
+  --collab-edge-strong: oklch(0.76 0.16 305);
+  --collab-role-legend-bg: oklch(1 0 0);
+  --collab-role-legend-fg: oklch(0.12 0 0);
+  --collab-role-legend-muted: oklch(0.45 0 0);
 }
 
 @layer base {

@@ -523,7 +523,7 @@ export type Database = {
           build_projects: string[]
           created_at: string | null
           flag_reason: string | null
-          flagged: boolean
+          flagged: string
           id: string
           month_date: string
           person_id: string
@@ -539,7 +539,7 @@ export type Database = {
           build_projects?: string[]
           created_at?: string | null
           flag_reason?: string | null
-          flagged?: boolean
+          flagged?: string
           id?: string
           month_date: string
           person_id: string
@@ -555,7 +555,7 @@ export type Database = {
           build_projects?: string[]
           created_at?: string | null
           flag_reason?: string | null
-          flagged?: boolean
+          flagged?: string
           id?: string
           month_date?: string
           person_id?: string

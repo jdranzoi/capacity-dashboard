@@ -1,12 +1,10 @@
 import { connection } from 'next/server'
 
 import { TeamsCompositionFilters } from '@/components/teams/composition/teams-composition-filters'
-import { TeamsMonthPicker } from '@/components/teams/_shared/teams-month-picker'
 import {
   TeamsDataError,
   TeamsEmptyMonths,
 } from '@/components/teams/_shared/teams-data-error'
-import { DashboardFilterField } from '@/components/layout/dashboard-filter-field'
 import { DashboardSectionHeader } from '@/components/layout/dashboard-section-header'
 import { perfSpan } from '@/lib/dev/perf-log'
 import { loadCompositionFilterSuggestions } from '@/lib/teams/composition/load-composition-filter-suggestions'
@@ -49,15 +47,12 @@ export async function TeamsCompositionChromeBlock({
         title="Teams composition"
         subtitle="Project teams grouped by delivery type"
         filters={
-          <div className="flex flex-wrap items-end gap-3" data-slot="teams-composition-filters">
-            <DashboardFilterField label="Period">
-              <TeamsMonthPicker options={ctx.data.options} selectedMonthKey={selected.monthKey} />
-            </DashboardFilterField>
-            <TeamsCompositionFilters
-              routeFilters={routeFilters}
-              suggestions={suggestionsResult.data}
-            />
-          </div>
+          <TeamsCompositionFilters
+            monthOptions={ctx.data.options}
+            monthKey={selected.monthKey}
+            routeFilters={routeFilters}
+            suggestions={suggestionsResult.data}
+          />
         }
       />
     )
