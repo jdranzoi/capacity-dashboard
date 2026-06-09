@@ -2,6 +2,7 @@
 
 import { PlanningGridToolbarShell } from '@/components/capacity/planning/planning-grid-toolbar-shell'
 import { PlanningMonthVisibilityControl } from '@/components/capacity/planning/planning-month-visibility-control'
+import { PlannedUtilizationBandFilter } from '@/components/ui/planned-utilization-band-filter'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { RoleNameStaffFilter } from '@/components/ui/role-name-staff-filter'
 import {
@@ -13,14 +14,6 @@ import type {
 } from '@/lib/capacity/planning/planning-grid-filters'
 import type { PlanningMonthVisibilityFilter } from '@/lib/capacity/planning/planning-month-visibility'
 import type { StaffFilterMode } from '@/lib/ui/staff-filter-mode'
-
-const UTIL_BAND_OPTIONS = [
-  { value: 'all' as const, label: 'All' },
-  { value: 'lt40' as const, label: '<40' },
-  { value: 'lt60' as const, label: '<60' },
-  { value: 'lt80' as const, label: '<80' },
-  { value: 'gt80' as const, label: '>80' },
-]
 
 export function CapacityPlanningPeopleGridToolbar({
   mode,
@@ -76,12 +69,7 @@ export function CapacityPlanningPeopleGridToolbar({
         roleOptions={roleOptions}
       />
 
-      <SegmentedControl
-        label="Utilization"
-        value={utilBand}
-        onChange={onUtilBandChange}
-        options={UTIL_BAND_OPTIONS}
-      />
+      <PlannedUtilizationBandFilter value={utilBand} onChange={onUtilBandChange} />
 
       <PlanningMonthVisibilityControl
         monthKeys={monthKeys}

@@ -3,25 +3,19 @@
 import { ArrowDown, ArrowUp, Minus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import { SegmentedControl } from '@/components/ui/segmented-control'
+import { PlannedUtilizationBandFilter } from '@/components/ui/planned-utilization-band-filter'
 import {
   DataSectionPanel,
   DataSectionPanelHeader,
 } from '@/components/ui/data-section-panel'
 import {
-  PLANNING_UPCOMING_DEFAULT_UTIL_THRESHOLD,
-  PLANNING_UPCOMING_UTIL_THRESHOLD_PCT,
-  type PlanningUpcomingUtilThreshold,
-} from '@/lib/capacity/planning/planning-upcoming-availability-config'
+  DEFAULT_PLANNED_UTILIZATION_BAND_AVAILABILITY,
+  plannedUtilizationBandDescription,
+  type PlannedUtilizationBand,
+} from '@/lib/domain/planned-utilization-band'
 import { shortMonthLabel } from '@/lib/capacity/planning/planning-month-visibility'
-import type { PlanningUpcomingAvailabilityByThreshold } from '@/lib/capacity/planning/planning-types'
+import type { PlanningUpcomingAvailabilityByBand } from '@/lib/capacity/planning/planning-types'
 import { cn } from '@/lib/utils'
-
-const UTIL_THRESHOLD_OPTIONS = [
-  { value: 'lt40' as const, label: '<40' },
-  { value: 'lt60' as const, label: '<60' },
-  { value: 'lt80' as const, label: '<80' },
-]
 
 type AvailabilityMatrixRow = {
   roleCode: string
@@ -32,7 +26,7 @@ type AvailabilityMatrixRow = {
 type HeadcountTrend = 'up' | 'down' | 'flat'
 
 function buildAvailabilityMatrix(
-  events: PlanningUpcomingAvailabilityByThreshold[PlanningUpcomingUtilThreshold],
+  events: PlanningUpcomingAvailabilityByBand[PlannedUtilizationBand],
   monthKeys: string[]
 ): AvailabilityMatrixRow[] {
   const byRole = new Map<string, { roleLabel: string; counts: Record<string, number> }>()
@@ -84,20 +78,20 @@ function AvailabilityTrendIcon({ trend }: { trend: HeadcountTrend }) {
 }
 
 export function CapacityPlanningUpcomingAvailabilityCard({
-  availabilityByThreshold,
+  availabilityByBand,
   monthKeys,
   monthLabels,
 }: {
-  availabilityByThreshold: PlanningUpcomingAvailabilityByThreshold
+  availabilityByBand: PlanningUpcomingAvailabilityByBand
   monthKeys: string[]
   monthLabels: Record<string, string>
 }) {
-  const [utilThreshold, setUtilThreshold] = useState<PlanningUpcomingUtilThreshold>(
-    PLANNING_UPCOMING_DEFAULT_UTIL_THRESHOLD
+  const [utilBand, setUtilBand] = useState<PlannedUtilizationBand>(
+    DEFAULT_PLANNED_UTILIZATION_BAND_AVAILABILITY
   )
 
-  const utilPct = PLANNING_UPCOMING_UTIL_THRESHOLD_PCT[utilThreshold]
-  const events = availabilityByThreshold[utilThreshold]
+  const bandDescription = plannedUtilizationBandDescription(utilBand)
+  const events = availabilityByBand[utilBand]
 
   const matrixRows = useMemo(
     () => buildAvailabilityMatrix(events, monthKeys),
@@ -110,13 +104,10 @@ export function CapacityPlanningUpcomingAvailabilityCard({
     <DataSectionPanel dataSlot="capacity-planning-upcoming-availability" className="gap-3">
       <DataSectionPanelHeader
         title="Upcoming Availability"
-        description={`Roles with people under ${utilPct}% planned utilization (plan ÷ net).`}
         aside={
-          <SegmentedControl
-            label="Utilization"
-            value={utilThreshold}
-            onChange={setUtilThreshold}
-            options={UTIL_THRESHOLD_OPTIONS}
+          <PlannedUtilizationBandFilter
+            value={utilBand}
+            onChange={setUtilBand}
             className="shrink-0"
           />
         }
@@ -124,13 +115,13 @@ export function CapacityPlanningUpcomingAvailabilityCard({
 
       {!hasData ? (
         <p className="rounded-lg border border-dashed border-border px-3 py-5 text-center text-xs text-muted-foreground">
-          No roles under the utilization threshold in this period.
+          No roles match the utilization band in this period.
         </p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto w-full">
           <table
             className="w-full table-fixed border-collapse text-sm"
-            aria-label={`Availability matrix: roles under ${utilPct} percent planned utilization by month`}
+            aria-label={`Availability matrix: ${bandDescription}`}
           >
             <colgroup>
               <col />
@@ -215,6 +206,8 @@ export function CapacityPlanningUpcomingAvailabilityCard({
           </table>
         </div>
       )}
+
+      <p className="w-full text-[0.7rem] text-muted-foreground">{bandDescription}</p>
     </DataSectionPanel>
   )
 }

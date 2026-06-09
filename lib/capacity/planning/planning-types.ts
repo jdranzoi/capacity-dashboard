@@ -59,7 +59,7 @@ export type PlanningAvailablePerson = {
   fragmentationLabel: 'Healthy' | 'Moderate' | 'High'
 }
 
-import type { PlanningUpcomingUtilThreshold } from '@/lib/capacity/planning/planning-upcoming-availability-config'
+import type { PlannedUtilizationBand } from '@/lib/domain/planned-utilization-band'
 
 export type PlanningAvailabilityEvent = {
   monthKey: string
@@ -70,8 +70,8 @@ export type PlanningAvailabilityEvent = {
   headcount: number
 }
 
-export type PlanningUpcomingAvailabilityByThreshold = Record<
-  PlanningUpcomingUtilThreshold,
+export type PlanningUpcomingAvailabilityByBand = Record<
+  PlannedUtilizationBand,
   PlanningAvailabilityEvent[]
 >
 
@@ -80,7 +80,7 @@ export type CapacityPlanningWorkspacePayload = {
   monthKpis: PlanningMonthKpi[]
   peopleTreeRows: PlanningPeopleNode[]
   projectTreeRows: PlanningProjectNode[]
-  upcomingAvailabilityByThreshold: PlanningUpcomingAvailabilityByThreshold
+  upcomingAvailabilityByBand: PlanningUpcomingAvailabilityByBand
 }
 
 /** Raw person facts for one month — loader output before tree builders. */

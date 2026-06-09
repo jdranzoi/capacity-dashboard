@@ -1,15 +1,12 @@
-import { plannedPct } from '@/lib/domain/workload-metrics'
 import {
-  PLANNING_UPCOMING_DEFAULT_UTIL_THRESHOLD,
-  PLANNING_UPCOMING_UTIL_THRESHOLDS,
-  PLANNING_UPCOMING_UTIL_THRESHOLD_PCT,
-  planningUpcomingUtilThresholdPct,
-} from '@/lib/capacity/planning/planning-upcoming-availability-config'
+  PLANNED_UTILIZATION_BAND_OPTIONS,
+  personMatchesPlannedUtilizationBand,
+  type PlannedUtilizationBand,
+} from '@/lib/domain/planned-utilization-band'
 import type {
   PlanningAvailabilityEvent,
   PlanningMonthFacts,
-  PlanningMonthPersonFact,
-  PlanningUpcomingAvailabilityByThreshold,
+  PlanningUpcomingAvailabilityByBand,
 } from '@/lib/capacity/planning/planning-types'
 
 type RoleHeadcountRollup = {
@@ -22,25 +19,14 @@ export function planningRoleAvailabilityCode(roleKey: string): string {
   return roleKey.toUpperCase()
 }
 
-export function personBelowPlannedUtilizationThreshold(
-  person: PlanningMonthPersonFact,
-  maxPlannedUtilPct: number
-): boolean {
-  const util = plannedPct(person.plannedHours, person.netCapacityHours)
-  if (util == null) return false
-  return util < maxPlannedUtilPct
-}
-
 /**
- * Per month and role: count people whose planned utilization is below the threshold
- * (same plan ÷ net definition as the people grid utilization bands).
+ * Per month and role: count people matching the utilization band
+ * (same plan ÷ net definition as the people grid utilization filter).
  */
 export function buildUpcomingAvailability(
   monthFacts: PlanningMonthFacts[],
   periodLabels: Record<string, string>,
-  maxPlannedUtilPct: number = planningUpcomingUtilThresholdPct(
-    PLANNING_UPCOMING_DEFAULT_UTIL_THRESHOLD
-  )
+  band: PlannedUtilizationBand
 ): PlanningAvailabilityEvent[] {
   const events: PlanningAvailabilityEvent[] = []
 
@@ -49,7 +35,7 @@ export function buildUpcomingAvailability(
 
     for (const person of month.people) {
       if (!person.roleId || !person.roleKey) continue
-      if (!personBelowPlannedUtilizationThreshold(person, maxPlannedUtilPct)) continue
+      if (!personMatchesPlannedUtilizationBand(person, band)) continue
 
       const key = person.roleKey
       let agg = byRole.get(key)
@@ -84,18 +70,14 @@ export function buildUpcomingAvailability(
   return events
 }
 
-export function buildUpcomingAvailabilityByThreshold(
+export function buildUpcomingAvailabilityByBand(
   monthFacts: PlanningMonthFacts[],
   periodLabels: Record<string, string>
-): PlanningUpcomingAvailabilityByThreshold {
+): PlanningUpcomingAvailabilityByBand {
   return Object.fromEntries(
-    PLANNING_UPCOMING_UTIL_THRESHOLDS.map((threshold) => [
-      threshold,
-      buildUpcomingAvailability(
-        monthFacts,
-        periodLabels,
-        PLANNING_UPCOMING_UTIL_THRESHOLD_PCT[threshold]
-      ),
+    PLANNED_UTILIZATION_BAND_OPTIONS.map((option) => [
+      option.value,
+      buildUpcomingAvailability(monthFacts, periodLabels, option.value),
     ])
-  ) as PlanningUpcomingAvailabilityByThreshold
+  ) as PlanningUpcomingAvailabilityByBand
 }

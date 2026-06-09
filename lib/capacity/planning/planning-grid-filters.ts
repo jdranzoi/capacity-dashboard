@@ -1,9 +1,13 @@
+import {
+  matchesPlannedUtilizationBand,
+  type PlannedUtilizationBand,
+} from '@/lib/domain/planned-utilization-band'
 import { plannedPct } from '@/lib/domain/workload-metrics'
 import type { ProjectSpaceTypeFilter } from '@/lib/domain/project-types'
 import type { PlanningPeopleNode, PlanningProjectNode } from '@/lib/capacity/planning/planning-types'
 import type { StaffFilterMode } from '@/lib/ui/staff-filter-mode'
 
-export type PlanningUtilizationBand = 'all' | 'lt40' | 'lt60' | 'lt80' | 'gt80'
+export type PlanningUtilizationBand = PlannedUtilizationBand
 export type PlanningProjectTypeFilter = ProjectSpaceTypeFilter
 export type PlanningTreeExpansion = 'expand' | 'collapse'
 
@@ -22,19 +26,6 @@ export function personPeriodUtilizationPct(
   return plannedPct(planned, net)
 }
 
-/** Planned utilization band for the full selected period (planned / net capacity). */
-export function matchesUtilizationBand(
-  pct: number | null,
-  band: PlanningUtilizationBand
-): boolean {
-  if (band === 'all') return true
-  if (pct == null) return false
-  if (band === 'lt40') return pct < 40
-  if (band === 'lt60') return pct < 60
-  if (band === 'lt80') return pct < 80
-  return pct > 80
-}
-
 export function filterPeopleTreeByUtilization(
   rows: PlanningPeopleNode[],
   monthKeys: string[],
@@ -45,7 +36,7 @@ export function filterPeopleTreeByUtilization(
   const out: PlanningPeopleNode[] = []
   for (const role of rows) {
     const people = (role.subRows ?? []).filter((person) =>
-      matchesUtilizationBand(personPeriodUtilizationPct(person, monthKeys), band)
+      matchesPlannedUtilizationBand(personPeriodUtilizationPct(person, monthKeys), band)
     )
     if (people.length > 0) out.push({ ...role, subRows: people })
   }

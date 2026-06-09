@@ -2,7 +2,7 @@ import { cache } from 'react'
 import { cacheLife, cacheTag } from 'next/cache'
 import { endOfMonth, format, parse } from 'date-fns'
 
-import { buildUpcomingAvailabilityByThreshold } from '@/lib/capacity/planning/build-upcoming-availability'
+import { buildUpcomingAvailabilityByBand } from '@/lib/capacity/planning/build-upcoming-availability'
 import {
   buildPlanningMonthKpis,
   buildPlanningPeopleTree,
@@ -237,7 +237,7 @@ export async function loadPlanningWorkspace(params: {
       monthKpis: buildPlanningMonthKpis(period, monthFacts),
       peopleTreeRows: buildPlanningPeopleTree(period, monthFacts),
       projectTreeRows: buildPlanningProjectTree(period, monthFacts),
-      upcomingAvailabilityByThreshold: buildUpcomingAvailabilityByThreshold(
+      upcomingAvailabilityByBand: buildUpcomingAvailabilityByBand(
         monthFacts,
         period.monthLabels
       ),
@@ -409,7 +409,16 @@ export function getMockPlanningWorkspace(): CapacityPlanningWorkspacePayload {
     })),
     peopleTreeRows,
     projectTreeRows,
-    upcomingAvailabilityByThreshold: {
+    upcomingAvailabilityByBand: {
+      all: [
+        {
+          monthKey: '2026-07',
+          monthLabel: 'Jul 2026',
+          roleCode: 'FSD',
+          roleLabel: 'Full Stack Developer',
+          headcount: 4,
+        },
+      ],
       lt40: [
         {
           monthKey: '2026-07',
@@ -456,6 +465,15 @@ export function getMockPlanningWorkspace(): CapacityPlanningWorkspacePayload {
           roleCode: 'QA',
           roleLabel: 'QA Tester',
           headcount: 2,
+        },
+      ],
+      gt80: [
+        {
+          monthKey: '2026-07',
+          monthLabel: 'Jul 2026',
+          roleCode: 'TL',
+          roleLabel: 'Tech Lead',
+          headcount: 1,
         },
       ],
     },
