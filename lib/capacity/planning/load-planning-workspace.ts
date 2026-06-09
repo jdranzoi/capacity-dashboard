@@ -23,7 +23,7 @@ import { roundDisplayStat } from '@/lib/format/display-stats'
 import { loadPlanningMonthOptions } from '@/lib/capacity/planning/load-planning-month-options'
 import { fetchPlanningMonthRolesForPeople } from '@/lib/capacity/planning/resolve-planning-month-roles'
 import { createServiceClientCached } from '@/lib/supabase/server'
-import { isCompositionProjectType } from '@/lib/teams/composition/teams-composition-utils'
+import { isProjectSpaceType } from '@/lib/domain/project-types'
 
 const PAGE = 1000
 
@@ -155,7 +155,7 @@ export async function loadMonthFacts(
           projectId: p.id,
           projectKey: p.project_key,
           projectName: p.project_name ?? p.project_key,
-          projectType: isCompositionProjectType(p.project_type) ? p.project_type : null,
+          projectType: isProjectSpaceType(p.project_type) ? p.project_type : null,
         })
       }
     }

@@ -16,10 +16,8 @@ import {
 } from "@/components/ui/data-section-panel";
 import { fmtHoursKpi, fmtPct } from "@/lib/overview/overview-metrics";
 import type { ProjectDetailPanelPayload } from "@/lib/projects/overview/projects-types";
-import {
-  COMPOSITION_TYPE_SECTIONS,
-  projectCardTitle,
-} from "@/lib/teams/composition/teams-composition-utils";
+import { projectSpaceTypeLabel } from "@/lib/domain/project-types";
+import { projectCardTitle } from "@/lib/teams/composition/teams-composition-utils";
 import { cn } from "@/lib/utils";
 import { dashboardSurfaceClass } from "@/lib/ui/dashboard-surface";
 
@@ -30,15 +28,6 @@ function formatStartDate(iso: string | null): string | null {
   } catch {
     return iso;
   }
-}
-
-function spaceTypeLabel(
-  projectType: ProjectDetailPanelPayload["projectType"],
-): string {
-  return (
-    COMPOSITION_TYPE_SECTIONS.find((s) => s.projectType === projectType)
-      ?.label ?? projectType
-  );
 }
 
 const DETAIL_META_TAG_CLASS = {
@@ -84,7 +73,7 @@ function ProjectDetailMetaRow({ detail }: { detail: ProjectDetailPanelPayload })
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <DetailMetaTag tone="type">{spaceTypeLabel(detail.projectType)}</DetailMetaTag>
+      <DetailMetaTag tone="type">{projectSpaceTypeLabel(detail.projectType)}</DetailMetaTag>
       <DetailMetaTag tone="pm">PM: {detail.pmName ?? "—"}</DetailMetaTag>
       <DetailMetaTag tone="tl">TL: {detail.tlNames ?? "—"}</DetailMetaTag>
       {started ? (

@@ -1,10 +1,10 @@
-import type { CompositionProjectType } from '@/lib/teams/composition/teams-composition-utils'
+import type { ProjectSpaceType } from '@/lib/domain/project-types'
 
 export type ProjectOverviewRow = {
   projectId: string
   projectKey: string
   projectName: string | null
-  projectType: CompositionProjectType
+  projectType: ProjectSpaceType
   status: string
   startDate: string | null
   budgetHours: number | null
@@ -66,7 +66,7 @@ export type ProjectDetailPanelPayload = {
   projectId: string
   projectKey: string
   projectName: string | null
-  projectType: CompositionProjectType
+  projectType: ProjectSpaceType
   startDate: string | null
   targetReleaseDate: string | null
   budgetHours: number | null

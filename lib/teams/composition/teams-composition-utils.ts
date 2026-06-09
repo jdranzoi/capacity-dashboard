@@ -1,15 +1,6 @@
+import type { ProjectSpaceType } from '@/lib/domain/project-types'
+
 export const PM_ROLE_KEY = 'pm'
-
-export type CompositionProjectType = 'build' | 'support' | 'internal'
-
-export const COMPOSITION_TYPE_SECTIONS: ReadonlyArray<{
-  projectType: CompositionProjectType
-  label: string
-}> = [
-  { projectType: 'build', label: 'Build' },
-  { projectType: 'support', label: 'Support' },
-  { projectType: 'internal', label: 'Internal' },
-]
 
 /** Roster group order on project cards (`dim_role.key`). */
 export const COMPOSITION_MEMBER_ROLE_ORDER: readonly string[] = [
@@ -41,14 +32,14 @@ export type TeamsCompositionProject = {
   projectId: string
   projectKey: string
   projectName: string | null
-  projectType: CompositionProjectType
+  projectType: ProjectSpaceType
   pmName: string | null
   pmSortKey: string
   memberGroups: TeamsCompositionMemberGroup[]
 }
 
 export type TeamsCompositionTypeGroup = {
-  projectType: CompositionProjectType
+  projectType: ProjectSpaceType
   label: string
   projects: TeamsCompositionProject[]
 }
@@ -62,10 +53,6 @@ export type TeamsCompositionPayload = {
   groups: TeamsCompositionTypeGroup[]
   totalProjectCount: number
   visibleProjectCount: number
-}
-
-export function isCompositionProjectType(value: string): value is CompositionProjectType {
-  return value === 'build' || value === 'support' || value === 'internal'
 }
 
 export function projectCardTitle(project: {
@@ -222,7 +209,7 @@ export function filterProjectsByPersonQuery(
 }
 
 export function buildTypeGroup(
-  projectType: CompositionProjectType,
+  projectType: ProjectSpaceType,
   label: string,
   projects: TeamsCompositionProject[],
   filters: {
@@ -238,6 +225,6 @@ export function buildTypeGroup(
   }
 }
 
-export function compositionSectionId(projectType: CompositionProjectType): string {
+export function compositionSectionId(projectType: ProjectSpaceType): string {
   return `teams-composition-${projectType}`
 }

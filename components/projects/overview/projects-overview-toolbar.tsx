@@ -4,7 +4,7 @@ import { useCallback } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { SegmentedControl } from '@/components/ui/segmented-control'
-import { PROJECTS_OVERVIEW_TYPE_OPTIONS } from '@/lib/projects/overview/projects-overview-constants'
+import { PROJECT_SPACE_TYPES } from '@/lib/domain/project-types'
 import { useProjectsRoutePending } from '@/components/projects/_shared/projects-route-pending-shell'
 import { DashboardFilterField } from '@/components/layout/dashboard-filter-field'
 import { projectsOverviewHref } from '@/lib/projects/overview/projects-overview-nav'
@@ -38,7 +38,7 @@ export function ProjectsOverviewToolbar({
         label="Project type"
         value={category}
         onChange={(v) => navigate({ category: v })}
-        options={PROJECTS_OVERVIEW_TYPE_OPTIONS}
+        options={PROJECT_SPACE_TYPES}
       />
 
       <DashboardFilterField label="Search">

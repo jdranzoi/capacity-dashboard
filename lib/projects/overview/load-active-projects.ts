@@ -1,15 +1,15 @@
 import { pagedQuery } from '@/lib/data/paged-query'
 import { createServiceClientCached } from '@/lib/supabase/server'
 import {
-  isCompositionProjectType,
-  type CompositionProjectType,
-} from '@/lib/teams/composition/teams-composition-utils'
+  isProjectSpaceType,
+  type ProjectSpaceType,
+} from '@/lib/domain/project-types'
 
 export type ActiveProjectMeta = {
   id: string
   project_key: string
   project_name: string | null
-  project_type: CompositionProjectType
+  project_type: ProjectSpaceType
   status: string
   start_date: string | null
   budget_hours: number | null
@@ -48,7 +48,7 @@ export async function loadActiveProjects(): Promise<{
 
   const mapped: ActiveProjectMeta[] = []
   for (const row of rows) {
-    if (!isCompositionProjectType(row.project_type)) continue
+    if (!isProjectSpaceType(row.project_type)) continue
     mapped.push({
       id: row.id,
       project_key: row.project_key,

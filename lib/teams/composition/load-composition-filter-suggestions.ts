@@ -3,10 +3,10 @@ import { endOfMonth, format, parse } from 'date-fns'
 
 import type { CompositionSuggestOption } from '@/lib/teams/composition/composition-suggest-utils'
 import {
-  COMPOSITION_TYPE_SECTIONS,
-  isCompositionProjectType,
-  projectCardTitle,
-} from '@/lib/teams/composition/teams-composition-utils'
+  isProjectSpaceType,
+  projectSpaceTypeLabel,
+} from '@/lib/domain/project-types'
+import { projectCardTitle } from '@/lib/teams/composition/teams-composition-utils'
 import { createServiceClientCached } from '@/lib/supabase/server'
 import type { Database } from '@/lib/supabase/database.types'
 
@@ -34,11 +34,6 @@ async function pagedQuery<T>(
 export type CompositionFilterSuggestions = {
   people: CompositionSuggestOption[]
   projects: CompositionSuggestOption[]
-}
-
-function projectTypeLabel(projectType: string): string {
-  return COMPOSITION_TYPE_SECTIONS.find((section) => section.projectType === projectType)
-    ?.label ?? projectType
 }
 
 export async function loadCompositionFilterSuggestions(params: {
@@ -158,7 +153,7 @@ async function loadProjectSuggestions(
     if (error) return { options: [], error: error.message }
 
     for (const row of data ?? []) {
-      if (isCompositionProjectType(row.project_type)) {
+      if (isProjectSpaceType(row.project_type)) {
         rows.push(row)
       }
     }
@@ -174,7 +169,7 @@ async function loadProjectSuggestions(
       return {
         value: label,
         label,
-        hint: projectTypeLabel(row.project_type),
+        hint: projectSpaceTypeLabel(row.project_type),
       }
     })
 

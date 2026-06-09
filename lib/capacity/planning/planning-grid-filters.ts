@@ -1,9 +1,9 @@
 import { plannedPct } from '@/lib/domain/workload-metrics'
-import type { CompositionProjectType } from '@/lib/teams/composition/teams-composition-utils'
+import type { ProjectSpaceTypeFilter } from '@/lib/domain/project-types'
 import type { PlanningPeopleNode, PlanningProjectNode } from '@/lib/capacity/planning/planning-types'
 
 export type PlanningUtilizationBand = 'all' | 'lt40' | 'lt60' | 'lt80' | 'gt80'
-export type PlanningProjectTypeFilter = 'all' | CompositionProjectType
+export type PlanningProjectTypeFilter = ProjectSpaceTypeFilter
 export type PlanningTreeExpansion = 'expand' | 'collapse'
 
 export function personPeriodUtilizationPct(

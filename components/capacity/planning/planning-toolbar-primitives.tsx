@@ -12,14 +12,6 @@ export const PLANNING_TREE_OPTIONS: readonly SegmentedControlOption<PlanningTree
   { value: 'collapse', label: 'Collapse' },
 ]
 
-/** Shared with Projects Overview space-type filter (same values as Capacity Planning project grid). */
-export const PLANNING_PROJECT_TYPE_OPTIONS = [
-  { value: 'all' as const, label: 'All' },
-  { value: 'build' as const, label: 'Build' },
-  { value: 'support' as const, label: 'Support' },
-  { value: 'internal' as const, label: 'Internal' },
-]
-
 /** Fixed slot for Role select vs person name search so toolbar layout does not shift. */
 export const PLANNING_ROLE_NAME_FILTER_WIDTH = 'w-44 shrink-0'
 

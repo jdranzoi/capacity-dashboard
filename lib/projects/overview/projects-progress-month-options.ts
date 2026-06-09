@@ -3,13 +3,13 @@ import { format, parse, startOfMonth } from 'date-fns'
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
 import type { ProjectsCategoryFilter } from '@/lib/projects/overview/projects-route-filters'
 
-/** Rolling month picker on the progress chart (support / internal). */
+/** Rolling month picker on the progress chart (non-build categories). */
 export const PROJECTS_PROGRESS_MONTH_COUNT = 3
 
 export function usesProjectsProgressMonthPicker(
   category: ProjectsCategoryFilter
-): category is 'support' | 'internal' {
-  return category === 'support' || category === 'internal'
+): category is Exclude<ProjectsCategoryFilter, 'build'> {
+  return category !== 'build'
 }
 
 /** Last `count` calendar months, oldest → newest (for left-to-right segmented control). */
@@ -27,7 +27,7 @@ export function formatProgressMonthToggleLabel(monthStartStr: string): string {
 }
 
 /**
- * Resolves the selected month within the progress-chart window (support / internal).
+ * Resolves the selected month within the progress-chart window (non-build categories).
  * Defaults to the current calendar month when present, else the newest option.
  */
 export function resolveProjectsProgressMonth(

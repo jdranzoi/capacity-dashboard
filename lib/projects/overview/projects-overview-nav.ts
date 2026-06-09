@@ -1,6 +1,6 @@
 import { format, startOfMonth } from 'date-fns'
 
-import { DEFAULT_PROJECTS_CATEGORY } from '@/lib/projects/overview/projects-overview-constants'
+import { DEFAULT_PROJECT_SPACE_TYPE } from '@/lib/domain/project-types'
 import {
   coerceViewForCategory,
   type ProjectsCategoryFilter,
@@ -46,7 +46,7 @@ export function buildProjectsOverviewNavUpdates(
   }
 
   if (Object.prototype.hasOwnProperty.call(updates, 'category')) {
-    const category = (updates.category ?? DEFAULT_PROJECTS_CATEGORY) as ProjectsCategoryFilter
+    const category = (updates.category ?? DEFAULT_PROJECT_SPACE_TYPE) as ProjectsCategoryFilter
     applyCategoryViewRules(next, category)
   }
 

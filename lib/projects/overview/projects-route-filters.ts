@@ -1,13 +1,12 @@
 import {
-  isCompositionProjectType,
-  type CompositionProjectType,
-} from '@/lib/teams/composition/teams-composition-utils'
-
-import { DEFAULT_PROJECTS_CATEGORY } from '@/lib/projects/overview/projects-overview-constants'
+  DEFAULT_PROJECT_SPACE_TYPE,
+  isProjectSpaceType,
+  type ProjectSpaceType,
+} from '@/lib/domain/project-types'
 
 export type ProjectsViewMode = 'monthly' | 'global'
 
-export type ProjectsCategoryFilter = CompositionProjectType
+export type ProjectsCategoryFilter = ProjectSpaceType
 
 export type ProjectsRouteFilters = {
   view: ProjectsViewMode
@@ -21,7 +20,7 @@ function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value
 }
 
-/** Build → global lifetime window. Support / internal → monthly window. */
+/** Build → global lifetime window. All other categories → monthly window. */
 export function coerceViewForCategory(
   category: ProjectsCategoryFilter,
   view: ProjectsViewMode
@@ -38,8 +37,8 @@ export function parseProjectsRouteFilters(
     viewRaw === 'monthly' ? 'monthly' : 'global'
 
   const categoryRaw = firstParam(raw.category)?.toLowerCase()
-  let category: ProjectsCategoryFilter = DEFAULT_PROJECTS_CATEGORY
-  if (categoryRaw && isCompositionProjectType(categoryRaw)) {
+  let category: ProjectsCategoryFilter = DEFAULT_PROJECT_SPACE_TYPE
+  if (categoryRaw && isProjectSpaceType(categoryRaw)) {
     category = categoryRaw
   }
 

@@ -25,8 +25,8 @@ import { loadProjectsGlobalTotalsCached } from '@/lib/projects/overview/load-pro
 import type { ProjectsMonthContext } from '@/lib/projects/overview/projects-page-cache'
 import type { ProjectDetailPanelPayload, ProjectRoleHoursRow } from '@/lib/projects/overview/projects-types'
 import { createServiceClientCached } from '@/lib/supabase/server'
+import { isProjectSpaceType } from '@/lib/domain/project-types'
 import {
-  isCompositionProjectType,
   PM_ROLE_KEY,
   resolvePmForMembers,
   resolveTlNamesForMembers,
@@ -104,7 +104,7 @@ export async function loadProjectDetailPanel(params: {
 
   if (projectErr) return { data: null, error: projectErr.message }
   if (!projectRow) return { data: null, error: null }
-  if (!isCompositionProjectType(projectRow.project_type)) {
+  if (!isProjectSpaceType(projectRow.project_type)) {
     return { data: null, error: 'Unsupported project type' }
   }
 

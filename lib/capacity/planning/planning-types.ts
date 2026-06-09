@@ -1,4 +1,4 @@
-import type { CompositionProjectType } from '@/lib/teams/composition/teams-composition-utils'
+import type { ProjectSpaceType } from '@/lib/domain/project-types'
 
 export type PlanningView = 'people' | 'project'
 
@@ -38,7 +38,7 @@ export type PlanningProjectNode = {
   label: string
   depth: 0 | 1 | 2
   projectId?: string
-  projectType?: CompositionProjectType
+  projectType?: ProjectSpaceType
   roleKey?: string
   personId?: string
   months: Record<string, PlanningProjectMonthCell>
@@ -99,8 +99,8 @@ export type PlanningMonthProjectMeta = {
   projectId: string
   projectKey: string
   projectName: string
-  /** Normalized `dim_project.project_type` when build | support | internal. */
-  projectType: CompositionProjectType | null
+  /** Normalized `dim_project.project_type` when it matches a known space type. */
+  projectType: ProjectSpaceType | null
 }
 
 export type PlanningMonthFacts = {

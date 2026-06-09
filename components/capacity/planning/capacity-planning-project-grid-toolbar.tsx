@@ -4,12 +4,12 @@ import { PlanningGridToolbarShell } from '@/components/capacity/planning/plannin
 import { PlanningMonthVisibilityControl } from '@/components/capacity/planning/planning-month-visibility-control'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import {
-  PLANNING_PROJECT_TYPE_OPTIONS,
   PLANNING_ROLE_NAME_FILTER_WIDTH,
   PLANNING_TREE_OPTIONS,
   PlanningToolbarSearch,
   PlanningToolbarSelect,
 } from '@/components/capacity/planning/planning-toolbar-primitives'
+import { PROJECT_SPACE_TYPE_FILTER_OPTIONS } from '@/lib/domain/project-types'
 import type {
   PlanningProjectTypeFilter,
   PlanningStaffFilterMode,
@@ -103,7 +103,7 @@ export function CapacityPlanningProjectGridToolbar({
         label="Project type"
         value={projectType}
         onChange={onProjectTypeChange}
-        options={PLANNING_PROJECT_TYPE_OPTIONS}
+        options={PROJECT_SPACE_TYPE_FILTER_OPTIONS}
       />
 
       <PlanningMonthVisibilityControl

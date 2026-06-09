@@ -3,11 +3,10 @@ import { endOfMonth, format, parse } from 'date-fns'
 
 import { createServiceClientCached } from '@/lib/supabase/server'
 import type { Database } from '@/lib/supabase/database.types'
+import { isProjectSpaceType, PROJECT_SPACE_TYPES } from '@/lib/domain/project-types'
 import {
   buildMemberRoleGroups,
   buildTypeGroup as buildCompositionTypeGroup,
-  COMPOSITION_TYPE_SECTIONS,
-  isCompositionProjectType,
   PM_ROLE_KEY,
   resolvePmForMembers,
   type TeamsCompositionMember,
@@ -263,7 +262,7 @@ export async function loadTeamsComposition(params: {
     }
 
     const eligibleProjects = projectsResult.rows.filter((p) =>
-      isCompositionProjectType(p.project_type)
+      isProjectSpaceType(p.project_type)
     )
 
     if (eligibleProjects.length === 0) {
@@ -310,7 +309,7 @@ export async function loadTeamsComposition(params: {
     }
 
     const projectsByType = new Map<TeamsCompositionProject['projectType'], TeamsCompositionProject[]>(
-      COMPOSITION_TYPE_SECTIONS.map((section) => [section.projectType, []])
+      PROJECT_SPACE_TYPES.map((section) => [section.value, []])
     )
 
     for (const project of eligibleProjects) {
@@ -348,17 +347,17 @@ export async function loadTeamsComposition(params: {
       projectsByType.get(projectType)?.push(card)
     }
 
-    const groups = COMPOSITION_TYPE_SECTIONS.map((section) =>
+    const groups = PROJECT_SPACE_TYPES.map((section) =>
       buildCompositionTypeGroup(
-        section.projectType,
+        section.value,
         section.label,
-        projectsByType.get(section.projectType) ?? [],
+        projectsByType.get(section.value) ?? [],
         filters
       )
     )
 
-    const totalProjectCount = COMPOSITION_TYPE_SECTIONS.reduce(
-      (sum, section) => sum + (projectsByType.get(section.projectType)?.length ?? 0),
+    const totalProjectCount = PROJECT_SPACE_TYPES.reduce(
+      (sum, section) => sum + (projectsByType.get(section.value)?.length ?? 0),
       0
     )
     const visibleProjectCount = groups.reduce((sum, group) => sum + group.projects.length, 0)
@@ -395,8 +394,8 @@ function emptyPayload(params: {
     syncCreatedAt: params.syncCreatedAt,
     personQuery: params.personQuery,
     projectQuery: params.projectQuery,
-    groups: COMPOSITION_TYPE_SECTIONS.map((section) => ({
-      projectType: section.projectType,
+    groups: PROJECT_SPACE_TYPES.map((section) => ({
+      projectType: section.value,
       label: section.label,
       projects: [],
     })),
