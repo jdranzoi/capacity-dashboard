@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { X } from "lucide-react";
 
 import { RoleBadge } from "@/components/ui/role-badge";
-import { PM_ROLE_KEY, TL_ROLE_KEY } from '@/lib/teams/collaboration/collaboration-ui-utils'
+import { isPmRoleKey, isTlRoleKey } from '@/lib/domain/role-keys'
 import { cn } from "@/lib/utils";
 import type {
   CollaborationEdge,
@@ -51,16 +51,16 @@ function orderPmLeftTlRight(
   personA: CollaborationNode,
   personB: CollaborationNode,
 ): { pm: CollaborationNode; tl: CollaborationNode } {
-  if (personA.roleKey === PM_ROLE_KEY && personB.roleKey === TL_ROLE_KEY) {
+  if (isPmRoleKey(personA.roleKey) && isTlRoleKey(personB.roleKey)) {
     return { pm: personA, tl: personB };
   }
-  if (personA.roleKey === TL_ROLE_KEY && personB.roleKey === PM_ROLE_KEY) {
+  if (isTlRoleKey(personA.roleKey) && isPmRoleKey(personB.roleKey)) {
     return { pm: personB, tl: personA };
   }
-  if (personB.roleKey === PM_ROLE_KEY) return { pm: personB, tl: personA };
-  if (personA.roleKey === PM_ROLE_KEY) return { pm: personA, tl: personB };
-  if (personA.roleKey === TL_ROLE_KEY) return { pm: personB, tl: personA };
-  if (personB.roleKey === TL_ROLE_KEY) return { pm: personA, tl: personB };
+  if (isPmRoleKey(personB.roleKey)) return { pm: personB, tl: personA };
+  if (isPmRoleKey(personA.roleKey)) return { pm: personA, tl: personB };
+  if (isTlRoleKey(personA.roleKey)) return { pm: personB, tl: personA };
+  if (isTlRoleKey(personB.roleKey)) return { pm: personA, tl: personB };
   return { pm: personA, tl: personB };
 }
 

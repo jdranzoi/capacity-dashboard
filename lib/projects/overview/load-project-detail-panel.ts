@@ -26,11 +26,10 @@ import type { ProjectsMonthContext } from '@/lib/projects/overview/projects-page
 import type { ProjectDetailPanelPayload, ProjectRoleHoursRow } from '@/lib/projects/overview/projects-types'
 import { createServiceClientCached } from '@/lib/supabase/server'
 import { isProjectSpaceType } from '@/lib/domain/project-types'
+import { PM_ROLE_KEY, roleSortIndex } from '@/lib/domain/role-keys'
 import {
-  PM_ROLE_KEY,
   resolvePmForMembers,
   resolveTlNamesForMembers,
-  roleSortIndex,
   type TeamsCompositionMember,
 } from '@/lib/teams/composition/teams-composition-utils'
 const BATCH = 200

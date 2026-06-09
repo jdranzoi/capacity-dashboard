@@ -4,10 +4,10 @@ import { endOfMonth, format, parse } from 'date-fns'
 import { createServiceClientCached } from '@/lib/supabase/server'
 import type { Database } from '@/lib/supabase/database.types'
 import { isProjectSpaceType, PROJECT_SPACE_TYPES } from '@/lib/domain/project-types'
+import { PM_ROLE_KEY } from '@/lib/domain/role-keys'
 import {
   buildMemberRoleGroups,
   buildTypeGroup as buildCompositionTypeGroup,
-  PM_ROLE_KEY,
   resolvePmForMembers,
   type TeamsCompositionMember,
   type TeamsCompositionPayload,

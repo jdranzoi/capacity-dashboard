@@ -1,5 +1,4 @@
-export const PM_ROLE_KEY = 'pm'
-export const TL_ROLE_KEY = 'tl'
+import { isLeadershipRoleKey, legendRoleSortRank } from '@/lib/domain/role-keys'
 import type {
   CollaborationEdge,
   CollaborationNode,
@@ -24,12 +23,6 @@ export function findEdgeByKey(
   return edges.find((edge) => collaborationEdgeKey(edge.source, edge.target) === key) ?? null
 }
 
-function legendRoleSortRank(key: string): number {
-  if (key === PM_ROLE_KEY) return 0
-  if (key === TL_ROLE_KEY) return 1
-  return 2
-}
-
 export function legendRolesFromNodes(
   nodes: CollaborationNode[]
 ): { key: string; label: string }[] {
@@ -49,7 +42,7 @@ export function legendRolesFromNodes(
 export function defaultVisibleRoleKeys(legendRoles: { key: string }[]): Set<string> {
   const next = new Set<string>()
   for (const role of legendRoles) {
-    if (role.key === PM_ROLE_KEY || role.key === TL_ROLE_KEY) next.add(role.key)
+    if (isLeadershipRoleKey(role.key)) next.add(role.key)
   }
   if (next.size === 0 && legendRoles[0]) next.add(legendRoles[0].key)
   return next

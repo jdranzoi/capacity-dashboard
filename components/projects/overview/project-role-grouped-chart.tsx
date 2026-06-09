@@ -7,7 +7,7 @@ import {
 import { fmtHoursKpi } from '@/lib/overview/overview-metrics'
 import { projectOverrunHours } from '@/lib/domain/project-delivery-metrics'
 import type { ProjectRoleHoursRow } from '@/lib/projects/overview/projects-types'
-import { roleSortIndex } from '@/lib/teams/composition/teams-composition-utils'
+import { roleSortIndex } from '@/lib/domain/role-keys'
 
 export type RoleGroupedRow = {
   roleKey: string

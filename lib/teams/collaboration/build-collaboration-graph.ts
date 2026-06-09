@@ -1,9 +1,8 @@
 import type { FragmentationFactRow } from '@/lib/data/load-fragmentation-by-person'
+import { isPmRoleKey, isTlRoleKey } from '@/lib/domain/role-keys'
 import {
   collaborationEdgeKey,
   formatProjectTypeLabel,
-  PM_ROLE_KEY,
-  TL_ROLE_KEY,
 } from '@/lib/teams/collaboration/collaboration-ui-utils'
 import type {
   CollaborationKpis,
@@ -12,8 +11,6 @@ import type {
   CollaborationNode,
   CollaborationProjectRef,
 } from '@/lib/teams/collaboration/collaboration-types'
-
-export { PM_ROLE_KEY, TL_ROLE_KEY } from '@/lib/teams/collaboration/collaboration-ui-utils'
 
 export type ParticipationRecord = {
   personId: string
@@ -234,12 +231,12 @@ function buildMatrix(
   projectMembers: Map<string, string[]>
 ): CollaborationMatrix {
   const pms = Array.from(peopleById.values())
-    .filter((person) => person.roleKey === PM_ROLE_KEY)
+    .filter((person) => isPmRoleKey(person.roleKey))
     .map((person) => ({ id: person.id, name: person.name }))
     .sort((a, b) => a.name.localeCompare(b.name, 'en'))
 
   const tls = Array.from(peopleById.values())
-    .filter((person) => person.roleKey === TL_ROLE_KEY)
+    .filter((person) => isTlRoleKey(person.roleKey))
     .map((person) => ({ id: person.id, name: person.name }))
     .sort((a, b) => a.name.localeCompare(b.name, 'en'))
 
@@ -251,8 +248,14 @@ function buildMatrix(
 
   for (const [projectId, members] of projectMembers) {
     const unique = Array.from(new Set(members))
-    const pmIds = unique.filter((id) => roleById.get(id) === PM_ROLE_KEY)
-    const tlIds = unique.filter((id) => roleById.get(id) === TL_ROLE_KEY)
+    const pmIds = unique.filter((id) => {
+      const key = roleById.get(id)
+      return key != null && isPmRoleKey(key)
+    })
+    const tlIds = unique.filter((id) => {
+      const key = roleById.get(id)
+      return key != null && isTlRoleKey(key)
+    })
     for (const pmId of pmIds) {
       for (const tlId of tlIds) {
         const key = `${pmId}|${tlId}`
@@ -305,7 +308,7 @@ function mostConnectedTlNode(
 ): { id: string; name: string; connections: number } | null {
   let best: CollaborationNode | null = null
   for (const node of nodes) {
-    if (node.roleKey !== TL_ROLE_KEY) continue
+    if (!isTlRoleKey(node.roleKey)) continue
     if (!best || node.collaborators > best.collaborators) best = node
   }
   return best ? { id: best.id, name: best.name, connections: best.collaborators } : null

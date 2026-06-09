@@ -1,18 +1,5 @@
 import type { ProjectSpaceType } from '@/lib/domain/project-types'
-
-export const PM_ROLE_KEY = 'pm'
-
-/** Roster group order on project cards (`dim_role.key`). */
-export const COMPOSITION_MEMBER_ROLE_ORDER: readonly string[] = [
-  'pm',
-  'tl',
-  'fsd',
-  'fed',
-  'qa',
-  'analytics',
-  'ux',
-  'em',
-]
+import { isTlRoleKey, roleSortIndex } from '@/lib/domain/role-keys'
 
 export type TeamsCompositionMember = {
   personId: string
@@ -75,11 +62,6 @@ export function projectSortLabel(project: {
   return label.toLocaleLowerCase('en')
 }
 
-export function roleSortIndex(roleKey: string): number {
-  const idx = COMPOSITION_MEMBER_ROLE_ORDER.indexOf(roleKey)
-  return idx === -1 ? COMPOSITION_MEMBER_ROLE_ORDER.length : idx
-}
-
 export function buildMemberRoleGroups(
   members: TeamsCompositionMember[]
 ): TeamsCompositionMemberGroup[] {
@@ -124,11 +106,9 @@ export function resolvePmForMembers(
   return { pmName: pms[0]!, pmSortKey: pms[0]!.toLocaleLowerCase('en') }
 }
 
-const TL_ROLE_KEY = 'tl'
-
 export function resolveTlNamesForMembers(members: TeamsCompositionMember[]): string | null {
   const tls = members
-    .filter((m) => m.roleKey === TL_ROLE_KEY)
+    .filter((m) => isTlRoleKey(m.roleKey))
     .map((m) => m.personName)
     .sort((a, b) => a.localeCompare(b, 'en'))
 
