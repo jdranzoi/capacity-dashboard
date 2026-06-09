@@ -12,9 +12,6 @@ export const PLANNING_TREE_OPTIONS: readonly SegmentedControlOption<PlanningTree
   { value: 'collapse', label: 'Collapse' },
 ]
 
-/** Fixed slot for Role select vs person name search so toolbar layout does not shift. */
-export const PLANNING_ROLE_NAME_FILTER_WIDTH = 'w-44 shrink-0'
-
 const fieldControlClass =
   'box-border h-8 w-full shrink-0 rounded-lg border border-border bg-muted/20 px-2.5 text-sm leading-none text-foreground ring-1 ring-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 

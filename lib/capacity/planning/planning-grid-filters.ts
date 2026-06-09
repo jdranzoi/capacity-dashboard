@@ -1,6 +1,7 @@
 import { plannedPct } from '@/lib/domain/workload-metrics'
 import type { ProjectSpaceTypeFilter } from '@/lib/domain/project-types'
 import type { PlanningPeopleNode, PlanningProjectNode } from '@/lib/capacity/planning/planning-types'
+import type { StaffFilterMode } from '@/lib/ui/staff-filter-mode'
 
 export type PlanningUtilizationBand = 'all' | 'lt40' | 'lt60' | 'lt80' | 'gt80'
 export type PlanningProjectTypeFilter = ProjectSpaceTypeFilter
@@ -59,7 +60,7 @@ export function filterProjectTreeByType(
   return rows.filter((row) => row.kind === 'project' && row.projectType === typeFilter)
 }
 
-export type PlanningStaffFilterMode = 'role' | 'name'
+export type PlanningStaffFilterMode = StaffFilterMode
 
 /** Prune project → role → person tree by role label or person name (same UX as people grid). */
 export function filterProjectTreeByRoleOrName(

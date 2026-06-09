@@ -12,10 +12,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 
-import {
-  CapacityPlanningPeopleGridToolbar,
-  type PeopleGridFilterMode,
-} from '@/components/capacity/planning/capacity-planning-people-grid-toolbar'
+import { CapacityPlanningPeopleGridToolbar } from '@/components/capacity/planning/capacity-planning-people-grid-toolbar'
 import {
   fmtPlanningHours,
   fmtPlanningPct,
@@ -44,6 +41,7 @@ import {
   dashboardTableEmptyClass,
   dashboardTableShellClass,
 } from '@/lib/ui/dashboard-surface'
+import type { StaffFilterMode } from '@/lib/ui/staff-filter-mode'
 import { cn } from '@/lib/utils'
 
 const columnHelper = createColumnHelper<PlanningPeopleNode>()
@@ -52,7 +50,7 @@ const METRIC_SUFFIXES = ['net', 'planned', 'open', 'util'] as const
 
 function filterPeopleTreeRows(
   rows: PlanningPeopleNode[],
-  mode: PeopleGridFilterMode,
+  mode: StaffFilterMode,
   roleValue: string,
   nameQuery: string
 ): PlanningPeopleNode[] {
@@ -87,7 +85,7 @@ export function CapacityPlanningPeopleGrid({
   const [sorting, setSorting] = useState<SortingState>([])
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [treeExpansion, setTreeExpansion] = useState<PlanningTreeExpansion>('collapse')
-  const [filterMode, setFilterMode] = useState<PeopleGridFilterMode>('role')
+  const [filterMode, setFilterMode] = useState<StaffFilterMode>('role')
   const [roleFilter, setRoleFilter] = useState('')
   const [nameQuery, setNameQuery] = useState('')
   const [utilBand, setUtilBand] = useState<PlanningUtilizationBand>('all')

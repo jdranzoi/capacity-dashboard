@@ -3,11 +3,9 @@
 import { PlanningGridToolbarShell } from '@/components/capacity/planning/planning-grid-toolbar-shell'
 import { PlanningMonthVisibilityControl } from '@/components/capacity/planning/planning-month-visibility-control'
 import { SegmentedControl } from '@/components/ui/segmented-control'
+import { RoleNameStaffFilter } from '@/components/ui/role-name-staff-filter'
 import {
-  PLANNING_ROLE_NAME_FILTER_WIDTH,
   PLANNING_TREE_OPTIONS,
-  PlanningToolbarSearch,
-  PlanningToolbarSelect,
 } from '@/components/capacity/planning/planning-toolbar-primitives'
 import { PROJECT_SPACE_TYPE_FILTER_OPTIONS } from '@/lib/domain/project-types'
 import type {
@@ -16,11 +14,6 @@ import type {
   PlanningTreeExpansion,
 } from '@/lib/capacity/planning/planning-grid-filters'
 import type { PlanningMonthVisibilityFilter } from '@/lib/capacity/planning/planning-month-visibility'
-
-const FILTER_BY_OPTIONS = [
-  { value: 'role' as const, label: 'Role' },
-  { value: 'name' as const, label: 'Name' },
-]
 
 export function CapacityPlanningProjectGridToolbar({
   filterMode,
@@ -66,38 +59,15 @@ export function CapacityPlanningProjectGridToolbar({
         />
       }
     >
-      <SegmentedControl
-        label="Filter by"
-        value={filterMode}
-        onChange={onFilterModeChange}
-        options={FILTER_BY_OPTIONS}
+      <RoleNameStaffFilter
+        mode={filterMode}
+        onModeChange={onFilterModeChange}
+        roleValue={roleValue}
+        onRoleChange={onRoleChange}
+        nameQuery={nameQuery}
+        onNameQueryChange={onNameQueryChange}
+        roleOptions={roleOptions}
       />
-
-      <div className={PLANNING_ROLE_NAME_FILTER_WIDTH}>
-        {filterMode === 'role' ? (
-          <PlanningToolbarSelect
-            label="Role"
-            value={roleValue}
-            onChange={onRoleChange}
-            className="w-full"
-          >
-            <option value="">All roles</option>
-            {roleOptions.map((role) => (
-              <option key={role} value={role}>
-                {role}
-              </option>
-            ))}
-          </PlanningToolbarSelect>
-        ) : (
-          <PlanningToolbarSearch
-            label="Person name"
-            value={nameQuery}
-            onChange={onNameQueryChange}
-            placeholder="Search people…"
-            className="w-full"
-          />
-        )}
-      </div>
 
       <SegmentedControl
         label="Project type"
