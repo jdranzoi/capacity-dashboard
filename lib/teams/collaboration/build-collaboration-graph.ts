@@ -201,7 +201,7 @@ export function buildCollaborationGraph(
       totalProjects,
       activeProjects,
       collaborators,
-      fragmentationFlagged: frag?.flagged ?? null,
+      fragmentationSeverity: frag?.flagged ?? null,
       fragmentationTotalCount: frag?.total_count ?? null,
     })
   }

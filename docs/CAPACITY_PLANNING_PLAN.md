@@ -60,7 +60,7 @@ Same as [SP2_CAPACITY_PLAN.md § Isolation model](./SP2_CAPACITY_PLAN.md#isolati
 | Person net / planned / open | Person-month capacity vs sum of plan lines | Person open = capacity − total planned (all projects). |
 | Person utilization % | Planning context | **`plannedPct(planned, netCapacity)`** — not logged pace (that belongs on Utilization). |
 | Available People list | `fact_bench` + `fact_capacity` + `fact_plans` + `dim_person` | Filter `availability_hours ≥ threshold`; project count from distinct non-PTO `project_id`. |
-| Fragmentation badge | `fact_fragmentation` | Map `flagged` / `total_count` → `Healthy` \| `Moderate` \| `High` (display labels). |
+| Fragmentation badge | `fact_fragmentation` | Read `flagged` severity (`low` / `moderate` / `high`); map to `Healthy` \| `Moderate` \| `High` for display only. |
 | Upcoming Availability rows | Month-over-month bench + plan deltas | Compare person/role availability across range; emit narrative DTOs (no chart). |
 | Allocate button | — | **Phase 1:** inert / `disabled` with tooltip “Coming soon”. No write path (D-009). |
 | People Planning tab (mock) | Same facts, role-first hierarchy | **Phase 2** — stub tab or hide until product signs off. |

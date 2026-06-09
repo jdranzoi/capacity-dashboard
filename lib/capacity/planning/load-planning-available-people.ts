@@ -1,4 +1,4 @@
-import { fragmentationLabelFromFacts } from '@/lib/capacity/planning/planning-metrics'
+import { fragmentationLabelFromFactRow } from '@/lib/domain/fragmentation-label'
 import { loadMonthFacts } from '@/lib/capacity/planning/load-planning-workspace'
 import { resolvePlanningPeriod } from '@/lib/capacity/planning/planning-route-period'
 import type {
@@ -33,10 +33,7 @@ export function selectAvailablePeopleFromMonthFacts(
         roleLabel: person.roleLabel,
         availableHours,
         projectCount: person.plannedByProject.size,
-        fragmentationLabel: fragmentationLabelFromFacts(
-          frag?.flagged ?? false,
-          frag?.total_count ?? 0
-        ),
+        fragmentationLabel: fragmentationLabelFromFactRow(frag),
       }
     })
     .filter((row): row is PlanningAvailablePerson => row != null)

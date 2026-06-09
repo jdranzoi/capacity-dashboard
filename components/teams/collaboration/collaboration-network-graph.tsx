@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 
 import { cn } from '@/lib/utils'
-import { formatFragmentationFlagged } from '@/lib/format/fragmentation-display'
+import { formatFragmentationSeverity } from '@/lib/format/fragmentation-display'
 import { roleColorVar } from '@/lib/ui/collaboration-role-colors'
 import { computeCollaborationLayout, collaborationGraphViewBox } from '@/lib/teams/collaboration/collaboration-graph-layout'
 import { collaborationEdgeKey } from '@/lib/teams/collaboration/collaboration-ui-utils'
@@ -191,11 +191,11 @@ export function CollaborationNetworkGraph({
             <dd className="text-right">{hoveredNode.activeProjects}</dd>
             <dt className="text-muted-foreground">Collaborators</dt>
             <dd className="text-right">{hoveredNode.collaborators}</dd>
-            {hoveredNode.fragmentationFlagged != null ? (
+            {hoveredNode.fragmentationSeverity != null ? (
               <>
                 <dt className="text-muted-foreground">Fragmentation</dt>
                 <dd className="text-right">
-                  {formatFragmentationFlagged(hoveredNode.fragmentationFlagged)}
+                  {formatFragmentationSeverity(hoveredNode.fragmentationSeverity)}
                 </dd>
               </>
             ) : null}

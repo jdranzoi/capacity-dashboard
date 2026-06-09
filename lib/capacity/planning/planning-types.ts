@@ -1,3 +1,5 @@
+import type { FragmentationLabel } from '@/lib/domain/fragmentation-label'
+import type { PlannedUtilizationBand } from '@/lib/domain/planned-utilization-band'
 import type { ProjectSpaceType } from '@/lib/domain/project-types'
 
 export type PlanningView = 'people' | 'project'
@@ -56,10 +58,8 @@ export type PlanningAvailablePerson = {
   roleLabel: string
   availableHours: number
   projectCount: number
-  fragmentationLabel: 'Healthy' | 'Moderate' | 'High'
+  fragmentationLabel: FragmentationLabel
 }
-
-import type { PlannedUtilizationBand } from '@/lib/domain/planned-utilization-band'
 
 export type PlanningAvailabilityEvent = {
   monthKey: string

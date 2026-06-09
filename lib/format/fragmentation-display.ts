@@ -1,6 +1,12 @@
-/** Presentation-only formatter for `fact_fragmentation.flagged` (no classification rules). */
+import {
+  fragmentationLabelFromSeverity,
+  type FragmentationSeverity,
+} from '@/lib/domain/fragmentation-label'
 
-export function formatFragmentationFlagged(flagged: boolean | null): string {
-  if (flagged == null) return '—'
-  return flagged ? 'Yes' : 'No'
+/** Maps `fact_fragmentation.flagged` severity to a user-facing label. */
+export function formatFragmentationSeverity(
+  severity: FragmentationSeverity | null | undefined
+): string {
+  if (!severity) return '—'
+  return fragmentationLabelFromSeverity(severity)
 }

@@ -233,14 +233,14 @@ WHERE snapshot_id = :snapshot_id
   AND month_date = :month_start_str;
 ```
 
-The dashboard **does not** derive fragmentation labels. It displays:
+The dashboard **does not** derive fragmentation severity. It reads `flagged` from sync (migration 023: `low` | `moderate` | `high`) and maps to display labels only:
 
 | Node field | Source column |
 |------------|---------------|
-| `fragmentationFlagged` | `flagged` → **Fragmentation** row in UI (Yes / No) |
+| `fragmentationSeverity` | `flagged` (`low` / `moderate` / `high` from ingestion) |
 | `fragmentationTotalCount` | `total_count` (concurrent projects in the fact row) |
 
-A future `fragmentation_level` (or similar) column may be added in capacity-mcp; wire it only after it exists in Supabase.
+UI shows **Healthy** / **Moderate** / **High** via `lib/domain/fragmentation-label.ts` (display mapping only).
 
 **Insights — “Highest fragmentation”:** person with the largest `total_count` among rows returned (numeric fact only).
 

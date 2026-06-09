@@ -1,3 +1,4 @@
+import type { FragmentationSeverity } from '@/lib/domain/fragmentation-label'
 import type { CollaborationEdgeRelationshipMetrics } from '@/lib/teams/collaboration/collaboration-relationship-metrics'
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
 
@@ -24,8 +25,8 @@ export type CollaborationNode = {
   activeProjects: number
   /** Degree in the collaboration graph (unique collaborators). */
   collaborators: number
-  /** `fact_fragmentation.flagged` for the anchor month — null when no row. */
-  fragmentationFlagged: boolean | null
+  /** `fact_fragmentation.flagged` severity for the anchor month — null when no row. */
+  fragmentationSeverity: FragmentationSeverity | null
   /** `fact_fragmentation.total_count` for the anchor month. */
   fragmentationTotalCount: number | null
 }

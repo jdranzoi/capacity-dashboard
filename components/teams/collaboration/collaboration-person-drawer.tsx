@@ -4,6 +4,7 @@ import { X, Link2 } from 'lucide-react'
 import Link from 'next/link'
 
 import { RoleBadge } from '@/components/ui/role-badge'
+import { formatFragmentationSeverity } from '@/lib/format/fragmentation-display'
 import { roleColorVar } from '@/lib/ui/collaboration-role-colors'
 import { teamsCompositionPersonHref } from '@/lib/teams/composition/teams-composition-utils'
 import { cn } from '@/lib/utils'
@@ -110,9 +111,7 @@ export function CollaborationPersonDrawer({
         <MetricCell label="Collaboratorsss" value={node.collaborators} />
         <MetricCell
           label="Fragmentation"
-          value={
-            node.fragmentationFlagged == null ? '—' : String(node.fragmentationFlagged)
-          }
+          value={formatFragmentationSeverity(node.fragmentationSeverity)}
         />
       </div>
 

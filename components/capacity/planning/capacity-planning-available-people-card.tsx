@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState, useTransition, type ReactNod
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { CapacityPlanningAvailablePeopleLoading } from '@/components/capacity/planning/capacity-planning-available-people-loading'
-import { Badge } from '@/components/ui/badge'
+import { FragmentationLabelBadge } from '@/components/ui/fragmentation-label-badge'
 import {
   DataSectionPanel,
   DataSectionPanelHeader,
@@ -13,22 +13,6 @@ import type { PlanningAvailablePerson, PlanningPeriod } from '@/lib/capacity/pla
 import { PLANNING_MIN_AVAILABILITY_HOURS } from '@/lib/capacity/planning/planning-available-people-filters'
 import { fmtHoursKpi } from '@/lib/overview/overview-metrics'
 import { cn } from '@/lib/utils'
-
-function fragmentationVariant(
-  label: PlanningAvailablePerson['fragmentationLabel']
-): 'secondary' | 'warning' | 'destructive' {
-  if (label === 'High') return 'destructive'
-  if (label === 'Moderate') return 'warning'
-  return 'secondary'
-}
-
-const FRAGMENTATION_BADGE_HINT: Record<PlanningAvailablePerson['fragmentationLabel'], string> = {
-  Healthy:
-    'Fewer than four concurrent projects and no fragmentation flag from the latest sync.',
-  Moderate:
-    'Flagged for fragmentation with up to three concurrent projects in this month.',
-  High: 'Four or more concurrent projects in this month.',
-}
 
 export function CapacityPlanningAvailablePeopleCard({
   people,
@@ -165,13 +149,7 @@ export function CapacityPlanningAvailablePeopleCard({
                       </span>
                     </p>
                   </div>
-                  <Badge
-                    variant={fragmentationVariant(person.fragmentationLabel)}
-                    className="h-4 shrink-0 px-1.5 text-[10px] leading-none"
-                    title={FRAGMENTATION_BADGE_HINT[person.fragmentationLabel]}
-                  >
-                    {person.fragmentationLabel}
-                  </Badge>
+                  <FragmentationLabelBadge label={person.fragmentationLabel} />
                 </li>
               ))
             )}
