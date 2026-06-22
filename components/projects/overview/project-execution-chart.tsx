@@ -9,6 +9,7 @@ import {
   PROJECT_CHART_VALUE_CLASS,
   PROJECT_CHART_VALUE_FONT_PX,
   formatBarHoursLabel,
+  formatExecutionPeriodRange,
   formatYAxisTickHours,
 } from '@/components/projects/overview/project-chart-styles'
 import type {
@@ -74,10 +75,14 @@ export function ProjectExecutionChart({
   series,
   granularity,
   ariaLabel,
+  periodStart,
+  periodEnd,
 }: {
   series: readonly ProjectExecutionPoint[]
   granularity: ProjectExecutionGranularity
   ariaLabel: string
+  periodStart?: string | null
+  periodEnd?: string | null
 }) {
   if (series.length === 0) {
     return (
@@ -107,24 +112,33 @@ export function ProjectExecutionChart({
   const pairW = Math.min(groupSlotW * 0.72, granularity === 'day' ? 14 : 28)
   const barW = Math.max(2, (pairW - 2) / 2)
   const step = labelStep(n, granularity)
+  const periodRangeLabel =
+    periodStart && periodEnd ? formatExecutionPeriodRange(periodStart, periodEnd) : null
 
   return (
     <div className="space-y-1.5">
-      <div className={`flex flex-wrap items-center gap-3 ${PROJECT_CHART_LEGEND_CLASS}`}>
-        <span className="inline-flex items-center gap-1">
-          <span
-            className="size-2 rounded-sm bg-[var(--overview-metric-planned)] opacity-55"
-            aria-hidden
-          />
-          Planned
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <span
-            className="size-2 rounded-sm bg-[var(--overview-metric-logged)]"
-            aria-hidden
-          />
-          Logged
-        </span>
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <div className={`flex flex-wrap items-center gap-3 ${PROJECT_CHART_LEGEND_CLASS}`}>
+          <span className="inline-flex items-center gap-1">
+            <span
+              className="size-2 rounded-sm bg-[var(--overview-metric-planned)] opacity-55"
+              aria-hidden
+            />
+            Planned
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span
+              className="size-2 rounded-sm bg-[var(--overview-metric-logged)]"
+              aria-hidden
+            />
+            Logged
+          </span>
+        </div>
+        {periodRangeLabel ? (
+          <p className="text-[0.6rem] tabular-nums leading-none text-muted-foreground">
+            {periodRangeLabel}
+          </p>
+        ) : null}
       </div>
 
       <svg

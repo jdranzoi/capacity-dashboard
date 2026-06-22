@@ -71,14 +71,15 @@ export async function loadProjectActualsForMonths(
 
 function groupMonthKeysBySnapshot(
   monthKeys: readonly string[],
-  options: readonly OverviewMonthOption[]
+  options: readonly OverviewMonthOption[],
+  fallbackSnapshotId?: string
 ): Map<string, string[]> {
   const snapshotByMonth = new Map(
     options.map((o) => [o.monthStartStr, o.snapshotId] as const)
   )
   const bySnapshot = new Map<string, string[]>()
   for (const monthKey of monthKeys) {
-    const snapshotId = snapshotByMonth.get(monthKey)
+    const snapshotId = snapshotByMonth.get(monthKey) ?? fallbackSnapshotId
     if (!snapshotId) continue
     const list = bySnapshot.get(snapshotId) ?? []
     list.push(monthKey)
@@ -90,13 +91,14 @@ function groupMonthKeysBySnapshot(
 /** `fact_project_actuals` for each month using that month's sync anchor from month options. */
 export async function loadProjectActualsForMonthsFromOptions(
   monthKeys: readonly string[],
-  options: readonly OverviewMonthOption[]
+  options: readonly OverviewMonthOption[],
+  fallbackSnapshotId?: string
 ): Promise<{ rows: ProjectActualsRow[]; error: string | null }> {
   if (monthKeys.length === 0) {
     return { rows: [], error: null }
   }
 
-  const bySnapshot = groupMonthKeysBySnapshot(monthKeys, options)
+  const bySnapshot = groupMonthKeysBySnapshot(monthKeys, options, fallbackSnapshotId)
   if (bySnapshot.size === 0) {
     return { rows: [], error: 'No sync snapshot found for requested months' }
   }
@@ -157,14 +159,15 @@ export async function loadProjectGrainPlans(
 /** `fact_plans` per month, each keyed to that month's sync anchor from month options. */
 export async function loadProjectGrainPlansForMonths(
   monthKeys: readonly string[],
-  options: readonly OverviewMonthOption[]
+  options: readonly OverviewMonthOption[],
+  fallbackSnapshotId?: string
 ): Promise<{ rowsByMonth: Map<string, ProjectPlanGrainRow[]>; error: string | null }> {
   const rowsByMonth = new Map<string, ProjectPlanGrainRow[]>()
   if (monthKeys.length === 0) {
     return { rowsByMonth, error: null }
   }
 
-  const bySnapshot = groupMonthKeysBySnapshot(monthKeys, options)
+  const bySnapshot = groupMonthKeysBySnapshot(monthKeys, options, fallbackSnapshotId)
   if (bySnapshot.size === 0) {
     return { rowsByMonth, error: 'No sync snapshot found for requested months' }
   }

@@ -3,10 +3,49 @@
  * UI and loaders must import from here — do not duplicate formulas in components.
  */
 
+import { parse, startOfMonth } from 'date-fns'
+
 import { roundDisplayStat } from '@/lib/format/display-stats'
 
 /** Budget-at-risk threshold: logged hours exceed budget by more than 15%. */
 export const PROJECT_BUDGET_AT_RISK_PCT = 115
+
+export type ProjectPlanVarianceStatus = 'under' | 'over' | 'on_plan'
+
+/** Monthly execution period that ended before the current calendar month. */
+export function isElapsedExecutionMonth(
+  monthStartStr: string,
+  asOf: Date = new Date()
+): boolean {
+  const monthStart = startOfMonth(parse(monthStartStr, 'yyyy-MM-dd', asOf))
+  return monthStart < startOfMonth(asOf)
+}
+
+/**
+ * Cumulative planned minus logged across elapsed months in a monthly execution series.
+ * Positive = under plan (planned > logged); negative = over plan.
+ */
+export function cumulativePlanVarianceHours(
+  series: readonly { periodKey: string; plannedHours: number; loggedHours: number }[],
+  asOf: Date = new Date()
+): number | null {
+  let sum = 0
+  let hasElapsedMonth = false
+
+  for (const point of series) {
+    if (!isElapsedExecutionMonth(point.periodKey, asOf)) continue
+    hasElapsedMonth = true
+    sum += point.plannedHours - point.loggedHours
+  }
+
+  return hasElapsedMonth ? roundDisplayStat(sum) : null
+}
+
+export function planVarianceStatus(varianceHours: number): ProjectPlanVarianceStatus {
+  if (varianceHours > 0) return 'under'
+  if (varianceHours < 0) return 'over'
+  return 'on_plan'
+}
 
 /**
  * Distinct people with non-zero logged hours (project worklogs in the queried period).
@@ -48,6 +87,33 @@ export function projectBudgetUsedPct(
 ): number | null {
   if (budgetHours == null || budgetHours <= 0 || loggedHours < 0) return null
   return roundDisplayStat((loggedHours / budgetHours) * 100)
+}
+
+/** Projected versus budget: `(projected − budget) / budget × 100`. */
+export function projectedVersusBudgetVariancePct(
+  projectedHours: number | null,
+  budgetHours: number | null
+): number | null {
+  if (projectedHours == null || budgetHours == null || budgetHours <= 0) return null
+  return roundDisplayStat(((projectedHours - budgetHours) / budgetHours) * 100)
+}
+
+/** Planned versus projected: `(planned − projected) / projected × 100`. */
+export function plannedVersusProjectedVariancePct(
+  plannedHours: number,
+  projectedHours: number | null
+): number | null {
+  if (projectedHours == null || projectedHours <= 0) return null
+  return roundDisplayStat(((plannedHours - projectedHours) / projectedHours) * 100)
+}
+
+/** Logged versus planned: `logged / planned × 100`. */
+export function loggedVersusPlannedPct(
+  loggedHours: number,
+  plannedHours: number
+): number | null {
+  if (plannedHours <= 0 || loggedHours < 0) return null
+  return roundDisplayStat((loggedHours / plannedHours) * 100)
 }
 
 /** Hours logged above plan (zero when under or on plan). */

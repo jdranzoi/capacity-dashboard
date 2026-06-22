@@ -44,6 +44,7 @@ export async function ProjectsOverviewKpiBlock({
             anchorMonthStartStr: monthCtxRes.data.monthStartStr,
             category: routeFilters.category,
             searchQuery: routeFilters.searchQuery,
+            fallbackSnapshotId: monthCtxRes.data.snapshot.id,
           })
         : await loadProjectsOverviewMonthly({
             monthContext: monthCtxRes.data,

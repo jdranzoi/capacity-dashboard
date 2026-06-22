@@ -13,9 +13,9 @@ import {
 } from '@/lib/domain/project-delivery-metrics'
 import { loadOverviewMonthOptions } from '@/lib/overview/overview-month-options'
 import { loadActiveProjects } from '@/lib/projects/overview/load-active-projects'
+import { loadBuildProjectDeliveryMetrics } from '@/lib/projects/overview/build-project-delivery-window'
 import {
   lastNMonthStarts,
-  loadLifetimePlannedHoursByProject,
   loadProjectActualsForMonthsFromOptions,
 } from '@/lib/projects/overview/load-project-grain-data'
 import {
@@ -78,42 +78,47 @@ export async function loadProjectsOverviewGlobal(params: {
   anchorMonthStartStr: string
   category: ProjectsCategoryFilter
   searchQuery: string | null
+  fallbackSnapshotId: string
 }): Promise<{ data: ProjectsOverviewPayload | null; error: string | null }> {
   const burnMonthKeys = lastNMonthStarts(params.anchorMonthStartStr, 3)
 
-  const [monthOptionsRes, totalsRes, projectsRes] = await Promise.all([
+  const [monthOptionsRes, projectsRes] = await Promise.all([
     loadOverviewMonthOptions(),
-    loadProjectsGlobalTotalsCached(),
     loadActiveProjects(),
   ])
 
   if (monthOptionsRes.error) {
     return { data: null, error: monthOptionsRes.error }
   }
-  if (totalsRes.error) {
-    return { data: null, error: totalsRes.error }
-  }
   if (projectsRes.error) {
     return { data: null, error: projectsRes.error }
   }
 
-  const [burnActualsRes, lifetimePlannedRes] = await Promise.all([
+  const filteredProjects = projectsRes.rows.filter((project) => {
+    if (!matchesProjectsCategory(project.project_type, params.category)) return false
+    return matchesProjectsSearch(project.project_key, project.project_name, params.searchQuery)
+  })
+
+  const [burnActualsRes, deliveryRes] = await Promise.all([
     loadProjectActualsForMonthsFromOptions(burnMonthKeys, monthOptionsRes.options),
-    loadLifetimePlannedHoursByProject({
-      anchorMonthStartStr: params.anchorMonthStartStr,
-      options: monthOptionsRes.options,
-      projects: projectsRes.rows,
+    loadBuildProjectDeliveryMetrics({
+      projects: filteredProjects.map((project) => ({
+        projectId: project.id,
+        startDate: project.start_date,
+        endDate: project.end_date,
+      })),
+      historicalOptions: monthOptionsRes.options,
+      fallbackSnapshotId: params.fallbackSnapshotId,
+      fallbackMonthStartStr: params.anchorMonthStartStr,
     }),
   ])
 
   if (burnActualsRes.error) {
     return { data: null, error: burnActualsRes.error }
   }
-  if (lifetimePlannedRes.error) {
-    return { data: null, error: lifetimePlannedRes.error }
+  if (deliveryRes.error) {
+    return { data: null, error: deliveryRes.error }
   }
-
-  const projectMetaById = new Map(projectsRes.rows.map((p) => [p.id, p]))
 
   const burnByProject = new Map<string, number[]>()
   for (const key of burnMonthKeys) {
@@ -134,38 +139,29 @@ export async function loadProjectsOverviewGlobal(params: {
 
   const rows: ProjectOverviewRow[] = []
 
-  for (const total of totalsRes.rows) {
-    const meta = projectMetaById.get(total.project_id)
-    if (!meta) continue
-    if (!matchesProjectsCategory(meta.project_type, params.category)) continue
-    if (!matchesProjectsSearch(meta.project_key, meta.project_name, params.searchQuery)) {
-      continue
-    }
+  for (const project of filteredProjects) {
+    const totals = deliveryRes.totalsByProject.get(project.id)
+    if (!totals) continue
 
-    const plannedHours =
-      lifetimePlannedRes.byProject.get(total.project_id) ??
-      roundDisplayStat(Number(total.lifetime_planned_hours))
-    const loggedHours = roundDisplayStat(Number(total.lifetime_logged_hours))
-    const billableHours = roundDisplayStat(Number(total.lifetime_billable_hours))
-
+    const { plannedHours, loggedHours, billableHours } = totals
     if (plannedHours <= 0 && loggedHours <= 0) continue
 
-    const budgetUsedPct = projectBudgetUsedPct(loggedHours, meta.budget_hours)
+    const budgetUsedPct = projectBudgetUsedPct(loggedHours, project.budget_hours)
     rows.push({
-      projectId: meta.id,
-      projectKey: meta.project_key,
-      projectName: meta.project_name,
-      projectType: meta.project_type,
-      status: meta.status,
-      startDate: meta.start_date,
-      budgetHours: meta.budget_hours,
+      projectId: project.id,
+      projectKey: project.project_key,
+      projectName: project.project_name,
+      projectType: project.project_type,
+      status: project.status,
+      startDate: project.start_date,
+      budgetHours: project.budget_hours,
       plannedHours,
       loggedHours,
       billableHours,
       budgetUsedPct,
       overrunHours: projectOverrunHours(loggedHours, plannedHours),
       atRisk: isProjectAtBudgetRisk(budgetUsedPct),
-      burnRateHoursPerMonth: projectBurnRateHoursPerMonth(burnByProject.get(meta.id) ?? []),
+      burnRateHoursPerMonth: projectBurnRateHoursPerMonth(burnByProject.get(project.id) ?? []),
     })
   }
 
@@ -202,7 +198,7 @@ export async function loadProjectsOverviewGlobal(params: {
       monthLabel: null,
       monthStartStr: null,
       footnote:
-        'Global view: lifetime logged and billable from worklogs; planned hours sum monthly plans from project start (each month uses its sync snapshot). Burn rate uses the last 3 months, each from its month sync.',
+        'Build view: planned hours sum monthly plans from project start through end date (each month uses its sync snapshot). Logged and billable use the same window. Burn rate uses the last 3 months, each from its month sync.',
       kpis,
       rows,
     },

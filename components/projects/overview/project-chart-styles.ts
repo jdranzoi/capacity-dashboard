@@ -1,3 +1,5 @@
+import { format, parse } from 'date-fns'
+
 import { fmtHoursKpi } from '@/lib/overview/overview-metrics'
 
 /** Shared SVG chart typography (detail panel charts). */
@@ -17,4 +19,16 @@ export function formatYAxisTickHours(hours: number): string {
   if (hours === 0) return '0'
   if (hours >= 1000) return `${Math.round(hours / 100) / 10}k`
   return `${Math.round(hours)}`
+}
+
+export function formatExecutionPeriodDate(iso: string): string {
+  try {
+    return format(parse(iso, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')
+  } catch {
+    return iso
+  }
+}
+
+export function formatExecutionPeriodRange(startIso: string, endIso: string): string {
+  return `${formatExecutionPeriodDate(startIso)} – ${formatExecutionPeriodDate(endIso)}`
 }

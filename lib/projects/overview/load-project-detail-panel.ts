@@ -1,25 +1,22 @@
-import { eachDayOfInterval, format, parse, startOfWeek, subWeeks } from 'date-fns'
+import { eachDayOfInterval, format, parse, startOfDay, startOfWeek, subWeeks } from 'date-fns'
 
 import { pagedQuery } from '@/lib/data/paged-query'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import {
   countPeopleOnProjectPlan,
+  cumulativePlanVarianceHours,
   projectBudgetUsedPct,
 } from '@/lib/domain/project-delivery-metrics'
+import { aggregateLoggedHoursByDate } from '@/lib/projects/overview/build-project-execution-series'
 import {
-  aggregateLoggedHoursByDate,
-  buildPerMonthExecutionPoints,
-} from '@/lib/projects/overview/build-project-execution-series'
+  buildBuildProjectExecutionSeries,
+  loadBuildProjectDeliveryMetrics,
+} from '@/lib/projects/overview/build-project-delivery-window'
 import {
-  formatMonthKeyLabel,
   loadProjectActualsForMonths,
-  loadProjectActualsForMonthsFromOptions,
   loadProjectGrainPlans,
   loadLifetimePlannedHoursByProject,
-  loadProjectGrainPlansForMonths,
-  monthStartsFromProjectStart,
   sumPlannedHoursByProject,
-  type ProjectPlanGrainRow,
 } from '@/lib/projects/overview/load-project-grain-data'
 import { loadProjectsGlobalTotalsCached } from '@/lib/projects/overview/load-projects-global-list'
 import type { ProjectsMonthContext } from '@/lib/projects/overview/projects-page-cache'
@@ -33,30 +30,6 @@ import {
   type TeamsCompositionMember,
 } from '@/lib/teams/composition/teams-composition-utils'
 const BATCH = 200
-
-async function resolveBuildExecutionStartDate(
-  supabase: ReturnType<typeof createServiceClientCached>,
-  projectId: string,
-  startDate: string | null,
-  fallbackMonthStartStr: string
-): Promise<string> {
-  if (startDate) return startDate
-
-  const { data, error } = await supabase
-    .from('fact_worklogs')
-    .select('log_date')
-    .eq('project_id', projectId)
-    .eq('is_pto', false)
-    .order('log_date', { ascending: true })
-    .limit(1)
-    .maybeSingle()
-
-  if (!error && data?.log_date) {
-    return data.log_date as string
-  }
-
-  return fallbackMonthStartStr
-}
 
 function buildRoleHoursRows(
   hoursByRole: Map<string, { roleKey: string; roleLabel: string; hours: number }>
@@ -96,7 +69,7 @@ export async function loadProjectDetailPanel(params: {
   const { data: projectRow, error: projectErr } = await supabase
     .from('dim_project')
     .select(
-      'id, project_key, project_name, project_type, start_date, budget_hours, status, target_release_date, projected_hours_at_completion'
+      'id, project_key, project_name, project_type, start_date, end_date, budget_hours, status, target_release_date, projected_hours_at_completion'
     )
     .eq('project_key', params.projectKey)
     .maybeSingle()
@@ -108,45 +81,44 @@ export async function loadProjectDetailPanel(params: {
   }
 
   const projectId = projectRow.id as string
+  const projectEndDate = projectRow.end_date as string | null
 
   const isBuildProject = projectRow.project_type === 'build'
   const executionScope = isBuildProject ? 'lifetime' : 'month'
   const executionGranularity = isBuildProject ? 'month' : 'day'
 
-  const buildExecutionStartStr = isBuildProject
-    ? await resolveBuildExecutionStartDate(
-        supabase,
-        projectId,
-        projectRow.start_date,
-        monthStartStr
-      )
-    : monthStartStr
+  const velocityAsOf = startOfDay(new Date())
+  const velocityEndStr = format(velocityAsOf, 'yyyy-MM-dd')
+  const velocityStartStr = format(
+    startOfWeek(subWeeks(velocityAsOf, 5), { weekStartsOn: 1 }),
+    'yyyy-MM-dd'
+  )
 
-  const executionMonthKeys = isBuildProject
-    ? monthStartsFromProjectStart(buildExecutionStartStr, monthStartStr)
-    : []
-
-  const velocityStart = format(subWeeks(new Date(), 6), 'yyyy-MM-dd')
+  const buildDeliveryPromise = isBuildProject
+    ? loadBuildProjectDeliveryMetrics({
+        projects: [
+          {
+            projectId,
+            startDate: projectRow.start_date,
+            endDate: projectEndDate,
+          },
+        ],
+        historicalOptions: options,
+        fallbackSnapshotId: snapshot.id,
+        fallbackMonthStartStr: monthStartStr,
+      })
+    : Promise.resolve(null)
 
   const [
     monthActualsRes,
-    executionActualsRes,
-    executionPlansRes,
+    buildDeliveryRes,
     monthPlansRes,
     worklogRes,
     velocityRes,
     roleMetaRes,
   ] = await Promise.all([
     loadProjectActualsForMonths(snapshot.id, [monthStartStr]),
-    isBuildProject
-      ? loadProjectActualsForMonthsFromOptions(executionMonthKeys, options)
-      : Promise.resolve({ rows: [], error: null as string | null }),
-    isBuildProject
-      ? loadProjectGrainPlansForMonths(executionMonthKeys, options)
-      : Promise.resolve({
-          rowsByMonth: new Map<string, ProjectPlanGrainRow[]>(),
-          error: null as string | null,
-        }),
+    buildDeliveryPromise,
     loadProjectGrainPlans(snapshot.id, monthStartStr),
     pagedQuery<{
       person_id: string
@@ -169,8 +141,8 @@ export async function loadProjectDetailPanel(params: {
         .select('log_date, logged_seconds')
         .eq('project_id', projectId)
         .eq('is_pto', false)
-        .gte('log_date', velocityStart)
-        .lte('log_date', monthEndStr)
+        .gte('log_date', velocityStartStr)
+        .lte('log_date', velocityEndStr)
         .order('log_date')
         .range(from, from + 999)
     ),
@@ -180,11 +152,8 @@ export async function loadProjectDetailPanel(params: {
   if (monthActualsRes.error) {
     return { data: null, error: monthActualsRes.error }
   }
-  if (isBuildProject && executionActualsRes.error) {
-    return { data: null, error: executionActualsRes.error }
-  }
-  if (isBuildProject && executionPlansRes.error) {
-    return { data: null, error: executionPlansRes.error }
+  if (buildDeliveryRes?.error) {
+    return { data: null, error: buildDeliveryRes.error }
   }
   if (monthPlansRes.error) return { data: null, error: monthPlansRes.error }
   if (worklogRes.error) return { data: null, error: worklogRes.error }
@@ -202,31 +171,19 @@ export async function loadProjectDetailPanel(params: {
     sumPlannedHoursByProject(monthPlansRes.rows).get(projectId) ?? 0
   )
 
+  const buildWindow = buildDeliveryRes?.windowsByProject.get(projectId) ?? null
+  const buildTotals = buildDeliveryRes?.totalsByProject.get(projectId) ?? null
+  const buildGrain = buildDeliveryRes?.grain ?? null
+
   let executionSeries: ProjectDetailPanelPayload['executionSeries']
 
-  if (isBuildProject) {
-    const plannedByExecutionMonth = new Map<string, number>()
-    for (const key of executionMonthKeys) {
-      const planRows = executionPlansRes.rowsByMonth.get(key) ?? []
-      const sums = sumPlannedHoursByProject(planRows)
-      plannedByExecutionMonth.set(key, roundDisplayStat(sums.get(projectId) ?? 0))
-    }
-
-    const loggedByExecutionMonth = new Map<string, number>()
-    for (const row of executionActualsRes.rows) {
-      if (row.project_id !== projectId) continue
-      loggedByExecutionMonth.set(
-        row.month_date,
-        roundDisplayStat((loggedByExecutionMonth.get(row.month_date) ?? 0) + row.logged_hours)
-      )
-    }
-
-    executionSeries = buildPerMonthExecutionPoints(
-      executionMonthKeys,
-      plannedByExecutionMonth,
-      loggedByExecutionMonth,
-      formatMonthKeyLabel
-    )
+  if (isBuildProject && buildWindow && buildGrain) {
+    executionSeries = buildBuildProjectExecutionSeries({
+      projectId,
+      monthKeys: buildWindow.monthKeys,
+      plansByMonth: buildGrain.plansByMonth,
+      actuals: buildGrain.actuals,
+    })
   } else {
     const loggedByDate = aggregateLoggedHoursByDate(worklogRes.rows)
     const monthStart = parse(monthStartStr, 'yyyy-MM-dd', new Date())
@@ -259,7 +216,11 @@ export async function loadProjectDetailPanel(params: {
     monthActualsForProject.reduce((s, r) => s + r.billable_hours, 0)
   )
 
-  if (params.viewMode === 'global') {
+  if (isBuildProject && buildTotals) {
+    plannedHoursTotal = buildTotals.plannedHours
+    loggedHoursTotal = buildTotals.loggedHours
+    billableHoursTotal = buildTotals.billableHours
+  } else if (params.viewMode === 'global') {
     const globalRes = await loadProjectsGlobalTotalsCached()
     if (globalRes.error) return { data: null, error: globalRes.error }
     const globalRow = globalRes.rows.find((r) => r.project_id === projectId)
@@ -267,21 +228,15 @@ export async function loadProjectDetailPanel(params: {
       loggedHoursTotal = roundDisplayStat(Number(globalRow.lifetime_logged_hours))
       billableHoursTotal = roundDisplayStat(Number(globalRow.lifetime_billable_hours))
     }
-    if (isBuildProject) {
-      plannedHoursTotal = roundDisplayStat(
-        executionSeries.reduce((s, point) => s + point.plannedHours, 0)
-      )
-    } else {
-      const lifetimePlannedRes = await loadLifetimePlannedHoursByProject({
-        anchorMonthStartStr: monthStartStr,
-        options,
-        projects: [{ id: projectId, start_date: projectRow.start_date }],
-      })
-      if (lifetimePlannedRes.error) {
-        return { data: null, error: lifetimePlannedRes.error }
-      }
-      plannedHoursTotal = lifetimePlannedRes.byProject.get(projectId) ?? plannedHoursTotal
+    const lifetimePlannedRes = await loadLifetimePlannedHoursByProject({
+      anchorMonthStartStr: monthStartStr,
+      options,
+      projects: [{ id: projectId, start_date: projectRow.start_date }],
+    })
+    if (lifetimePlannedRes.error) {
+      return { data: null, error: lifetimePlannedRes.error }
     }
+    plannedHoursTotal = lifetimePlannedRes.byProject.get(projectId) ?? plannedHoursTotal
   }
 
   const teamSize = countPeopleOnProjectPlan(monthPlansRes.rows, projectId)
@@ -374,13 +329,24 @@ export async function loadProjectDetailPanel(params: {
     )
   }
 
-  const velocityWeeks = Array.from(velocityByWeek.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-6)
-    .map(([weekKey, hours]) => ({
-      weekLabel: format(parse(weekKey, 'yyyy-MM-dd', new Date()), "'W'II"),
-      loggedHours: roundDisplayStat(hours),
-    }))
+  const velocityWeekStarts = Array.from({ length: 6 }, (_, index) =>
+    subWeeks(startOfWeek(velocityAsOf, { weekStartsOn: 1 }), 5 - index)
+  )
+
+  const velocityWeeks = velocityWeekStarts.map((weekStart) => {
+    const weekKey = format(weekStart, 'yyyy-MM-dd')
+    return {
+      weekLabel: format(weekStart, "'W'II"),
+      loggedHours: roundDisplayStat(velocityByWeek.get(weekKey) ?? 0),
+    }
+  })
+
+  const executionPeriodStart = isBuildProject ? (buildWindow?.periodStart ?? null) : null
+
+  const planVarianceHours =
+    isBuildProject && executionGranularity === 'month'
+      ? cumulativePlanVarianceHours(executionSeries)
+      : null
 
   return {
     data: {
@@ -404,11 +370,14 @@ export async function loadProjectDetailPanel(params: {
         loggedHoursTotal,
         projectRow.budget_hours
       ),
+      planVarianceHours,
       teamSize,
       monthKey,
       executionSeries,
       executionScope,
       executionGranularity,
+      executionPeriodStart,
+      executionPeriodEnd: isBuildProject ? projectEndDate : null,
       teamBreakdown: buildRoleHoursRows(teamBreakdownMap),
       roleAllocation: buildRoleHoursRows(roleAllocationMap),
       velocityWeeks,

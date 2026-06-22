@@ -33,6 +33,19 @@ export function resolveSelectedOverviewMonth(
   return options.find((o) => o.monthKey === currentKey) ?? options[0]
 }
 
+/** Dedupe month options; later groups override earlier entries for the same `monthStartStr`. */
+export function mergeOverviewMonthOptions(
+  ...groups: readonly (readonly OverviewMonthOption[])[]
+): OverviewMonthOption[] {
+  const byStart = new Map<string, OverviewMonthOption>()
+  for (const group of groups) {
+    for (const opt of group) {
+      byStart.set(opt.monthStartStr, opt)
+    }
+  }
+  return [...byStart.values()]
+}
+
 type DashboardMonthOptionRow = {
   month_date: string
   snapshot_id: string

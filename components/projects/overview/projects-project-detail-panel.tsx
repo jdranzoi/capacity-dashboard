@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { format, isAfter, parse, startOfDay } from "date-fns";
-import { Link2 } from "lucide-react";
+import { format, parse } from "date-fns";
+import { Link2, CircleHelp } from "lucide-react";
 
 import { ProjectExecutionChart } from "@/components/projects/overview/project-execution-chart";
 import {
@@ -14,7 +14,12 @@ import {
   DataSectionPanel,
   DataSectionPanelHeader,
 } from "@/components/ui/data-section-panel";
-import { fmtHoursKpi, fmtPct } from "@/lib/overview/overview-metrics";
+import { fmtHoursKpi, fmtPct, fmtPlanVarianceKpi } from "@/lib/overview/overview-metrics";
+import { PROJECT_DETAIL_KPI_TOOLTIPS } from "@/components/projects/overview/projects-detail-kpi-tooltips";
+import {
+  buildProjectDetailKpiContextLines,
+  type ProjectDetailKpiContextLine,
+} from "@/lib/projects/overview/project-detail-kpi-context";
 import type { ProjectDetailPanelPayload } from "@/lib/projects/overview/projects-types";
 import { projectSpaceTypeLabel } from "@/lib/domain/project-types";
 import { projectCardTitle } from "@/lib/teams/composition/teams-composition-utils";
@@ -59,12 +64,6 @@ function DetailMetaTag({
   );
 }
 
-function releaseDateLabel(targetReleaseDate: string): "Released date" | "Target release date" {
-  const releaseDate = startOfDay(parse(targetReleaseDate, "yyyy-MM-dd", new Date()));
-  const today = startOfDay(new Date());
-  return isAfter(releaseDate, today) ? "Target release date" : "Released date";
-}
-
 function ProjectDetailMetaRow({ detail }: { detail: ProjectDetailPanelPayload }) {
   const started = formatStartDate(detail.startDate);
   const releaseFormatted = detail.targetReleaseDate
@@ -77,11 +76,11 @@ function ProjectDetailMetaRow({ detail }: { detail: ProjectDetailPanelPayload })
       <DetailMetaTag tone="pm">PM: {detail.pmName ?? "—"}</DetailMetaTag>
       <DetailMetaTag tone="tl">TL: {detail.tlNames ?? "—"}</DetailMetaTag>
       {started ? (
-        <DetailMetaTag tone="started">Started {started}</DetailMetaTag>
+        <DetailMetaTag tone="started">Kick off: {started}</DetailMetaTag>
       ) : null}
       {releaseFormatted && detail.targetReleaseDate ? (
         <DetailMetaTag tone="release">
-          {releaseDateLabel(detail.targetReleaseDate)}: {releaseFormatted}
+          Release: {releaseFormatted}
         </DetailMetaTag>
       ) : null}
     </div>
@@ -100,7 +99,87 @@ type DetailKpiCell = {
   label: string;
   value: string;
   href?: string;
+  tooltip?: string;
+  contextLine?: ProjectDetailKpiContextLine;
 };
+
+function DetailKpiContextLine({ line }: { line?: ProjectDetailKpiContextLine }) {
+  return (
+    <p
+      className={cn(
+        "mt-0.5 min-h-[0.6rem] text-[0.6rem] tabular-nums leading-none",
+        !line && "invisible",
+        line?.tone === "positive" && "text-[var(--overview-metric-billable)]",
+        line?.tone === "negative" && "text-destructive",
+        line?.tone === "neutral" && "text-foreground",
+      )}
+      aria-hidden={!line}
+    >
+      {line?.text ?? "\u00a0"}
+    </p>
+  );
+}
+
+function DetailKpiCard({ cell }: { cell: DetailKpiCell }) {
+  const body = (
+    <>
+      <DetailKpiLabel label={cell.label} tooltip={cell.tooltip} />
+      <p
+        className={cn(
+          "mt-0.5 text-xs font-semibold tabular-nums text-foreground",
+          cell.href && "flex items-center gap-1",
+        )}
+      >
+        <span>{cell.value}</span>
+        {cell.href ? (
+          <Link2
+            className="size-3 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-muted-foreground"
+            aria-hidden="true"
+          />
+        ) : null}
+      </p>
+      <DetailKpiContextLine line={cell.contextLine} />
+    </>
+  );
+
+  if (cell.href) {
+    return (
+      <a
+        href={cell.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`${cell.label}: ${cell.value}. Opens team composition in a new tab.`}
+        className={cn(
+          dashboardSurfaceClass(
+            "group block p-2 transition-[background-color,box-shadow] duration-150",
+          ),
+          "cursor-pointer hover:bg-muted/30 hover:ring-foreground/15",
+        )}
+      >
+        {body}
+      </a>
+    );
+  }
+
+  return <div className={cn(dashboardSurfaceClass("p-2"))}>{body}</div>;
+}
+
+function DetailKpiLabel({ label, tooltip }: { label: string; tooltip?: string }) {
+  return (
+    <p
+      className="flex items-center gap-0.5 text-[0.55rem] font-medium uppercase leading-none tracking-wider text-muted-foreground"
+      title={tooltip}
+    >
+      <span className={cn(tooltip && "min-w-0 truncate whitespace-nowrap")}>{label}</span>
+      {tooltip ? (
+        <>
+          <CircleHelp className="size-2.5 shrink-0 opacity-50" aria-hidden />
+          <span className="sr-only">{tooltip}</span>
+        </>
+      ) : null}
+    </p>
+  );
+}
 
 const PROJECT_DETAIL_TABS = [
   { id: "overview", label: "Overview" },
@@ -180,9 +259,13 @@ function ProjectDetailOverviewTab({
           <ProjectExecutionChart
             series={detail.executionSeries}
             granularity={detail.executionGranularity}
+            periodStart={detail.executionPeriodStart}
+            periodEnd={detail.executionPeriodEnd}
             ariaLabel={
               detail.executionGranularity === "month"
-                ? "Planned versus logged hours by month"
+                ? detail.executionPeriodStart && detail.executionPeriodEnd
+                  ? `Planned versus logged hours by month from ${detail.executionPeriodStart} to ${detail.executionPeriodEnd}`
+                  : "Planned versus logged hours by month"
                 : "Planned versus logged hours by day in the selected month"
             }
           />
@@ -220,17 +303,13 @@ function ProjectDetailOverviewTab({
 
 const DETAIL_KPI_CELLS = (
   detail: ProjectDetailPanelPayload,
-): DetailKpiCell[] => [
-  { label: "Planned", value: fmtHoursKpi(detail.plannedHoursTotal) },
-  { label: "Logged", value: fmtHoursKpi(detail.loggedHoursTotal) },
-  { label: "Billable", value: fmtHoursKpi(detail.billableHoursTotal) },
+): DetailKpiCell[] => {
+  const contextLines = buildProjectDetailKpiContextLines(detail);
+
+  return [
   {
     label: "Budget",
     value: detail.budgetHours != null ? fmtHoursKpi(detail.budgetHours) : "—",
-  },
-  {
-    label: "Budget used",
-    value: detail.budgetUsedPct != null ? fmtPct(detail.budgetUsedPct) : "—",
   },
   {
     label: "Projected",
@@ -238,6 +317,27 @@ const DETAIL_KPI_CELLS = (
       detail.projectedHoursAtCompletion != null
         ? fmtHoursKpi(detail.projectedHoursAtCompletion)
         : "—",
+    contextLine: contextLines.projected,
+  },
+  {
+    label: "Planned",
+    value: fmtHoursKpi(detail.plannedHoursTotal),
+    contextLine: contextLines.planned,
+  },
+  {
+    label: "Logged",
+    value: fmtHoursKpi(detail.loggedHoursTotal),
+    contextLine: contextLines.logged,
+  },
+  { label: "Billable", value: fmtHoursKpi(detail.billableHoursTotal) },
+  {
+    label: "Budget used",
+    value: detail.budgetUsedPct != null ? fmtPct(detail.budgetUsedPct) : "—",
+  },
+  {
+    label: "Plan gap",
+    value: fmtPlanVarianceKpi(detail.planVarianceHours),
+    tooltip: PROJECT_DETAIL_KPI_TOOLTIPS.planGap,
   },
   {
     label: "Team Size",
@@ -245,6 +345,7 @@ const DETAIL_KPI_CELLS = (
     href: teamCompositionHref(detail),
   },
 ];
+};
 
 function DetailChartSection({
   title,
@@ -291,7 +392,9 @@ export function ProjectsProjectDetailPanel({
 
   const executionDescription =
     detail.executionGranularity === "month"
-      ? "Planned vs logged hours by month from project start"
+      ? detail.executionPeriodEnd
+        ? "Planned vs logged hours by month through project end date"
+        : "Planned vs logged hours by month from project start"
       : detail.monthLabel
         ? `Planned vs logged hours by day in ${detail.monthLabel}`
         : "Planned vs logged hours by day in the selected month";
@@ -306,44 +409,10 @@ export function ProjectsProjectDetailPanel({
         description={<ProjectDetailMetaRow detail={detail} />}
       />
 
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-        {DETAIL_KPI_CELLS(detail).map((cell) =>
-          cell.href ? (
-            <a
-              key={cell.label}
-              href={cell.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`${cell.label}: ${cell.value}. Opens team composition in a new tab.`}
-              className={cn(
-                dashboardSurfaceClass(
-                  "group block p-2 transition-[background-color,box-shadow] duration-150",
-                ),
-                "cursor-pointer hover:bg-muted/30 hover:ring-foreground/15",
-              )}
-            >
-              <p className="text-[0.55rem] font-medium uppercase tracking-wider text-muted-foreground">
-                {cell.label}
-              </p>
-              <p className="mt-0.5 flex items-center gap-1 text-xs font-semibold tabular-nums text-foreground">
-                <span>{cell.value}</span>
-                <Link2
-                  className="size-3 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-muted-foreground"
-                  aria-hidden="true"
-                />
-              </p>
-            </a>
-          ) : (
-            <div key={cell.label} className={cn(dashboardSurfaceClass("p-2"))}>
-              <p className="text-[0.55rem] font-medium uppercase tracking-wider text-muted-foreground">
-                {cell.label}
-              </p>
-              <p className="mt-0.5 text-xs font-semibold tabular-nums text-foreground">
-                {cell.value}
-              </p>
-            </div>
-          ),
-        )}
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+        {DETAIL_KPI_CELLS(detail).map((cell) => (
+          <DetailKpiCard key={cell.label} cell={cell} />
+        ))}
       </div>
 
       <ProjectDetailTabs activeTab={activeTab} onChange={setActiveTab} />

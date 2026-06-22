@@ -63,6 +63,14 @@ export function fmtHoursKpi(n: number): string {
   })}h`
 }
 
+/** Build detail KPI: cumulative plan variance for elapsed months. */
+export function fmtPlanVarianceKpi(varianceHours: number | null): string {
+  if (varianceHours == null) return '—'
+  if (varianceHours === 0) return 'On plan'
+  const magnitude = fmtHoursKpi(Math.abs(varianceHours))
+  return varianceHours > 0 ? `${magnitude} under` : `${magnitude} over`
+}
+
 /** Whole-person counts (headline KPIs). */
 export function fmtHeadcountKpi(n: number): string {
   const i = roundDisplayStat(n)

@@ -12,6 +12,7 @@ export type ActiveProjectMeta = {
   project_type: ProjectSpaceType
   status: string
   start_date: string | null
+  end_date: string | null
   budget_hours: number | null
 }
 
@@ -22,6 +23,7 @@ type ProjectRow = {
   project_type: string
   status: string
   start_date: string | null
+  end_date: string | null
   budget_hours: number | null
 }
 
@@ -35,7 +37,7 @@ export async function loadActiveProjects(): Promise<{
     supabase
       .from('dim_project')
       .select(
-        'id, project_key, project_name, project_type, status, start_date, budget_hours'
+        'id, project_key, project_name, project_type, status, start_date, end_date, budget_hours'
       )
       .eq('status', 'active')
       .order('project_key')
@@ -56,6 +58,7 @@ export async function loadActiveProjects(): Promise<{
       project_type: row.project_type,
       status: row.status,
       start_date: row.start_date,
+      end_date: row.end_date,
       budget_hours: row.budget_hours,
     })
   }

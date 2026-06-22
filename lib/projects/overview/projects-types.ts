@@ -77,11 +77,16 @@ export type ProjectDetailPanelPayload = {
   loggedHoursTotal: number
   billableHoursTotal: number
   budgetUsedPct: number | null
+  /** Build only: cumulative planned − logged for elapsed months (positive = under plan). */
+  planVarianceHours: number | null
   teamSize: number
   monthKey: string | null
   executionSeries: ProjectExecutionPoint[]
   executionScope: ProjectExecutionScope
   executionGranularity: ProjectExecutionGranularity
+  /** Build burn-rate window start (inclusive ISO date). End uses `end_date`. */
+  executionPeriodStart: string | null
+  executionPeriodEnd: string | null
   teamBreakdown: ProjectRoleHoursRow[]
   roleAllocation: ProjectRoleHoursRow[]
   velocityWeeks: ProjectVelocityWeekPoint[]
