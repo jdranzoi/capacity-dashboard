@@ -48,11 +48,11 @@ export function SyncStatusBadge() {
 
   return (
     <span
-      className={`inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-full px-2.5 py-1 text-xs font-medium ${tierStyles[tier]}`}
+      className={`inline-flex max-w-full flex-wrap items-center gap-3 rounded-full px-2.5 py-1 text-xs font-medium ${tierStyles[tier]}`}
       title={snapshotId ?? undefined}
     >
       <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${tierDot[tier]}`} />
-      <span className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5">
+      <span className="flex min-w-0 flex-wrap items-center gap-3">
         <span className="shrink-0">{label}</span>
         {snapshotId && syncedAt ? (
           <>
@@ -67,5 +67,5 @@ export function SyncStatusBadge() {
         ) : null}
       </span>
     </span>
-  )
+  );
 }

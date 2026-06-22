@@ -55,7 +55,7 @@ export function CollaborationNetworkExplorer({ data }: { data: CollaborationNetw
   }
 
   return (
-    <div className="grid min-w-0 gap-4 lg:h-[min(42rem,calc(100vh-11rem))] lg:grid-cols-[minmax(0,3fr)_minmax(0,4fr)_minmax(0,3fr)] lg:items-stretch">
+    <div className="grid min-w-0 gap-3 lg:h-[min(42rem,calc(100vh-11rem))] lg:grid-cols-[minmax(0,3fr)_minmax(0,4fr)_minmax(0,3fr)] lg:items-stretch">
       <CollaborationMatrix
         matrix={data.matrix}
         selectedEdgeKey={selectedEdgeKey}
@@ -63,24 +63,28 @@ export function CollaborationNetworkExplorer({ data }: { data: CollaborationNetw
         className="h-full min-h-0"
       />
 
-      <div className="flex h-full min-h-0 flex-col gap-2">
+      <div className="flex h-full min-h-0 flex-col gap-3">
         <CollaborationRoleLegend
           roles={legendRoles}
           visibleRoleKeys={visibleRoleKeys}
           onToggleRole={(roleKey) => {
             setVisibleRoleKeys((prev) => {
-              const next = new Set(prev)
+              const next = new Set(prev);
               if (next.has(roleKey)) {
-                if (next.size <= 1) return prev
-                next.delete(roleKey)
+                if (next.size <= 1) return prev;
+                next.delete(roleKey);
               } else {
-                next.add(roleKey)
+                next.add(roleKey);
               }
-              return next
-            })
+              return next;
+            });
           }}
-          onShowAll={() => setVisibleRoleKeys(new Set(legendRoles.map((r) => r.key)))}
-          onHideAll={() => setVisibleRoleKeys(defaultVisibleRoleKeys(legendRoles))}
+          onShowAll={() =>
+            setVisibleRoleKeys(new Set(legendRoles.map((r) => r.key)))
+          }
+          onHideAll={() =>
+            setVisibleRoleKeys(defaultVisibleRoleKeys(legendRoles))
+          }
           className="shrink-0"
         />
         {visibleNodes.length === 0 ? (
@@ -109,5 +113,5 @@ export function CollaborationNetworkExplorer({ data }: { data: CollaborationNetw
         className="h-full min-h-0 overflow-y-auto"
       />
     </div>
-  )
+  );
 }

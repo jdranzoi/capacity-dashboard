@@ -1,9 +1,6 @@
 import { connection } from 'next/server'
 
-import {
-  CapacityDataError,
-  CapacityEmptyMonths,
-} from '@/components/capacity/_shared/capacity-data-error'
+import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import { CapacityPlanningHeader } from '@/components/capacity/planning/capacity-planning-header'
 import { CapacityPlanningMonthKpiStrip } from '@/components/capacity/planning/capacity-planning-month-kpi-strip'
 import { CapacityPlanningPeriodPicker } from '@/components/capacity/planning/capacity-planning-period-picker'
@@ -24,10 +21,10 @@ export async function CapacityPlanningChromeBlock({
     loadPlanningWorkspaceCached(fromParam, toParam),
   ])
 
-  if (monthOptErr) return <CapacityDataError message={monthOptErr} />
-  if (options.length === 0) return <CapacityEmptyMonths />
-  if (workspaceResult.error) return <CapacityDataError message={workspaceResult.error} />
-  if (!workspaceResult.data) return <CapacityEmptyMonths />
+  if (monthOptErr) return <SectionDataError message={monthOptErr} />
+  if (options.length === 0) return <SectionEmptyState />
+  if (workspaceResult.error) return <SectionDataError message={workspaceResult.error} />
+  if (!workspaceResult.data) return <SectionEmptyState />
 
   const data = workspaceResult.data
 

@@ -165,7 +165,6 @@ Each Level 1 section answers one question (see `NAVIGATION_FUNCTIONAL.md`).
 |---|---|---|---|
 | Overview | How healthy is the org? | `/` | 1 |
 | Capacity | Can we absorb work? | `/capacity` | 1 |
-| People | Who is overloaded? | `/people` | 1 |
 | Teams | Which teams are healthy? | `/teams` | 1 |
 | Projects | Which deliveries are at risk? | `/projects` | 1 |
 | Insights | What requires intervention today? | — | 2 (deactivated; `/flags` is proto) |
@@ -181,12 +180,11 @@ Each Level 1 section answers one question (see `NAVIGATION_FUNCTIONAL.md`).
 |---|---|
 | `/` | Overview — weekly cards, KPIs, charts (*Overview page — weekly metrics*) |
 | `/capacity` | Capacity section; Level 2 nav; sub-routes are shells → redirects to `/capacity/overview` |
-| `/people` | People section; Level 2 shells → redirects to `/people/directory` |
 | `/teams` | Teams utilization dashboard (migrated from `/team`) |
 | `/teams/*` | Other Teams sub-sections — placeholders until SP-4 |
 | `/projects` | Projects section; Level 2 shells → redirects to `/projects/portfolio` |
 | `/ask` | Agent query interface (sidebar utility) |
-| `/team` | Redirect → `/teams` |
+| `/team` | Redirect → `/capacity/utilization` (legacy alias) |
 | `/flags`, `/pipeline` | Redirect → `/` (legacy; SP-6 / Zoho future) |
 
 **Navigation config:** `lib/navigation/section-nav-config.ts` · **Sidebar assembly:** `lib/navigation/sidebar-nav-config.ts` · Level 2 items live in the left sidebar under group headers (Capacity, People, Teams, Projects).
@@ -268,8 +266,9 @@ Internal formulas may use floating-point until the display boundary; contracts s
 - Use `data-slot` attributes on compound component parts so parent selectors can target them.
 - `@container` queries for card-internal responsive layouts (already established in `components/ui/card.tsx`).
 - Skeleton states use `components/ui/skeleton.tsx` — do not add new loading primitives.
+- **Coming-soon placeholders:** full-page unbuilt routes use `*ComingSoonPage` (`data-slot="*-coming-soon-page"`); inline card placeholders use `*ComingSoonCard` (`data-slot="*-coming-soon-card"`).
 - **Entity data tables** must be sortable and filterable per column via TanStack Table + shared `components/ui/data-table/*` (see `.cursor/rules/data-tables.mdc`). Exempt fixed pivot matrices (e.g. Overview weekly detail metrics × weeks).
-- New page-level data components go in `components/<section>/` mirroring the app route (e.g. `components/overview/`, `components/people/`, `components/teams/`). During SP-0 migration, `components/team/` remains until People/Teams split is done.
+- New page-level data components go in `components/<section>/` mirroring the app route (e.g. `components/overview/`, `components/teams/`, `components/projects/`).
 
 ## Code organisation
 
@@ -277,7 +276,7 @@ Internal formulas may use floating-point until the display boundary; contracts s
 
 | Folder | What lives here |
 |---|---|
-| `components/ui/` | Reusable UI primitives — no business logic, no Supabase calls (e.g. `kpi-metric-card`, `skeleton`, `data-table/*`, `charts`) |
+| `components/ui/` | Reusable UI primitives — no business logic, no Supabase calls (e.g. `kpi-metric-card`, `headcount-bar-chart`, `skeleton`, `data-table/*`) |
 | `components/layout/` | Layout-level shells: sidebar, header, providers |
 | `components/<section>/` | Section-specific data components mirroring the app route (`overview/`, `capacity/`, `teams/`, `people/`, `projects/`) |
 | `components/<section>/_shared/` | Components shared across sub-routes within a section (e.g. `capacity/_shared/role-analytics-table.tsx`) |
@@ -291,9 +290,9 @@ The `lib/` tree has four tiers. **Do not mix tiers** — a Supabase loader does 
 | Tier | Folder(s) | Rules |
 |---|---|---|
 | **Pure formulas** | `lib/domain/` | No I/O. Cross-section business rules, KPI formulas, KPI contracts. Used by loaders, components, and tests alike. |
-| **Section data layer** | `lib/capacity/`, `lib/overview/`, `lib/teams/` | Supabase loaders and route-scoped aggregations. Mirrored sub-folder structure matches `app/(dashboard)/`. |
+| **Section data layer** | `lib/capacity/`, `lib/overview/`, `lib/teams/`, `lib/projects/` | Supabase loaders and route-scoped aggregations. Mirrored sub-folder structure matches `app/(dashboard)/`. |
 | **Cross-cutting data** | `lib/workforce/`, `lib/data/` | Roster/person logic and shared data infrastructure (snapshot resolution, paged queries, cache tags) used by multiple sections. |
-| **Infrastructure** | `lib/table/`, `lib/format/`, `lib/ui/`, `lib/navigation/`, `lib/supabase/`, `lib/cache/` | No business logic. Framework glue, formatting utilities, navigation config, Supabase client setup. |
+| **Infrastructure** | `lib/table/`, `lib/format/`, `lib/ui/`, `lib/navigation/`, `lib/supabase/`, `lib/cache/`, `lib/dev/` | No business logic. Framework glue, formatting utilities, navigation config, Supabase client setup. `lib/dev/` is development-only (e.g. `perf-log.ts` no-ops in production). |
 
 **KPI contracts** (e.g. `capacity-kpi-contract.ts`) belong in `lib/domain/` — they are cross-section definitions, not section-specific. Do not place them in a section folder.
 

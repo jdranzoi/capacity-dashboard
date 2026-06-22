@@ -1,9 +1,6 @@
 import { connection } from 'next/server'
 
-import {
-  TeamsDataError,
-  TeamsEmptyMonths,
-} from '@/components/teams/_shared/teams-data-error'
+import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import { TeamsOverviewDistributionSection } from '@/components/teams/overview/teams-overview-distribution-section'
 import { TeamsOverviewFutureSection } from '@/components/teams/overview/teams-overview-future-section'
 import { TeamsOverviewKpiSection } from '@/components/teams/overview/teams-overview-kpi-section'
@@ -16,10 +13,10 @@ export async function TeamsOverviewBlock({ monthStr }: { monthStr: string | unde
     await connection()
     const ctx = await getTeamsMonthContext(monthStr)
     if (ctx.error) {
-      return <TeamsDataError message={ctx.error} />
+      return <SectionDataError message={ctx.error} />
     }
     if (!ctx.data) {
-      return <TeamsEmptyMonths />
+      return <SectionEmptyState />
     }
 
     const { selected, snapshot, monthEndStr } = ctx.data
@@ -32,18 +29,18 @@ export async function TeamsOverviewBlock({ monthStr }: { monthStr: string | unde
 
     if (result.error || !result.data) {
       return (
-        <TeamsDataError message={result.error ?? 'Could not load teams overview.'} />
+        <SectionDataError message={result.error ?? 'Could not load teams overview.'} />
       )
     }
 
     const data = result.data
 
     return (
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6">
         <TeamsOverviewKpiSection data={data} />
         <TeamsOverviewDistributionSection data={data} />
         <TeamsOverviewFutureSection />
       </div>
-    )
+    );
   })
 }

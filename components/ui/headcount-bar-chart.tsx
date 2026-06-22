@@ -1,18 +1,28 @@
 import { fmtHeadcountKpi, fmtPct } from '@/lib/overview/overview-metrics'
-import type { TeamsDistributionRow } from '@/lib/teams/overview/load-teams-overview'
+import { cn } from '@/lib/utils'
 
-function distributionAxisDomainMax(maxValue: number): number {
+const HEADCOUNT_BAR_GRID_CLASS =
+  "grid gap-3 grid-cols-[minmax(11rem,34%)_minmax(0,1fr)]";
+
+export type HeadcountBarChartRow = {
+  id: string
+  label: string
+  headcount: number
+  sharePct: number
+}
+
+function headcountAxisDomainMax(maxValue: number): number {
   if (maxValue <= 0) return 5
   return Math.max(5, Math.ceil(maxValue / 5) * 5)
 }
 
-export function TeamsDistributionChart({
+export function HeadcountBarChart({
   rows,
   totalHeadcount,
   emptyMessage,
   ariaLabel,
 }: {
-  rows: TeamsDistributionRow[]
+  rows: HeadcountBarChartRow[]
   totalHeadcount: number
   emptyMessage: string
   ariaLabel: string
@@ -26,7 +36,7 @@ export function TeamsDistributionChart({
   }
 
   const maxValue = chartRows.reduce((max, row) => Math.max(max, row.headcount), 0)
-  const domainMax = distributionAxisDomainMax(maxValue)
+  const domainMax = headcountAxisDomainMax(maxValue)
   const tickStep = 5
   const ticks = Array.from({ length: domainMax / tickStep + 1 }, (_, i) => i * tickStep)
 
@@ -40,11 +50,7 @@ export function TeamsDistributionChart({
           const fullLabel = `${row.label}, ${countLabel} (${shareLabel} of ${fmtHeadcountKpi(totalHeadcount)})`
 
           return (
-            <li
-              key={row.id ?? row.key}
-              className="grid gap-x-3"
-              style={{ gridTemplateColumns: 'minmax(11rem, 34%) minmax(0, 1fr)' }}
-            >
+            <li key={row.id} className={HEADCOUNT_BAR_GRID_CLASS}>
               <div
                 className="min-w-0 truncate text-sm leading-6 text-foreground"
                 title={fullLabel}
@@ -71,10 +77,7 @@ export function TeamsDistributionChart({
           )
         })}
       </ul>
-      <div
-        className="mt-2 grid gap-x-3"
-        style={{ gridTemplateColumns: 'minmax(11rem, 34%) minmax(0, 1fr)' }}
-      >
+      <div className={cn('mt-2', HEADCOUNT_BAR_GRID_CLASS)}>
         <div aria-hidden />
         <div className="flex justify-between border-t border-border/60 pt-1 font-mono text-[10px] tabular-nums text-muted-foreground">
           {ticks.map((tick) => (

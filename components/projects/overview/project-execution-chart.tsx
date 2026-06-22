@@ -117,16 +117,18 @@ export function ProjectExecutionChart({
 
   return (
     <div className="space-y-1.5">
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <div className={`flex flex-wrap items-center gap-3 ${PROJECT_CHART_LEGEND_CLASS}`}>
-          <span className="inline-flex items-center gap-1">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div
+          className={`flex flex-wrap items-center gap-3 ${PROJECT_CHART_LEGEND_CLASS}`}
+        >
+          <span className="inline-flex items-center gap-3">
             <span
               className="size-2 rounded-sm bg-[var(--overview-metric-planned)] opacity-55"
               aria-hidden
             />
             Planned
           </span>
-          <span className="inline-flex items-center gap-1">
+          <span className="inline-flex items-center gap-3">
             <span
               className="size-2 rounded-sm bg-[var(--overview-metric-logged)]"
               aria-hidden
@@ -149,7 +151,7 @@ export function ProjectExecutionChart({
         aria-label={ariaLabel}
       >
         {ticks.map((tick) => {
-          const y = toY(tick)
+          const y = toY(tick);
           return (
             <g key={tick}>
               <line
@@ -159,7 +161,7 @@ export function ProjectExecutionChart({
                 y2={y}
                 className="stroke-border/70"
                 strokeWidth={1}
-                strokeDasharray={tick === 0 ? undefined : '2 3'}
+                strokeDasharray={tick === 0 ? undefined : "2 3"}
               />
               <text
                 x={padL - 4}
@@ -171,7 +173,7 @@ export function ProjectExecutionChart({
                 {formatYAxisTickHours(tick)}
               </text>
             </g>
-          )
+          );
         })}
 
         <line
@@ -184,16 +186,16 @@ export function ProjectExecutionChart({
         />
 
         {series.map((point, i) => {
-          const groupCx = padL + groupSlotW * i + groupSlotW / 2
-          const plannedX = groupCx - barW - 1
-          const loggedX = groupCx + 1
-          const plannedH = (point.plannedHours / maxY) * plotH
-          const loggedH = (point.loggedHours / maxY) * plotH
-          const showPeriodLabel = i === 0 || i === n - 1 || i % step === 0
-          const showValueLabels = granularity === 'month' || showPeriodLabel
+          const groupCx = padL + groupSlotW * i + groupSlotW / 2;
+          const plannedX = groupCx - barW - 1;
+          const loggedX = groupCx + 1;
+          const plannedH = (point.plannedHours / maxY) * plotH;
+          const loggedH = (point.loggedHours / maxY) * plotH;
+          const showPeriodLabel = i === 0 || i === n - 1 || i % step === 0;
+          const showValueLabels = granularity === "month" || showPeriodLabel;
 
-          const plannedTop = axisBaselineY - plannedH
-          const loggedTop = axisBaselineY - loggedH
+          const plannedTop = axisBaselineY - plannedH;
+          const loggedTop = axisBaselineY - loggedH;
 
           return (
             <g key={point.periodKey}>
@@ -246,13 +248,17 @@ export function ProjectExecutionChart({
                   textAnchor="end"
                   transform={`rotate(-90, ${groupCx}, ${axisBaselineY + 2})`}
                 >
-                  {shortPeriodLabel(point.periodKey, point.periodLabel, granularity)}
+                  {shortPeriodLabel(
+                    point.periodKey,
+                    point.periodLabel,
+                    granularity,
+                  )}
                 </text>
               ) : null}
             </g>
-          )
+          );
         })}
       </svg>
     </div>
-  )
+  );
 }

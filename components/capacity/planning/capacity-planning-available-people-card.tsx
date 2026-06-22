@@ -59,7 +59,10 @@ export function CapacityPlanningAvailablePeopleCard({
   )
 
   return (
-    <DataSectionPanel dataSlot="capacity-planning-available-people" className="gap-3">
+    <DataSectionPanel
+      dataSlot="capacity-planning-available-people"
+      className="gap-6"
+    >
       <DataSectionPanelHeader
         title="Available People"
         description="Identify open capacity for staffing decisions."
@@ -103,8 +106,8 @@ export function CapacityPlanningAvailablePeopleCard({
             value={localMin}
             disabled={isPending}
             onChange={(e) => {
-              setLocalMin(e.target.value)
-              pushParams({ minAvail: e.target.value })
+              setLocalMin(e.target.value);
+              pushParams({ minAvail: e.target.value });
             }}
             className={filterSelectClass}
           >
@@ -144,8 +147,8 @@ export function CapacityPlanningAvailablePeopleCard({
                       </span>
                       <span aria-hidden="true"> · </span>
                       <span>
-                        {person.projectCount}{' '}
-                        {person.projectCount === 1 ? 'project' : 'projects'}
+                        {person.projectCount}{" "}
+                        {person.projectCount === 1 ? "project" : "projects"}
                       </span>
                     </p>
                   </div>
@@ -157,7 +160,7 @@ export function CapacityPlanningAvailablePeopleCard({
         )}
       </div>
     </DataSectionPanel>
-  )
+  );
 }
 
 function FilterField({ label, children }: { label: string; children: ReactNode }) {

@@ -2,10 +2,7 @@ import { connection } from 'next/server'
 
 import { CapacityOverviewTrendsSection } from '@/components/capacity/overview/capacity-overview-charts-section'
 import { CapacityOverviewKpiSection } from '@/components/capacity/overview/capacity-overview-kpi-section'
-import {
-  CapacityDataError,
-  CapacityEmptyMonths,
-} from '@/components/capacity/_shared/capacity-data-error'
+import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import { perfSpan } from '@/lib/dev/perf-log'
 import { loadCapacityOverview } from '@/lib/capacity/overview/load-capacity-overview'
 import { getCapacityMonthContext } from '@/lib/capacity/shared/capacity-page-cache'
@@ -23,10 +20,10 @@ export async function CapacityOverviewBlock({
     await connection()
     const ctx = await getCapacityMonthContext(monthStr, routeFilters)
     if (ctx.error) {
-      return <CapacityDataError message={ctx.error} />
+      return <SectionDataError message={ctx.error} />
     }
     if (!ctx.data) {
-      return <CapacityEmptyMonths />
+      return <SectionEmptyState />
     }
 
     const { selected, snapshot, personIds } = ctx.data
@@ -41,17 +38,17 @@ export async function CapacityOverviewBlock({
 
     if (result.error || !result.data) {
       return (
-        <CapacityDataError message={result.error ?? 'Could not load capacity overview.'} />
+        <SectionDataError message={result.error ?? 'Could not load capacity overview.'} />
       )
     }
 
     const data = result.data
 
     return (
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6">
         <CapacityOverviewKpiSection data={data} />
         <CapacityOverviewTrendsSection data={data} />
       </div>
-    )
+    );
   })
 }

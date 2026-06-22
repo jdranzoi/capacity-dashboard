@@ -108,25 +108,25 @@ export function PlannedLoggedBarLegend({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'flex flex-wrap items-center gap-3 text-[0.7rem] text-muted-foreground',
-        className
+        "flex flex-wrap items-center gap-3 text-[0.7rem] text-muted-foreground",
+        className,
       )}
     >
-      <span className="inline-flex items-center gap-1.5">
+      <span className="inline-flex items-center gap-3">
         <span
           className="size-2 rounded-sm bg-[var(--overview-metric-planned)] opacity-50"
           aria-hidden
         />
         Planned
       </span>
-      <span className="inline-flex items-center gap-1.5">
+      <span className="inline-flex items-center gap-3">
         <span
           className="size-2 rounded-sm bg-[var(--overview-metric-logged)]"
           aria-hidden
         />
         Logged
       </span>
-      <span className="inline-flex items-center gap-1.5">
+      <span className="inline-flex items-center gap-3">
         <span
           className="h-2 w-2.5 rounded-sm bg-destructive/50 ring-1 ring-destructive"
           aria-hidden
@@ -134,5 +134,5 @@ export function PlannedLoggedBarLegend({ className }: { className?: string }) {
         Overrun
       </span>
     </div>
-  )
+  );
 }

@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useCallback } from 'react'
 
 import { useTeamsRoutePending } from '@/components/teams/_shared/teams-route-pending-shell'
-import { TeamsMonthPicker } from '@/components/teams/_shared/teams-month-picker'
+import { OverviewMonthPicker } from '@/components/overview/overview-month-picker'
 import { FilterSuggestInput } from '@/components/ui/filter-suggest-input'
 import { DashboardFilterField } from '@/components/layout/dashboard-filter-field'
 import type { FilterSuggestOption } from '@/lib/format/filter-suggest-utils'
@@ -93,7 +93,7 @@ export function CollaborationFilters({
   return (
     <div className="flex flex-wrap items-end gap-3" data-slot="collaboration-filters">
       <DashboardFilterField label="Period">
-        <TeamsMonthPicker options={data.monthOptions} selectedMonthKey={data.monthKey} />
+        <OverviewMonthPicker options={data.monthOptions} selectedMonthKey={data.monthKey} />
       </DashboardFilterField>
       <DashboardFilterField label="Project category">
         <NativeSelect

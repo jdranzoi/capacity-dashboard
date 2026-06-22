@@ -1,6 +1,6 @@
 import { connection } from 'next/server'
 
-import { CapacityDataError, CapacityEmptyMonths } from '@/components/capacity/_shared/capacity-data-error'
+import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import { UtilizationToolbar } from '@/components/capacity/utilization/utilization-toolbar'
 import { DashboardSectionHeader } from '@/components/layout/dashboard-section-header'
 import { perfSpan } from '@/lib/dev/perf-log'
@@ -19,10 +19,10 @@ export async function UtilizationChromeBlock({
     const boot = await getCapacityMonthContext(monthStr, routeFilters)
 
     if (boot.error) {
-      return <CapacityDataError message={boot.error} />
+      return <SectionDataError message={boot.error} />
     }
     if (!boot.data) {
-      return <CapacityEmptyMonths />
+      return <SectionEmptyState />
     }
 
     const { options, selected, filterOptions } = boot.data

@@ -4,7 +4,7 @@ export type SectionNavItemStatus = 'active' | 'coming-soon' | 'future'
 
 export type SectionNavItem = NavigationCatalogItem
 
-export type SectionId = 'capacity' | 'people' | 'teams' | 'projects'
+export type SectionId = 'capacity' | 'teams' | 'projects'
 
 export type SectionNavConfig = {
   id: SectionId

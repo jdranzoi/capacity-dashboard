@@ -1,9 +1,6 @@
 import { connection } from 'next/server'
 
-import {
-  CapacityDataError,
-  CapacityEmptyMonths,
-} from '@/components/capacity/_shared/capacity-data-error'
+import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import { CapacityPlanningPeopleGrid } from '@/components/capacity/planning/capacity-planning-people-grid'
 import { CapacityPlanningProjectGrid } from '@/components/capacity/planning/capacity-planning-project-grid'
 import { DataSectionPanel, DataSectionPanelHeader } from '@/components/ui/data-section-panel'
@@ -35,8 +32,8 @@ export async function CapacityPlanningGridBlock({
   const view: PlanningView = parsePlanningView(viewParam)
   const workspaceResult = await loadPlanningWorkspaceCached(fromParam, toParam)
 
-  if (workspaceResult.error) return <CapacityDataError message={workspaceResult.error} />
-  if (!workspaceResult.data) return <CapacityEmptyMonths />
+  if (workspaceResult.error) return <SectionDataError message={workspaceResult.error} />
+  if (!workspaceResult.data) return <SectionEmptyState />
 
   const data = workspaceResult.data
   const roleOptions = collectRoleOptions(data.peopleTreeRows)

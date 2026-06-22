@@ -2,7 +2,7 @@ import {
   KpiMetricCard,
   KpiMetricSubline,
   KPI_METRICS_GRID_CLASS,
-} from '@/components/dashboard/kpi-metric-card'
+} from '@/components/ui/kpi-metric-card'
 import { fmtHoursKpi, fmtPct } from '@/lib/overview/overview-metrics'
 import type { ProjectsOverviewKpis } from '@/lib/projects/overview/projects-types'
 import { cn } from '@/lib/utils'

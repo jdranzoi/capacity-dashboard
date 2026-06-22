@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 
 import { CapacityRoutePendingShell } from '@/components/capacity/_shared/capacity-route-pending-shell'
-import { CapacityRouteSection } from '@/components/capacity/_shared/capacity-route-section'
+import { CapacityRouteSection } from '@/components/capacity/_shared/capacity-route-pending-shell'
 import {
   UtilizationAnalyticsSkeleton,
   UtilizationKpiRowSkeleton,
@@ -39,22 +39,33 @@ async function CapacityUtilizationPageContent({ searchParams }: CapacityUtilizat
   const monthStr = Array.isArray(monthParam) ? monthParam[0] : monthParam
 
   return (
-    <div className="flex flex-col gap-8">
-      <CapacityRouteSection fallback={<DashboardSectionHeaderSkeleton filterCount={4} />}>
-        <UtilizationChromeBlock monthStr={monthStr} routeFilters={routeFilters} />
+    <div className="flex flex-col gap-6">
+      <CapacityRouteSection
+        fallback={<DashboardSectionHeaderSkeleton filterCount={4} />}
+      >
+        <UtilizationChromeBlock
+          monthStr={monthStr}
+          routeFilters={routeFilters}
+        />
       </CapacityRouteSection>
 
       <Suspense fallback={<UtilizationKpiRowSkeleton />}>
         <CapacityRouteSection fallback={<UtilizationKpiRowSkeleton />}>
-          <UtilizationKpiBlock monthStr={monthStr} routeFilters={routeFilters} />
+          <UtilizationKpiBlock
+            monthStr={monthStr}
+            routeFilters={routeFilters}
+          />
         </CapacityRouteSection>
       </Suspense>
 
       <Suspense fallback={<UtilizationAnalyticsSkeleton />}>
         <CapacityRouteSection fallback={<UtilizationAnalyticsSkeleton />}>
-          <UtilizationAnalyticsBlock monthStr={monthStr} routeFilters={routeFilters} />
+          <UtilizationAnalyticsBlock
+            monthStr={monthStr}
+            routeFilters={routeFilters}
+          />
         </CapacityRouteSection>
       </Suspense>
     </div>
-  )
+  );
 }

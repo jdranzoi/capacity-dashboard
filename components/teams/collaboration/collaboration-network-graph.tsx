@@ -96,8 +96,8 @@ export function CollaborationNetworkGraph({
   return (
     <div
       className={cn(
-        'relative min-h-0 w-full flex-1 overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10',
-        className
+        "relative min-h-0 w-full flex-1 overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10",
+        className,
       )}
       data-slot="collaboration-graph"
     >
@@ -110,16 +110,16 @@ export function CollaborationNetworkGraph({
       >
         <g>
           {edges.map((edge) => {
-            const a = layout.get(edge.source)
-            const b = layout.get(edge.target)
-            if (!a || !b) return null
-            const key = collaborationEdgeKey(edge.source, edge.target)
-            const isSelected = key === selectedEdgeKey
+            const a = layout.get(edge.source);
+            const b = layout.get(edge.target);
+            if (!a || !b) return null;
+            const key = collaborationEdgeKey(edge.source, edge.target);
+            const isSelected = key === selectedEdgeKey;
             const touchesActive =
               activeNodeId != null &&
-              (edge.source === activeNodeId || edge.target === activeNodeId)
-            const highlighted = isSelected || touchesActive
-            const dimmed = hasFocus && !highlighted
+              (edge.source === activeNodeId || edge.target === activeNodeId);
+            const highlighted = isSelected || touchesActive;
+            const dimmed = hasFocus && !highlighted;
             return (
               <line
                 key={key}
@@ -127,25 +127,31 @@ export function CollaborationNetworkGraph({
                 y1={a.y}
                 x2={b.x}
                 y2={b.y}
-                stroke={highlighted ? 'var(--collab-edge-strong)' : 'var(--collab-edge)'}
-                strokeWidth={edgeWidth(edge.sharedProjects) * (highlighted ? 1.4 : 1)}
+                stroke={
+                  highlighted
+                    ? "var(--collab-edge-strong)"
+                    : "var(--collab-edge)"
+                }
+                strokeWidth={
+                  edgeWidth(edge.sharedProjects) * (highlighted ? 1.4 : 1)
+                }
                 strokeOpacity={dimmed ? 0.06 : highlighted ? 0.85 : 0.32}
                 className="cursor-pointer transition-[stroke-opacity] duration-150"
                 onClick={() => onSelectEdge(key)}
               />
-            )
+            );
           })}
         </g>
 
         <g>
           {nodes.map((node) => {
-            const p = layout.get(node.id)
-            if (!p) return null
-            const isSelected = node.id === selectedNodeId
-            const inNeighborhood = neighborIds?.has(node.id) ?? true
-            const dimmed = hasFocus && !inNeighborhood && !isSelected
-            const r = nodeRadius(node.activeProjects)
-            const showLabel = shouldShowLabel(node)
+            const p = layout.get(node.id);
+            if (!p) return null;
+            const isSelected = node.id === selectedNodeId;
+            const inNeighborhood = neighborIds?.has(node.id) ?? true;
+            const dimmed = hasFocus && !inNeighborhood && !isSelected;
+            const r = nodeRadius(node.activeProjects);
+            const showLabel = shouldShowLabel(node);
             return (
               <g
                 key={node.id}
@@ -161,7 +167,9 @@ export function CollaborationNetworkGraph({
                   r={r}
                   fill={roleColorVar(node.roleKey)}
                   fillOpacity={0.9}
-                  stroke={isSelected ? 'var(--foreground)' : 'var(--background)'}
+                  stroke={
+                    isSelected ? "var(--foreground)" : "var(--background)"
+                  }
                   strokeWidth={isSelected ? 2 : 1}
                 />
                 {showLabel ? (
@@ -175,18 +183,18 @@ export function CollaborationNetworkGraph({
                   </text>
                 ) : null}
               </g>
-            )
+            );
           })}
         </g>
       </svg>
 
       {hoveredNode ? (
-        <div
-          className="pointer-events-none absolute left-3 top-3 z-10 w-48 rounded-lg border border-border bg-popover/90 px-3 py-2 text-popover-foreground shadow-lg backdrop-blur-sm"
-        >
+        <div className="pointer-events-none absolute left-3 top-3 z-10 w-48 rounded-lg border border-border bg-popover/90 px-3 py-2 text-popover-foreground shadow-lg backdrop-blur-sm">
           <p className="truncate text-sm font-medium">{hoveredNode.name}</p>
-          <p className="text-[0.7rem] text-muted-foreground">{hoveredNode.roleLabel}</p>
-          <dl className="mt-1.5 grid grid-cols-2 gap-x-2 gap-y-0.5 text-[0.7rem] tabular-nums">
+          <p className="text-[0.7rem] text-muted-foreground">
+            {hoveredNode.roleLabel}
+          </p>
+          <dl className="mt-1.5 grid grid-cols-2 gap-3 text-[0.7rem] tabular-nums">
             <dt className="text-muted-foreground">Projects</dt>
             <dd className="text-right">{hoveredNode.activeProjects}</dd>
             <dt className="text-muted-foreground">Collaborators</dt>
@@ -195,7 +203,9 @@ export function CollaborationNetworkGraph({
               <>
                 <dt className="text-muted-foreground">Fragmentation</dt>
                 <dd className="text-right">
-                  {formatFragmentationSeverity(hoveredNode.fragmentationSeverity)}
+                  {formatFragmentationSeverity(
+                    hoveredNode.fragmentationSeverity,
+                  )}
                 </dd>
               </>
             ) : null}
@@ -203,5 +213,5 @@ export function CollaborationNetworkGraph({
         </div>
       ) : null}
     </div>
-  )
+  );
 }

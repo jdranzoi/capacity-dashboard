@@ -71,8 +71,10 @@ function ProjectDetailMetaRow({ detail }: { detail: ProjectDetailPanelPayload })
     : null;
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <DetailMetaTag tone="type">{projectSpaceTypeLabel(detail.projectType)}</DetailMetaTag>
+    <div className="flex flex-wrap items-center gap-3">
+      <DetailMetaTag tone="type">
+        {projectSpaceTypeLabel(detail.projectType)}
+      </DetailMetaTag>
       <DetailMetaTag tone="pm">PM: {detail.pmName ?? "—"}</DetailMetaTag>
       <DetailMetaTag tone="tl">TL: {detail.tlNames ?? "—"}</DetailMetaTag>
       {started ? (
@@ -127,7 +129,7 @@ function DetailKpiCard({ cell }: { cell: DetailKpiCell }) {
       <p
         className={cn(
           "mt-0.5 text-xs font-semibold tabular-nums text-foreground",
-          cell.href && "flex items-center gap-1",
+          cell.href && "flex items-center gap-3",
         )}
       >
         <span>{cell.value}</span>
@@ -167,10 +169,12 @@ function DetailKpiCard({ cell }: { cell: DetailKpiCell }) {
 function DetailKpiLabel({ label, tooltip }: { label: string; tooltip?: string }) {
   return (
     <p
-      className="flex items-center gap-0.5 text-[0.55rem] font-medium uppercase leading-none tracking-wider text-muted-foreground"
+      className="flex items-center gap-3 text-[0.55rem] font-medium uppercase leading-none tracking-wider text-muted-foreground"
       title={tooltip}
     >
-      <span className={cn(tooltip && "min-w-0 truncate whitespace-nowrap")}>{label}</span>
+      <span className={cn(tooltip && "min-w-0 truncate whitespace-nowrap")}>
+        {label}
+      </span>
       {tooltip ? (
         <>
           <CircleHelp className="size-2.5 shrink-0 opacity-50" aria-hidden />
@@ -202,7 +206,7 @@ function ProjectDetailTabs({
     <div
       role="tablist"
       aria-label="Project detail sections"
-      className="flex gap-0.5 overflow-x-auto border-b border-border/70 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="flex gap-3 overflow-x-auto border-b border-border/70 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       data-slot="projects-detail-tabs"
     >
       {PROJECT_DETAIL_TABS.map((tab) => {
@@ -357,7 +361,7 @@ function DetailChartSection({
   children: ReactNode;
 }) {
   return (
-    <section className="flex min-w-0 flex-col gap-1.5">
+    <section className="flex min-w-0 flex-col gap-3">
       <div>
         <h3 className="text-[0.7rem] font-medium text-foreground">{title}</h3>
         <p className="mt-0.5 text-[0.6rem] leading-snug text-muted-foreground">
@@ -409,7 +413,7 @@ export function ProjectsProjectDetailPanel({
         description={<ProjectDetailMetaRow detail={detail} />}
       />
 
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-8">
         {DETAIL_KPI_CELLS(detail).map((cell) => (
           <DetailKpiCard key={cell.label} cell={cell} />
         ))}

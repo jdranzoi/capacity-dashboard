@@ -58,7 +58,7 @@ Three files implement the exact same React context + `useTransition` + router pa
 
 Each is ~50 lines. All three render identical JSX:
 ```tsx
-<div className="flex min-h-[50vh] flex-col gap-8" aria-busy={isPending} aria-live="polite">
+<div className="flex min-h-[50vh] flex-col gap-6" aria-busy={isPending} aria-live="polite">
   {children}
 </div>
 ```

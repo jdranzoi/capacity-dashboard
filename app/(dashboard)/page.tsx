@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import { OverviewChartsBlock } from '@/components/overview/overview-charts-block'
 import { OverviewKpiBlock } from '@/components/overview/overview-kpi-block'
 import { OverviewRoutePendingShell } from '@/components/overview/overview-route-pending-shell'
-import { OverviewRouteSection } from '@/components/overview/overview-route-section'
+import { OverviewRouteSection } from '@/components/overview/overview-route-pending-shell'
 import {
   OverviewChartsRowSkeleton,
   OverviewKpiRowSkeleton,

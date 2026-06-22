@@ -132,11 +132,11 @@ export function WeeklyEvolutionChart({
             );
           })}
         </svg>
-        <div className="mt-2 shrink-0 flex flex-wrap gap-x-4 gap-y-1.5 text-[0.7rem] text-muted-foreground">
+        <div className="mt-2 shrink-0 flex flex-wrap gap-3 text-[0.7rem] text-muted-foreground">
           {BAR_KEYS.map((key) => {
             const row = OVERVIEW_METRIC_ROWS.find((r) => r.key === key)!;
             return (
-              <span key={key} className="inline-flex items-center gap-1.5">
+              <span key={key} className="inline-flex items-center gap-3">
                 <span
                   className="size-2 shrink-0 rounded-sm"
                   style={{ backgroundColor: `var(${row.cssVar})` }}
@@ -145,7 +145,7 @@ export function WeeklyEvolutionChart({
               </span>
             );
           })}
-          <span className="inline-flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-3">
             <span
               className="size-2 shrink-0 rounded-full border-2"
               style={{ borderColor: metricCssVar("loggedHours") }}

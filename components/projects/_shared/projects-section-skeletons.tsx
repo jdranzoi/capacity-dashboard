@@ -1,4 +1,4 @@
-import { KPI_METRICS_GRID_CLASS } from '@/components/dashboard/kpi-metric-card'
+import { KPI_METRICS_GRID_CLASS } from '@/components/ui/kpi-metric-card'
 import { DashboardSectionHeaderSkeleton } from '@/components/layout/dashboard-section-header-skeleton'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -6,15 +6,15 @@ import { dashboardSurfaceClass } from '@/lib/ui/dashboard-surface'
 
 export function ProjectsPageSkeleton() {
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <DashboardSectionHeaderSkeleton filterCount={2} />
       <ProjectsKpiRowSkeleton />
-      <div className="grid items-start gap-6 lg:grid-cols-2">
+      <div className="grid items-start gap-3 lg:grid-cols-2">
         <ProjectsProgressChartSkeleton />
-        <Skeleton className={cn(dashboardSurfaceClass('h-[24rem]'))} />
+        <Skeleton className={cn(dashboardSurfaceClass("h-[24rem]"))} />
       </div>
     </div>
-  )
+  );
 }
 
 export function ProjectsKpiRowSkeleton() {

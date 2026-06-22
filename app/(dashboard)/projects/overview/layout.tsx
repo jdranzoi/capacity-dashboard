@@ -22,17 +22,21 @@ export default function ProjectsOverviewLayout({
 }: ProjectsOverviewLayoutProps) {
   return (
     <ProjectsRoutePendingShell>
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6">
         {children}
-        <div className="grid items-start gap-6 lg:grid-cols-2">
+        <div className="grid items-start gap-3 lg:grid-cols-2">
           <div className="min-w-0">
-            <Suspense fallback={<ProjectsProgressChartSkeleton />}>{grid}</Suspense>
+            <Suspense fallback={<ProjectsProgressChartSkeleton />}>
+              {grid}
+            </Suspense>
           </div>
-          <aside className="flex min-w-0 flex-col gap-4">
-            <Suspense fallback={<ProjectsProjectDetailLoading />}>{detail}</Suspense>
+          <aside className="flex min-w-0 flex-col gap-6">
+            <Suspense fallback={<ProjectsProjectDetailLoading />}>
+              {detail}
+            </Suspense>
           </aside>
         </div>
       </div>
     </ProjectsRoutePendingShell>
-  )
+  );
 }

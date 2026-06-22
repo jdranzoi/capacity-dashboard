@@ -2,7 +2,7 @@ import { WeeklyEvolutionChart } from '@/components/overview/overview-workload-ch
 import { OverviewMonthPicker } from '@/components/overview/overview-month-picker'
 import { Button } from '@/components/ui/button'
 import { capacityFillPct } from '@/lib/domain/workload-metrics'
-import { CAPACITY_FILL_KPI } from '@/lib/overview/capacity-kpi-contract'
+import { CAPACITY_FILL_KPI } from '@/lib/domain/capacity-kpi-contract'
 import type { WeeklyHeadline } from '@/lib/overview/load-weekly-overview'
 import {
   fmtHoursCell,
@@ -16,7 +16,7 @@ import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
 import {
   KPI_METRICS_GRID_CLASS,
   KpiMetricCard,
-} from '@/components/dashboard/kpi-metric-card'
+} from '@/components/ui/kpi-metric-card'
 import { cn } from '@/lib/utils'
 import { addDays, format, parseISO } from 'date-fns'
 import { Download } from 'lucide-react'
@@ -70,8 +70,8 @@ export function OverviewToolbarPanel({
   }
 }) {
   return (
-    <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col">
         <OverviewMonthPicker
           options={monthPicker.options}
           selectedMonthKey={monthPicker.selectedMonthKey}
@@ -80,12 +80,12 @@ export function OverviewToolbarPanel({
           Weeks overlapping month: {rangeLabel}
         </p>
       </div>
-      <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+      <div className="flex flex-wrap items-center gap-3 lg:justify-end">
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="gap-1.5"
+          className="gap-3"
           disabled
           title="Export is not available yet"
         >
@@ -94,7 +94,7 @@ export function OverviewToolbarPanel({
         </Button>
       </div>
     </div>
-  )
+  );
 }
 
 export function OverviewKpiCards({ weeks }: { weeks: WeeklyHeadline[] }) {
@@ -129,17 +129,19 @@ export function OverviewChartsAndDetailRow({
   ) as Record<OverviewMetricKey, number>
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3 lg:items-stretch lg:min-h-[min(28rem,52vh)]">
+    <div className="grid gap-3 lg:grid-cols-3 lg:items-stretch lg:min-h-[min(28rem,52vh)]">
       <div className="h-full min-h-0">
         <WeeklyEvolutionChart weeks={weeks} className="h-full" />
       </div>
 
       <div className="flex h-full min-h-0 lg:col-span-2">
         <div className="flex h-full min-h-0 w-full flex-col rounded-xl bg-card p-4 text-card-foreground ring-1 ring-foreground/10">
-          <div className="mb-3 flex shrink-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-            <h2 className="text-sm font-medium tracking-tight">Weekly detail (hours)</h2>
+          <div className="mb-3 flex shrink-0 flex-wrap items-baseline justify-between gap-3">
+            <h2 className="text-sm font-medium tracking-tight">
+              Weekly detail (hours)
+            </h2>
             <p className="text-[0.65rem] text-muted-foreground">
-              Billable and logged through{asOfDate ? ` ${asOfDate}` : ' —'}
+              Billable and logged through{asOfDate ? ` ${asOfDate}` : " —"}
             </p>
           </div>
           <div className="min-h-0 flex-1 overflow-x-auto">
@@ -154,7 +156,7 @@ export function OverviewChartsAndDetailRow({
                       key={w.weekStart}
                       className="px-4 py-2.5 text-right text-xs font-normal text-muted-foreground tabular-nums"
                     >
-                      {format(parseISO(w.weekStart), 'MMM d')}
+                      {format(parseISO(w.weekStart), "MMM d")}
                     </th>
                   ))}
                   <th className="border-l border-border px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">
@@ -164,15 +166,15 @@ export function OverviewChartsAndDetailRow({
               </thead>
               <tbody>
                 {OVERVIEW_METRIC_ROWS.map((rowDef, idx) => {
-                  const { key, label, worklog } = rowDef
+                  const { key, label, worklog } = rowDef;
                   const isGroupBoundary =
-                    worklog && !OVERVIEW_METRIC_ROWS[idx - 1]?.worklog
+                    worklog && !OVERVIEW_METRIC_ROWS[idx - 1]?.worklog;
                   return (
                     <tr
                       key={key}
                       className={cn(
-                        'border-b border-border/45 last:border-0',
-                        isGroupBoundary && 'border-t border-border'
+                        "border-b border-border/45 last:border-0",
+                        isGroupBoundary && "border-t border-border",
                       )}
                     >
                       <td
@@ -193,7 +195,7 @@ export function OverviewChartsAndDetailRow({
                         {fmtHoursCell(totals[key])}
                       </td>
                     </tr>
-                  )
+                  );
                 })}
                 <tr className="border-t border-border bg-muted/15">
                   <td className="px-4 py-2.5 font-medium text-foreground">
@@ -204,12 +206,17 @@ export function OverviewChartsAndDetailRow({
                       key={`fill-${w.weekStart}`}
                       className="px-4 py-2.5 text-right tabular-nums text-muted-foreground"
                     >
-                      {fmtPct(capacityFillPct(w.loggedHours, w.netCapacityHours))}
+                      {fmtPct(
+                        capacityFillPct(w.loggedHours, w.netCapacityHours),
+                      )}
                     </td>
                   ))}
                   <td className="border-l border-border px-4 py-2.5 text-right tabular-nums text-muted-foreground">
                     {fmtPct(
-                      capacityFillPct(totals.loggedHours, totals.netCapacityHours)
+                      capacityFillPct(
+                        totals.loggedHours,
+                        totals.netCapacityHours,
+                      ),
                     )}
                   </td>
                 </tr>
@@ -219,7 +226,7 @@ export function OverviewChartsAndDetailRow({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function overviewRangeLabel(weeks: WeeklyHeadline[]): string {

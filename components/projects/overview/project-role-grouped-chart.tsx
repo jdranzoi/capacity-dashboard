@@ -74,8 +74,10 @@ export function ProjectRoleGroupedChart({
 
           return (
             <li key={row.roleKey}>
-              <div className="mb-1 flex items-baseline justify-between gap-2 text-xs">
-                <span className="font-medium text-foreground">{row.roleLabel}</span>
+              <div className="mb-1 flex items-baseline justify-between gap-3 text-xs">
+                <span className="font-medium text-foreground">
+                  {row.roleLabel}
+                </span>
                 <span className="shrink-0 tabular-nums text-muted-foreground">
                   {planLabel} plan · {fmtHoursKpi(row.loggedHours)} log
                 </span>
@@ -87,7 +89,7 @@ export function ProjectRoleGroupedChart({
                 trackClassName="h-3"
               />
             </li>
-          )
+          );
         })}
       </ul>
     </div>

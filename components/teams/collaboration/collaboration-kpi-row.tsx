@@ -1,7 +1,7 @@
 import {
   KpiMetricCard,
   KpiMetricSubline,
-} from '@/components/dashboard/kpi-metric-card'
+} from '@/components/ui/kpi-metric-card'
 import type { CollaborationKpis } from '@/lib/teams/collaboration/collaboration-types'
 import { cn } from '@/lib/utils'
 

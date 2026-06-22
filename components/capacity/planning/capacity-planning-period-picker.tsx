@@ -92,18 +92,21 @@ export function CapacityPlanningPeriodPicker({
   if (chron.length === 0) return null
 
   return (
-    <div className="flex flex-wrap items-end gap-2">
+    <div className="flex flex-wrap items-end gap-3">
       <PeriodSelect
         label="From"
         value={fromMonthKey}
         options={chron}
         disabled={isPending}
         onChange={(monthKey) => {
-          const to = monthKey > toMonthKey ? monthKey : toMonthKey
-          navigate(monthKey, to)
+          const to = monthKey > toMonthKey ? monthKey : toMonthKey;
+          navigate(monthKey, to);
         }}
       />
-      <span className="hidden pb-2 text-sm text-muted-foreground sm:inline" aria-hidden>
+      <span
+        className="hidden pb-2 text-sm text-muted-foreground sm:inline"
+        aria-hidden
+      >
         →
       </span>
       <PeriodSelect
@@ -114,5 +117,5 @@ export function CapacityPlanningPeriodPicker({
         onChange={(monthKey) => navigate(fromMonthKey, monthKey)}
       />
     </div>
-  )
+  );
 }

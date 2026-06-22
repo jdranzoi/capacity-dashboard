@@ -2,7 +2,7 @@
  * Central definitions for workload KPIs (capacity fill, utilization pace, planned share,
  * productivity, efficiency, weekly table roll-ups).
  *
- * **Standard org percentage KPIs** (see `lib/overview/capacity-kpi-contract.ts` for labels):
+ * **Standard org percentage KPIs** (see `lib/domain/capacity-kpi-contract.ts` for labels):
  *
  * | KPI | Formula | Primary function |
  * |-----|---------|------------------|

@@ -77,5 +77,6 @@ export function fmtHeadcountKpi(n: number): string {
   return i.toLocaleString('en-US', { maximumFractionDigits: 0 })
 }
 
-/** @deprecated Import from `lib/format/display-stats` directly. Re-exported for backward compatibility. */
+/** Display formatters — import from here in UI and loaders at the display boundary. */
+export { roundDisplayStat } from '@/lib/format/display-stats'
 export const fmtPct = _fmtPct

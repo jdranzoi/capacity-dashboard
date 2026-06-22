@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 
 import { TeamsRoutePendingShell } from '@/components/teams/_shared/teams-route-pending-shell'
-import { TeamsRouteSection } from '@/components/teams/_shared/teams-route-section'
+import { TeamsRouteSection } from '@/components/teams/_shared/teams-route-pending-shell'
 import {
   TeamsDistributionSkeleton,
   TeamsFutureCardsSkeleton,
@@ -34,14 +34,14 @@ async function TeamsOverviewPageContent({ searchParams }: TeamsOverviewPageProps
   const monthStr = Array.isArray(monthParam) ? monthParam[0] : monthParam
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <TeamsRouteSection fallback={<DashboardSectionHeaderSkeleton />}>
         <TeamsOverviewChromeBlock monthStr={monthStr} />
       </TeamsRouteSection>
 
       <Suspense
         fallback={
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-6">
             <TeamsKpiRowSkeleton />
             <TeamsDistributionSkeleton />
             <TeamsFutureCardsSkeleton />
@@ -50,7 +50,7 @@ async function TeamsOverviewPageContent({ searchParams }: TeamsOverviewPageProps
       >
         <TeamsRouteSection
           fallback={
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-6">
               <TeamsKpiRowSkeleton />
               <TeamsDistributionSkeleton />
               <TeamsFutureCardsSkeleton />
@@ -61,5 +61,5 @@ async function TeamsOverviewPageContent({ searchParams }: TeamsOverviewPageProps
         </TeamsRouteSection>
       </Suspense>
     </div>
-  )
+  );
 }

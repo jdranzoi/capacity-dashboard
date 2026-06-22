@@ -3,7 +3,7 @@ import type { TeamsCompositionPayload } from '@/lib/teams/composition/teams-comp
 
 export function TeamsCompositionGroups({ data }: { data: TeamsCompositionPayload }) {
   return (
-    <div className="flex flex-col gap-10" data-slot="teams-composition-groups">
+    <div className="flex flex-col gap-6" data-slot="teams-composition-groups">
       {data.groups.map((group) => (
         <TeamsCompositionTypeSection
           key={group.projectType}
@@ -13,7 +13,7 @@ export function TeamsCompositionGroups({ data }: { data: TeamsCompositionPayload
         />
       ))}
     </div>
-  )
+  );
 }
 
 export function TeamsCompositionAlerts({ data }: { data: TeamsCompositionPayload }) {

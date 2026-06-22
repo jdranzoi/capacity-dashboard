@@ -3,7 +3,7 @@ import {
   plannedVersusProjectedVariancePct,
   projectedVersusBudgetVariancePct,
 } from '@/lib/domain/project-delivery-metrics'
-import { fmtPct, roundDisplayStat } from '@/lib/format/display-stats'
+import { fmtHoursKpi, fmtPct, roundDisplayStat } from '@/lib/overview/overview-metrics'
 import type { ProjectDetailPanelPayload } from '@/lib/projects/overview/projects-types'
 
 export type ProjectDetailKpiContextTone = 'positive' | 'negative' | 'neutral'

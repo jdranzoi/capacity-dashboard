@@ -5,7 +5,7 @@ import {
 
 export function ProjectsProjectDetailEmpty() {
   return (
-    <DataSectionPanel dataSlot="projects-overview-detail" className="gap-4">
+    <DataSectionPanel dataSlot="projects-overview-detail" className="gap-3">
       <DataSectionPanelHeader
         title="Project detail"
         description="Select a project from the grid to view delivery metrics."
@@ -14,5 +14,5 @@ export function ProjectsProjectDetailEmpty() {
         Execution, role hours, and weekly velocity appear here.
       </p>
     </DataSectionPanel>
-  )
+  );
 }

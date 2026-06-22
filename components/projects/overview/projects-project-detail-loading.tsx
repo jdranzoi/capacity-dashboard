@@ -14,11 +14,17 @@ export function ProjectsProjectDetailLoading() {
       aria-busy
       aria-label="Loading project detail"
     >
-      <DataSectionPanelHeader title="Project detail" description="Loading delivery metrics…" />
+      <DataSectionPanelHeader
+        title="Project detail"
+        description="Loading delivery metrics…"
+      />
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className={cn(dashboardSurfaceClass('h-12 w-full'))} />
+          <Skeleton
+            key={i}
+            className={cn(dashboardSurfaceClass("h-12 w-full"))}
+          />
         ))}
       </div>
 
@@ -38,5 +44,5 @@ export function ProjectsProjectDetailLoading() {
         <Skeleton className="h-20 w-full rounded-lg" />
       </div>
     </DataSectionPanel>
-  )
+  );
 }

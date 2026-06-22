@@ -82,7 +82,7 @@ export function CollaborationPersonDrawer({
       )}
       data-slot="collaboration-person"
     >
-      <div className="mb-3 flex items-start justify-between gap-2">
+      <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <RoleBadge roleKey={node.roleKey} className="text-sm">
             {node.name}
@@ -102,7 +102,7 @@ export function CollaborationPersonDrawer({
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-3">
         <MetricCell
           label="Projects"
           value={node.totalProjects}
@@ -133,7 +133,7 @@ export function CollaborationPersonDrawer({
               />
             ))}
           </div>
-          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[0.7rem] text-muted-foreground">
+          <div className="mt-2 flex flex-wrap gap-3 text-[0.7rem] text-muted-foreground">
             {distribution.map((slice) => (
               <RoleBadge key={slice.roleKey} roleKey={slice.roleKey}>
                 {slice.roleLabel} {slice.pct}%
@@ -148,13 +148,13 @@ export function CollaborationPersonDrawer({
           Top collaborators
         </p>
         {topCollaborators.length > 0 ? (
-          <ul className="flex flex-col gap-1">
+          <ul className="flex flex-col gap-3">
             {topCollaborators.map((link) => (
               <li key={link.node.id}>
                 <button
                   type="button"
                   onClick={() => onSelectNode(link.node.id)}
-                  className="flex w-full items-center justify-between gap-2 rounded-md bg-muted/20 px-2.5 py-1.5 text-xs hover:bg-muted/50"
+                  className="flex w-full items-center justify-between gap-3 rounded-md bg-muted/20 px-2.5 py-1.5 text-xs hover:bg-muted/50"
                 >
                   <RoleBadge
                     roleKey={link.node.roleKey}

@@ -1,6 +1,7 @@
 import { SectionPlaceholder } from '@/components/layout/section-placeholder'
 import { getNavigationEntryByHref } from '@/lib/navigation/search-navigation'
 
+/** Resolves nav-catalog metadata for a href and renders {@link SectionPlaceholder}. */
 export function SectionRoutePlaceholder({ href }: { href: string }) {
   const entry = getNavigationEntryByHref(href)
 

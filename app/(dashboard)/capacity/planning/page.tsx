@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 
 import { CapacityRoutePendingShell } from '@/components/capacity/_shared/capacity-route-pending-shell'
-import { CapacityRouteSection } from '@/components/capacity/_shared/capacity-route-section'
+import { CapacityRouteSection } from '@/components/capacity/_shared/capacity-route-pending-shell'
 import {
   CapacityPlanningChromeSkeleton,
   CapacityPlanningGridSkeleton,
@@ -42,7 +42,7 @@ async function CapacityPlanningPageContent({ searchParams }: CapacityPlanningPag
   const view = parsePlanningView(raw.view)
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <CapacityRouteSection fallback={<CapacityPlanningChromeSkeleton />}>
         <Suspense fallback={<CapacityPlanningChromeSkeleton />}>
           <CapacityPlanningChromeBlock fromParam={raw.from} toParam={raw.to} />
@@ -51,7 +51,7 @@ async function CapacityPlanningPageContent({ searchParams }: CapacityPlanningPag
 
       <CapacityPlanningViewTabs activeView={view} />
 
-      <div className="grid gap-6 xl:grid-cols-12 xl:items-start">
+      <div className="grid gap-3 xl:grid-cols-12 xl:items-start">
         <section className="space-y-3 xl:col-span-9">
           <CapacityRouteSection fallback={<CapacityPlanningGridSkeleton />}>
             <Suspense fallback={<CapacityPlanningGridSkeleton />}>
@@ -64,7 +64,7 @@ async function CapacityPlanningPageContent({ searchParams }: CapacityPlanningPag
           </CapacityRouteSection>
         </section>
 
-        <aside className="flex flex-col gap-4 xl:col-span-3">
+        <aside className="flex flex-col gap-3 xl:col-span-3">
           <Suspense fallback={<CapacityPlanningAvailablePeopleLoading />}>
             <CapacityPlanningAvailablePeopleBlock
               fromParam={raw.from}
@@ -75,10 +75,13 @@ async function CapacityPlanningPageContent({ searchParams }: CapacityPlanningPag
             />
           </Suspense>
           <Suspense fallback={<CapacityPlanningUpcomingSkeleton />}>
-            <CapacityPlanningUpcomingBlock fromParam={raw.from} toParam={raw.to} />
+            <CapacityPlanningUpcomingBlock
+              fromParam={raw.from}
+              toParam={raw.to}
+            />
           </Suspense>
         </aside>
       </div>
     </div>
-  )
+  );
 }

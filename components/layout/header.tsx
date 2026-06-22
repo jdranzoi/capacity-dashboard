@@ -33,21 +33,23 @@ export async function Header() {
   return (
     <header className="flex h-12 shrink-0 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm">
       <SyncStatusBadge />
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <ThemeToggle />
         {roleLabel && (
           <Badge variant="secondary" className="text-xs font-medium">
             {roleLabel}
           </Badge>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Avatar className="h-6 w-6">
-            <AvatarFallback className="text-[10px]">{getInitials(displayName)}</AvatarFallback>
+            <AvatarFallback className="text-[10px]">
+              {getInitials(displayName)}
+            </AvatarFallback>
           </Avatar>
           <span className="text-xs text-muted-foreground">{displayName}</span>
         </div>
         <SignOutButton />
       </div>
     </header>
-  )
+  );
 }

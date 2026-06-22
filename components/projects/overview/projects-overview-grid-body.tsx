@@ -45,7 +45,7 @@ export function ProjectsOverviewGridBody({
   )
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col 3">
       <ProjectsProgressChart
         rows={payload.rows}
         selectedProjectKey={selectedProjectKey}
@@ -63,5 +63,5 @@ export function ProjectsOverviewGridBody({
 
       <p className="text-[0.7rem] text-muted-foreground">{payload.footnote}</p>
     </div>
-  )
+  );
 }

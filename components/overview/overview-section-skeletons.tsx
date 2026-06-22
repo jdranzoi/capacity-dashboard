@@ -28,20 +28,20 @@ export function OverviewKpiRowSkeleton() {
 
 export function OverviewChartsRowSkeleton() {
   return (
-    <div className="grid gap-4 lg:grid-cols-3 lg:items-stretch lg:min-h-[min(28rem,52vh)]">
+    <div className="grid gap-3 lg:grid-cols-3 lg:items-stretch lg:min-h-[min(28rem,52vh)]">
       <Skeleton className="h-72 rounded-xl" />
       <Skeleton className="h-72 rounded-xl lg:col-span-2" />
     </div>
-  )
+  );
 }
 
 /** Full page fallback when the route has no streamed sections yet. */
 export function WeeklyHeadlineSkeleton() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col 6">
       <OverviewToolbarSkeleton />
       <OverviewKpiRowSkeleton />
       <OverviewChartsRowSkeleton />
     </div>
-  )
+  );
 }

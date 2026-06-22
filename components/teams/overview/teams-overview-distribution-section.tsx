@@ -1,19 +1,37 @@
-import { TeamsDistributionChart } from '@/components/teams/overview/teams-distribution-chart'
+import {
+  HeadcountBarChart,
+  type HeadcountBarChartRow,
+} from "@/components/ui/headcount-bar-chart";
 import {
   DataSectionPanel,
   DataSectionPanelHeader,
   DataSectionPanelTotalBadge,
-} from '@/components/ui/data-section-panel'
-import { fmtHeadcountKpi } from '@/lib/overview/overview-metrics'
-import type { TeamsOverviewPayload } from '@/lib/teams/overview/load-teams-overview'
+} from "@/components/ui/data-section-panel";
+import { fmtHeadcountKpi } from "@/lib/overview/overview-metrics";
+import type { TeamsOverviewPayload } from "@/lib/teams/overview/load-teams-overview";
 
-export function TeamsOverviewDistributionSection({ data }: { data: TeamsOverviewPayload }) {
+function toHeadcountBarRows(
+  rows: TeamsOverviewPayload["byRole"],
+): HeadcountBarChartRow[] {
+  return rows.map((row) => ({
+    id: row.id ?? row.key,
+    label: row.label,
+    headcount: row.headcount,
+    sharePct: row.sharePct ?? 0,
+  }));
+}
+
+export function TeamsOverviewDistributionSection({
+  data,
+}: {
+  data: TeamsOverviewPayload;
+}) {
   return (
     <section className="space-y-3" data-slot="teams-overview-distribution">
       <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
         Structure
       </p>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-3 lg:grid-cols-2">
         <DataSectionPanel className="min-h-72">
           <DataSectionPanelHeader
             title="Role distribution"
@@ -26,8 +44,8 @@ export function TeamsOverviewDistributionSection({ data }: { data: TeamsOverview
               />
             }
           />
-          <TeamsDistributionChart
-            rows={data.byRole}
+          <HeadcountBarChart
+            rows={toHeadcountBarRows(data.byRole)}
             totalHeadcount={data.headcount}
             emptyMessage="No roster members with a role assignment for this month."
             ariaLabel="Headcount by role as share of planning roster"
@@ -51,8 +69,8 @@ export function TeamsOverviewDistributionSection({ data }: { data: TeamsOverview
               />
             }
           />
-          <TeamsDistributionChart
-            rows={data.byZone}
+          <HeadcountBarChart
+            rows={toHeadcountBarRows(data.byZone)}
             totalHeadcount={data.headcount}
             emptyMessage="No roster members with a zone assignment."
             ariaLabel="Headcount by holiday zone as share of planning roster"

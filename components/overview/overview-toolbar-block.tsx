@@ -4,10 +4,7 @@ import { OverviewMonthPicker } from '@/components/overview/overview-month-picker
 import { overviewRangeLabel } from '@/components/overview/overview-headline-parts'
 import { DashboardFilterField } from '@/components/layout/dashboard-filter-field'
 import { DashboardSectionHeader } from '@/components/layout/dashboard-section-header'
-import {
-  OverviewDataError,
-  OverviewEmptyMonths,
-} from '@/components/overview/overview-data-error'
+import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import { perfSpan } from '@/lib/dev/perf-log'
 import { getOverviewMonthSelection, getOverviewWeeklyData } from '@/lib/overview/overview-page-cache'
 
@@ -22,10 +19,10 @@ export async function OverviewToolbarBlock({
   const { options, selected, error } = await getOverviewMonthSelection(monthParam)
 
   if (error) {
-    return <OverviewDataError message={`Could not load month options: ${error}`} />
+    return <SectionDataError message={`Could not load month options: ${error}`} />
   }
   if (!selected) {
-    return <OverviewEmptyMonths />
+    return <SectionEmptyState />
   }
 
   const data = await getOverviewWeeklyData(
@@ -35,7 +32,7 @@ export async function OverviewToolbarBlock({
   )
 
   if (data.error) {
-    return <OverviewDataError message={data.error} />
+    return <SectionDataError message={data.error} />
   }
 
   const rangeLabel =

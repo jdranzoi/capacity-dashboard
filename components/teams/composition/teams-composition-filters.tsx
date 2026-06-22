@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 
 import { useTeamsRoutePending } from '@/components/teams/_shared/teams-route-pending-shell'
-import { TeamsMonthPicker } from '@/components/teams/_shared/teams-month-picker'
+import { OverviewMonthPicker } from '@/components/overview/overview-month-picker'
 import { FilterSuggestInput } from '@/components/ui/filter-suggest-input'
 import { DashboardFilterField } from '@/components/layout/dashboard-filter-field'
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
@@ -38,7 +38,7 @@ export function TeamsCompositionFilters({
   return (
     <div className="flex flex-wrap items-end gap-3" data-slot="teams-composition-filters">
       <DashboardFilterField label="Period">
-        <TeamsMonthPicker options={monthOptions} selectedMonthKey={monthKey} />
+        <OverviewMonthPicker options={monthOptions} selectedMonthKey={monthKey} />
       </DashboardFilterField>
       <FilterSuggestInput
         paramKey="q"

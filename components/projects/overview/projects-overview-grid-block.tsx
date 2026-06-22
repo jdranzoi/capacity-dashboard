@@ -1,9 +1,10 @@
 import { connection } from 'next/server'
 
 import {
-  ProjectsDataError,
-  ProjectsEmptyMonths,
-} from '@/components/projects/_shared/projects-data-error'
+  PROJECTS_EMPTY_MONTHS_MESSAGE,
+  SectionDataError,
+  SectionEmptyState,
+} from '@/components/ui/section-data-states'
 import { ProjectsOverviewGridBody } from '@/components/projects/overview/projects-overview-grid-body'
 import { perfSpan } from '@/lib/dev/perf-log'
 import { loadProjectsOverviewGlobal } from '@/lib/projects/overview/load-projects-global-list'
@@ -37,10 +38,10 @@ export async function ProjectsOverviewGridBlock({
     )
 
     if (monthCtxRes.error) {
-      return <ProjectsDataError message={`Could not load month context: ${monthCtxRes.error}`} />
+      return <SectionDataError message={`Could not load month context: ${monthCtxRes.error}`} />
     }
     if (!monthCtxRes.data) {
-      return <ProjectsEmptyMonths />
+      return <SectionEmptyState message={PROJECTS_EMPTY_MONTHS_MESSAGE} />
     }
 
     const listRes =
@@ -58,10 +59,10 @@ export async function ProjectsOverviewGridBlock({
           })
 
     if (listRes.error) {
-      return <ProjectsDataError message={`Could not load projects: ${listRes.error}`} />
+      return <SectionDataError message={`Could not load projects: ${listRes.error}`} />
     }
     if (!listRes.data) {
-      return <ProjectsEmptyMonths />
+      return <SectionEmptyState message={PROJECTS_EMPTY_MONTHS_MESSAGE} />
     }
 
     const showMonthPicker = usesProjectsProgressMonthPicker(routeFilters.category)

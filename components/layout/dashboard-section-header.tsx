@@ -11,7 +11,7 @@ export function DashboardSectionHeader({
 }) {
   return (
     <header
-      className="flex flex-col gap-4 border-b border-border pb-6 lg:flex-row lg:items-end lg:justify-between"
+      className="flex flex-col gap-3 border-b border-border pb-6 lg:flex-row lg:items-end lg:justify-between"
       data-slot="dashboard-section-header"
     >
       <div className="space-y-1">
@@ -22,5 +22,5 @@ export function DashboardSectionHeader({
       </div>
       {filters ? <div className="shrink-0">{filters}</div> : null}
     </header>
-  )
+  );
 }

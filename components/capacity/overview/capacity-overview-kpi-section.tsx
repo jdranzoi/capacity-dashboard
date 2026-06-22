@@ -2,13 +2,13 @@ import {
   KPI_METRICS_GRID_CLASS,
   KpiMetricCard,
   KpiMetricSubline,
-} from '@/components/dashboard/kpi-metric-card'
+} from '@/components/ui/kpi-metric-card'
 import type { CapacityOverviewPayload } from '@/lib/capacity/overview/load-capacity-overview'
 import {
   CAPACITY_FILL_KPI,
   PLANNED_KPI,
   UTILIZATION_KPI,
-} from '@/lib/overview/capacity-kpi-contract'
+} from '@/lib/domain/capacity-kpi-contract'
 import { fmtHeadcountKpi, fmtHoursKpi, fmtPct } from '@/lib/overview/overview-metrics'
 
 export function CapacityOverviewKpiSection({ data }: { data: CapacityOverviewPayload }) {

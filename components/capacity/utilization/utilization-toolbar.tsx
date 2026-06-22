@@ -1,5 +1,5 @@
 import { CapacityFilterSuggestInput } from '@/components/capacity/_shared/capacity-filter-suggest-input'
-import { CapacityMonthPicker } from '@/components/capacity/_shared/capacity-month-picker'
+import { OverviewMonthPicker } from "@/components/overview/overview-month-picker";
 import type { WorkforceFilterOptionsPayload } from '@/lib/workforce/load-filter-options'
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
 import type { CapacityRouteFilters } from '@/lib/capacity/shared/capacity-route-filters'
@@ -14,13 +14,16 @@ export function UtilizationToolbar({
   routeFilters: CapacityRouteFilters
 }) {
   return (
-    <div className="flex flex-wrap items-end gap-3" data-slot="capacity-utilization-toolbar">
-      <div className="flex min-w-[9.5rem] flex-col gap-1">
+    <div
+      className="flex flex-wrap items-end gap-3"
+      data-slot="capacity-utilization-toolbar"
+    >
+      <div className="flex min-w-[9.5rem] flex-col">
         <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
           Period
         </span>
         {monthPicker && monthPicker.options.length > 0 ? (
-          <CapacityMonthPicker
+          <OverviewMonthPicker
             options={monthPicker.options}
             selectedMonthKey={monthPicker.selectedMonthKey}
           />
@@ -54,5 +57,5 @@ export function UtilizationToolbar({
         selectedParamValue={routeFilters.zoneKey}
       />
     </div>
-  )
+  );
 }

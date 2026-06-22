@@ -25,11 +25,11 @@ export function PlanningToolbarField({
   children: ReactNode
 }) {
   return (
-    <div className={cn('flex flex-col gap-1', className)}>
+    <div className={cn("flex flex-col gap-3", className)}>
       <span className={TOOLBAR_FIELD_LABEL_CLASS}>{label}</span>
       {children}
     </div>
-  )
+  );
 }
 
 export function PlanningToolbarSelect({

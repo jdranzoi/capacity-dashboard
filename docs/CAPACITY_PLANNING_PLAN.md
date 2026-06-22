@@ -237,7 +237,7 @@ Follow established dashboard tokens — **not** the mock’s light SaaS palette 
 | Open capacity | `text-emerald-600 dark:text-emerald-400` or existing metric token if defined |
 | Grid | `dashboardTableShellClass`, hairline borders |
 | Sidebar cards | Same card shell as utilization analytics panels |
-| Whitespace | `gap-6`/`gap-8` between slots; tight `text-sm` inside grid |
+| Whitespace | `gap-6` between slots; tight `text-sm` inside grid |
 
 Invoke `/frontend-design`, `/next-best-practices`, `/next-cache-components` before Phase 0 UI work.
 

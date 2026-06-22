@@ -2,8 +2,8 @@ import { connection } from 'next/server'
 import { Suspense } from 'react'
 
 import { UtilizationAnalyticsGrid } from '@/components/capacity/utilization/utilization-analytics-grid'
-import { CapacityDataError, CapacityEmptyMonths } from '@/components/capacity/_shared/capacity-data-error'
-import { CapacityRouteSection } from '@/components/capacity/_shared/capacity-route-section'
+import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
+import { CapacityRouteSection } from '@/components/capacity/_shared/capacity-route-pending-shell'
 import { UtilizationStaffingBlock } from '@/components/capacity/utilization/utilization-staffing-block'
 import { UtilizationStaffingSkeleton } from '@/components/capacity/_shared/capacity-section-skeletons'
 import { perfSpan } from '@/lib/dev/perf-log'
@@ -21,16 +21,16 @@ export async function UtilizationAnalyticsBlock({
   await connection()
   const { selected, error: monthErr } = await getCapacityMonthSelection(monthStr)
   if (monthErr) {
-    return <CapacityDataError message={`Could not load month options: ${monthErr}`} />
+    return <SectionDataError message={`Could not load month options: ${monthErr}`} />
   }
   if (!selected) {
-    return <CapacityEmptyMonths />
+    return <SectionEmptyState />
   }
 
   const { data: rows, error } = await getUtilizationRoleAnalyticsCached(monthStr, routeFilters)
 
   if (error) {
-    return <CapacityDataError message={`Could not load role analytics: ${error}`} />
+    return <SectionDataError message={`Could not load role analytics: ${error}`} />
   }
 
   return (

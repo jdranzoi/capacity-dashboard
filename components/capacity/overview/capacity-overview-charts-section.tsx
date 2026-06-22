@@ -8,10 +8,13 @@ export function CapacityOverviewTrendsSection({ data }: { data: CapacityOverview
       <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
         Trends
       </p>
-      <div className="grid min-h-[22rem] gap-4 lg:grid-cols-[2fr_3fr] lg:items-stretch">
+      <div className="grid min-h-[22rem] gap-3 lg:grid-cols-[2fr_3fr] lg:items-stretch">
         <WeeklyEvolutionChart weeks={data.weeks} className="min-h-[22rem]" />
-        <CapacityOverviewRoleSummary rows={data.roleSummary} className="min-h-[22rem]" />
+        <CapacityOverviewRoleSummary
+          rows={data.roleSummary}
+          className="min-h-[22rem]"
+        />
       </div>
     </section>
-  )
+  );
 }

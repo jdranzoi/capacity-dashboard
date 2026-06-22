@@ -17,7 +17,7 @@ Lightweight checkpoint for agents and contributors. Update this file when a subp
 | Phase | Scope | Status |
 |---|---|---|
 | Phase 0 | Auth, layout, sidebar, v2 data plumbing, Overview weekly metrics | **Done** |
-| Phase 1 | Overview, Capacity, People, Teams, Projects + navigation restructure | **In progress** |
+| Phase 1 | Overview, Capacity, Teams, Projects + navigation restructure | **In progress** |
 | Phase 2 | Insights, Reports | Not started |
 
 ---
@@ -44,9 +44,10 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 |---|---|---|---|
 | SP-4.1 Teams Overview | `/teams/overview` | **Done** | Org-structure snapshot: headcount, roles, geographic distribution + coming-soon placeholders |
 | SP-4.2 Teams Composition | `/teams/composition` | **Done** | Project teams cards grouped by build/support, ordered by PM, `?q=` name filter |
+| SP-4.3 Teams Collaboration | `/teams/collaboration-network` | **Done** | Cross-project collaboration network graph + KPI row |
 | SP-4.x other Teams sub-sections | `/teams/*` | Placeholders | Staffing, Dependencies, Health, Skills coverage — to be planned per track |
 
-**Deferred:** SP-1 Overview · SP-3 People.
+**Deferred:** SP-1 Overview.
 
 ---
 
@@ -76,8 +77,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 |---|---|---|
 | SP-1 Overview | Weekly section, workload charts, KPI blocks, loaders in `lib/overview/` | **Deferred** — extend after Capacity widgets exist |
 | SP-2 Capacity | `/capacity/overview`, `/capacity/utilization`, `/capacity/planning` shipped; other tracks pending | [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md) |
-| SP-3 People | None (individual views TBD) | `/people` |
-| SP-4 Teams | `/teams/overview` + `/teams/composition` shipped | `/teams/*` remaining sub-sections |
+| SP-4 Teams | `/teams/overview`, `/teams/composition`, `/teams/collaboration-network` shipped | `/teams/*` remaining sub-sections |
 | SP-5 Projects | `/projects/overview` shipped | [SP5_PROJECTS_PLAN.md](./SP5_PROJECTS_PLAN.md) |
 | SP-6 Insights | `/flags` proto | Phase 2 |
 | SP-7 Reports | None | Phase 2 |
@@ -106,7 +106,6 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 ```
 Overview    /
 Capacity    /capacity
-People      /people
 Teams       /teams
 Projects    /projects
 ────────────

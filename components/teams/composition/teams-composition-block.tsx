@@ -1,9 +1,6 @@
 import { connection } from 'next/server'
 
-import {
-  TeamsDataError,
-  TeamsEmptyMonths,
-} from '@/components/teams/_shared/teams-data-error'
+import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import {
   TeamsCompositionAlerts,
   TeamsCompositionGroups,
@@ -25,10 +22,10 @@ export async function TeamsCompositionBlock({
     await connection()
     const ctx = await getTeamsMonthContext(monthStr)
     if (ctx.error) {
-      return <TeamsDataError message={ctx.error} />
+      return <SectionDataError message={ctx.error} />
     }
     if (!ctx.data) {
-      return <TeamsEmptyMonths />
+      return <SectionEmptyState />
     }
 
     const { selected, snapshot } = ctx.data
@@ -42,14 +39,17 @@ export async function TeamsCompositionBlock({
 
     if (result.error || !result.data) {
       return (
-        <TeamsDataError message={result.error ?? 'Could not load teams composition.'} />
+        <SectionDataError message={result.error ?? 'Could not load teams composition.'} />
       )
     }
 
     const data = result.data
 
     return (
-      <div className="flex flex-col gap-4" data-slot="teams-composition-section">
+      <div
+        className="flex flex-col gap-3"
+        data-slot="teams-composition-section"
+      >
         <TeamsCompositionAlerts data={data} />
         <div
           className="sticky top-0 z-30 -mx-8 border-b border-border bg-background px-8 py-2.5 shadow-sm"
@@ -59,6 +59,6 @@ export async function TeamsCompositionBlock({
         </div>
         <TeamsCompositionGroups data={data} />
       </div>
-    )
+    );
   })
 }

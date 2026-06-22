@@ -10,7 +10,7 @@ import {
   CAPACITY_FILL_KPI,
   PLANNED_KPI,
   UTILIZATION_KPI,
-} from '@/lib/overview/capacity-kpi-contract'
+} from '@/lib/domain/capacity-kpi-contract'
 import { fmtHoursKpi, fmtPct } from '@/lib/overview/overview-metrics'
 import {
   filterNumberContains,

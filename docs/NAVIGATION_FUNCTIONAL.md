@@ -12,7 +12,6 @@ Every section answers ONE question leadership actually asks:
 | -------- | ----------------------------- | ----- |
 | Overview | How healthy is the org?       | 1     |
 | Capacity | Can we absorb work?           | 1     |
-| People   | Who is overloaded?            | 1     |
 | Teams    | Which teams are healthy?      | 1     |
 | Projects | Which deliveries are at risk? | 1     |
 
@@ -44,17 +43,7 @@ The operational core.
 - **Role access:** admin, leadership.
 - **Includes:** utilization, planning, forecast, allocations, bench, PTO impact, saturation, hiring gaps.
 
-#### 3. People
-
-Individual-centered view.
-
-- **Purpose:** Analyze individual workload and operational load.
-- **Audience:** Engineering management, team leads.
-- **Role access:** admin (full detail), leadership (aggregate).
-- **Includes:** utilization per person, project fragmentation, seniority, skills, PTO, performance indicators, workload distribution, cross-team allocation.
-- **Distinction from Teams:** People starts bottom-up — from a person's perspective. Teams starts top-down — from an org structure perspective.
-
-#### 4. Teams
+#### 3. Teams
 
 Organizational view.
 
@@ -62,9 +51,8 @@ Organizational view.
 - **Audience:** Engineering management, PMO.
 - **Role access:** admin, leadership.
 - **Includes:** team composition, delivery load, capacity health, leadership structure, role distribution, staffing balance, inter-team dependencies.
-- **Distinction from People:** Teams starts top-down — from an organizational structure. People starts bottom-up — from an individual's workload.
 
-#### 5. Projects
+#### 4. Projects
 
 Delivery intelligence.
 
@@ -78,7 +66,7 @@ Delivery intelligence.
 
 ### LEVEL 2 — SIDEBAR DRILL-IN (Vercel-style)
 
-**Level 1:** Compact root list (Overview, Capacity, People, Teams, Projects) with chevrons on domains that have sub-routes. **Level 2:** When inside a domain (`/capacity/*`, etc.), the sidebar switches to a drill-in panel: back control + section title + sub-route list (each item shows its description as a subtitle). **Search:** `⌘K` / sidebar trigger (top of left nav, below brand) — indexes title, description, and breadcrumb from `lib/navigation/navigation-catalog.ts`. Brand + search stay visible in level-2 drill-in. Config: `navigation-catalog.ts`, `section-nav-config.ts`, `sidebar-nav-config.ts`, UI: `sidebar.tsx`, `navigation-command-menu.tsx`.
+**Level 1:** Compact root list (Overview, Capacity, Teams, Projects) with chevrons on domains that have sub-routes. **Level 2:** When inside a domain (`/capacity/*`, etc.), the sidebar switches to a drill-in panel: back control + section title + sub-route list (each item shows its description as a subtitle). **Search:** `⌘K` / sidebar trigger (top of left nav, below brand) — indexes title, description, and breadcrumb from `lib/navigation/navigation-catalog.ts`. Brand + search stay visible in level-2 drill-in. Config: `navigation-catalog.ts`, `section-nav-config.ts`, `sidebar-nav-config.ts`, UI: `sidebar.tsx`, `navigation-command-menu.tsx`.
 
 #### Capacity
 
@@ -92,15 +80,6 @@ Implementation plan (isolated sub-section tracks): [SP2_CAPACITY_PLAN.md](./SP2_
 - **Allocations:** Detailed people/project allocations. Includes: people-to-project mapping, allocation %, split allocations, staffing load.
 - **Bench:** Unallocated/open capacity analysis. Includes: idle capacity, future availability, underutilized teams, staffing opportunities.
 - **Scenarios:** `[future]` What-if simulations. Includes: hiring simulations, project expansion impact, PTO stress testing, staffing redistribution.
-
-#### People
-
-- **Directory:** Searchable people index. Includes: roles, teams, seniority, regions, project participation.
-- **Utilization:** Individual workload analysis. Includes: capacity fill, logged hours, billable %, operational load, overtime indicators.
-- **Fragmentation:** One of the most valuable future sections. Analyzes: too many projects per person, context switching, split allocations, organizational inefficiency.
-- **Availability:** Future open capacity. Includes: future open capacity, upcoming PTO, allocation gaps, staffing readiness.
-- **Performance:** Operational delivery metrics — NOT HR performance. Includes: allocation consistency, delivery participation, utilization balance, workload stability.
-- **Skills:** `[future — no data source yet]` Skill inventory and capability map.
 
 #### Teams
 

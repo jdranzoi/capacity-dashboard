@@ -1,10 +1,7 @@
 import { connection } from 'next/server'
 
-import { CapacityMonthPicker } from '@/components/capacity/_shared/capacity-month-picker'
-import {
-  CapacityDataError,
-  CapacityEmptyMonths,
-} from '@/components/capacity/_shared/capacity-data-error'
+import { OverviewMonthPicker } from '@/components/overview/overview-month-picker'
+import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import { DashboardFilterField } from '@/components/layout/dashboard-filter-field'
 import { DashboardSectionHeader } from '@/components/layout/dashboard-section-header'
 import { perfSpan } from '@/lib/dev/perf-log'
@@ -20,10 +17,10 @@ export async function CapacityOverviewChromeBlock({
     const { options, selected, error } = await getCapacityMonthSelection(monthStr)
 
     if (error) {
-      return <CapacityDataError message={`Could not load month options: ${error}`} />
+      return <SectionDataError message={`Could not load month options: ${error}`} />
     }
     if (!selected) {
-      return <CapacityEmptyMonths />
+      return <SectionEmptyState />
     }
 
     return (
@@ -32,7 +29,7 @@ export async function CapacityOverviewChromeBlock({
         subtitle="Org capacity position and monthly trends"
         filters={
           <DashboardFilterField label="Period">
-            <CapacityMonthPicker options={options} selectedMonthKey={selected.monthKey} />
+            <OverviewMonthPicker options={options} selectedMonthKey={selected.monthKey} />
           </DashboardFilterField>
         }
       />

@@ -2,11 +2,11 @@ import {
   KPI_METRICS_GRID_CLASS,
   KpiMetricCard,
   KpiMetricSubline,
-} from '@/components/dashboard/kpi-metric-card'
+} from '@/components/ui/kpi-metric-card'
 import {
   CAPACITY_FILL_KPI,
   UTILIZATION_KPI,
-} from '@/lib/overview/capacity-kpi-contract'
+} from '@/lib/domain/capacity-kpi-contract'
 import type { UtilizationMonthKpisPayload } from '@/lib/capacity/utilization/load-month-kpis'
 import { fmtHoursKpi, fmtPct } from '@/lib/overview/overview-metrics'
 import type { ReactNode } from 'react'

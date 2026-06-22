@@ -12,22 +12,22 @@ export function KpiMetricCard({
   valueColorVar,
   className,
 }: {
-  label: string;
-  value: ReactNode;
-  subline?: ReactNode;
-  valueColorVar?: string;
-  className?: string;
+  label: string
+  value: ReactNode
+  subline?: ReactNode
+  valueColorVar?: string
+  className?: string
 }) {
   const valueStyle: CSSProperties | undefined = valueColorVar
     ? { color: `var(${valueColorVar})` }
-    : undefined;
+    : undefined
 
   return (
     <div
       className={cn(
-        "flex h-full min-h-0 flex-col",
-        dashboardSurfaceClass("p-3"),
-        className,
+        'flex h-full min-h-0 flex-col',
+        dashboardSurfaceClass('p-3'),
+        className
       )}
     >
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
@@ -39,7 +39,7 @@ export function KpiMetricCard({
       </p>
       {subline}
     </div>
-  );
+  )
 }
 
 export function KpiMetricSubline({ children }: { children: ReactNode }) {

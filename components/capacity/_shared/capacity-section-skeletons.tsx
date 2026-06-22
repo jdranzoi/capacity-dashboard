@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 
 export function CapacityKpiRowSkeleton({ count = 6 }: { count?: number }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="rounded-xl border border-border p-3">
           <Skeleton className="h-3 w-28" />
@@ -14,16 +14,16 @@ export function CapacityKpiRowSkeleton({ count = 6 }: { count?: number }) {
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 export function UtilizationKpiRowSkeleton() {
   return (
     <div className="space-y-3">
       <Skeleton className="h-3 w-40" />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className={cn(DASHBOARD_SURFACE, 'p-3')}>
+          <div key={i} className={cn(DASHBOARD_SURFACE, "p-3")}>
             <Skeleton className="h-3 w-28" />
             <Skeleton className="mt-2 h-8 w-24" />
             <Skeleton className="mt-3 h-3 w-full" />
@@ -32,17 +32,17 @@ export function UtilizationKpiRowSkeleton() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 export function UtilizationAnalyticsSkeleton() {
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <Skeleton className={cn(DASHBOARD_SURFACE, 'h-72')} />
-      <Skeleton className={cn(DASHBOARD_SURFACE, 'h-72')} />
-      <Skeleton className={cn(DASHBOARD_SURFACE, 'h-96 lg:col-span-2')} />
+    <div className="grid gap-6 lg:grid-cols-2">
+      <Skeleton className={cn(DASHBOARD_SURFACE, "h-72")} />
+      <Skeleton className={cn(DASHBOARD_SURFACE, "h-72")} />
+      <Skeleton className={cn(DASHBOARD_SURFACE, "h-96 lg:col-span-2")} />
     </div>
-  )
+  );
 }
 
 /** Table body placeholder when staffing loads inside the analytics panel. */
@@ -65,11 +65,11 @@ export function UtilizationPageSkeleton() {
 
 export function CapacityChartsSkeleton() {
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-2">
       <Skeleton className="h-80 rounded-xl border border-border" />
       <Skeleton className="h-80 rounded-xl border border-border" />
     </div>
-  )
+  );
 }
 
 export function CapacityRoleSummarySkeleton() {
@@ -78,13 +78,13 @@ export function CapacityRoleSummarySkeleton() {
 
 export function CapacityPageSkeleton() {
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <DashboardSectionHeaderSkeleton />
       <CapacityKpiRowSkeleton />
       <CapacityChartsSkeleton />
       <CapacityRoleSummarySkeleton />
     </div>
-  )
+  );
 }
 
 export function CapacityPlanningChromeSkeleton() {
@@ -110,18 +110,18 @@ export function CapacityPlanningUpcomingSkeleton() {
 
 export function CapacityPlanningPageSkeleton() {
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <CapacityPlanningChromeSkeleton />
       <Skeleton className="h-10 w-72" />
       <div className="grid gap-6 xl:grid-cols-12">
         <div className="xl:col-span-9">
           <CapacityPlanningGridSkeleton />
         </div>
-        <div className="flex flex-col gap-4 xl:col-span-3">
+        <div className="flex flex-col gap-3 xl:col-span-3">
           <CapacityPlanningAvailablePeopleSkeleton />
           <CapacityPlanningUpcomingSkeleton />
         </div>
       </div>
     </div>
-  )
+  );
 }

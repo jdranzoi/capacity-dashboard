@@ -6,7 +6,7 @@ export function TeamsOverviewFutureSection() {
       <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
         Planned dimensions
       </p>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         <TeamsComingSoonCard
           title="Seniority mix"
           description="Level distribution across the roster (e.g. junior, mid, senior). Requires a seniority field on dim_person or an equivalent controlled vocabulary."
@@ -17,5 +17,5 @@ export function TeamsOverviewFutureSection() {
         />
       </div>
     </section>
-  )
+  );
 }

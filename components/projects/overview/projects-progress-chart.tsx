@@ -71,10 +71,12 @@ export function ProjectsProgressChart({
     sortColumn === column ? sortDir : null
 
   return (
-    <div className={cn(dashboardSurfaceClass('flex flex-col p-4'))}>
+    <div className={cn(dashboardSurfaceClass("flex flex-col p-4"))}>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-foreground">{chartTitle}</h2>
+          <h2 className="text-sm font-semibold text-foreground">
+            {chartTitle}
+          </h2>
           <PlannedLoggedBarLegend className="mt-0.5" />
         </div>
         {headerAction ? <div className="shrink-0">{headerAction}</div> : null}
@@ -95,49 +97,54 @@ export function ProjectsProgressChart({
                 <SortableHeaderButton
                   label="Project"
                   title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.project}
-                  active={sortColumn === 'project'}
-                  direction={sortDirectionFor('project')}
-                  onClick={() => toggleSort('project')}
+                  active={sortColumn === "project"}
+                  direction={sortDirectionFor("project")}
+                  onClick={() => toggleSort("project")}
                 />
               </th>
               <th className="pb-2 pr-2 font-medium">
                 <span
-                  className="inline-flex max-w-full items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+                  className="inline-flex max-w-full items-center gap-3 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
                   title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.progress}
                 >
                   <span>Progress</span>
-                  <CircleHelp className="size-3 shrink-0 opacity-50" aria-hidden />
-                  <span className="sr-only">{PROJECTS_PROGRESS_COLUMN_TOOLTIPS.progress}</span>
+                  <CircleHelp
+                    className="size-3 shrink-0 opacity-50"
+                    aria-hidden
+                  />
+                  <span className="sr-only">
+                    {PROJECTS_PROGRESS_COLUMN_TOOLTIPS.progress}
+                  </span>
                 </span>
               </th>
               <th className="pb-2 pr-2 text-right font-medium">
                 <SortableHeaderButton
                   label="Planned (h)"
                   title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.planned}
-                  active={sortColumn === 'planned'}
-                  direction={sortDirectionFor('planned')}
+                  active={sortColumn === "planned"}
+                  direction={sortDirectionFor("planned")}
                   align="right"
-                  onClick={() => toggleSort('planned')}
+                  onClick={() => toggleSort("planned")}
                 />
               </th>
               <th className="pb-2 pr-2 text-right font-medium">
                 <SortableHeaderButton
                   label="Logged (h)"
                   title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.logged}
-                  active={sortColumn === 'logged'}
-                  direction={sortDirectionFor('logged')}
+                  active={sortColumn === "logged"}
+                  direction={sortDirectionFor("logged")}
                   align="right"
-                  onClick={() => toggleSort('logged')}
+                  onClick={() => toggleSort("logged")}
                 />
               </th>
               <th className="pb-2 text-right font-medium">
                 <SortableHeaderButton
                   label="Budget used"
                   title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.budgetUsed}
-                  active={sortColumn === 'budgetUsed'}
-                  direction={sortDirectionFor('budgetUsed')}
+                  active={sortColumn === "budgetUsed"}
+                  direction={sortDirectionFor("budgetUsed")}
                   align="right"
-                  onClick={() => toggleSort('budgetUsed')}
+                  onClick={() => toggleSort("budgetUsed")}
                 />
               </th>
             </tr>
@@ -147,15 +154,15 @@ export function ProjectsProgressChart({
               const title = projectCardTitle({
                 projectKey: row.projectKey,
                 projectName: row.projectName,
-              })
-              const isSelected = selectedProjectKey === row.projectKey
+              });
+              const isSelected = selectedProjectKey === row.projectKey;
 
               return (
                 <tr
                   key={row.projectId}
                   className={cn(
-                    'border-b border-border/60 transition-colors',
-                    isSelected ? 'bg-muted/40' : 'hover:bg-muted/25'
+                    "border-b border-border/60 transition-colors",
+                    isSelected ? "bg-muted/40" : "hover:bg-muted/25",
                   )}
                 >
                   <td className="py-2.5 pr-2">
@@ -193,19 +200,21 @@ export function ProjectsProgressChart({
                   </td>
                   <td
                     className={cn(
-                      'py-2.5 text-right tabular-nums font-medium',
-                      row.atRisk ? 'text-destructive' : 'text-foreground'
+                      "py-2.5 text-right tabular-nums font-medium",
+                      row.atRisk ? "text-destructive" : "text-foreground",
                     )}
                     title={
                       row.budgetUsedPct != null
-                        ? `${fmtPct(row.budgetUsedPct)} of budget${row.atRisk ? ' — at risk (over 115%)' : ''}`
-                        : 'No budget hours on file'
+                        ? `${fmtPct(row.budgetUsedPct)} of budget${row.atRisk ? " — at risk (over 115%)" : ""}`
+                        : "No budget hours on file"
                     }
                   >
-                    {row.budgetUsedPct != null ? fmtPct(row.budgetUsedPct) : '—'}
+                    {row.budgetUsedPct != null
+                      ? fmtPct(row.budgetUsedPct)
+                      : "—"}
                   </td>
                 </tr>
-              )
+              );
             })}
           </tbody>
         </table>
@@ -217,5 +226,5 @@ export function ProjectsProgressChart({
         </p>
       ) : null}
     </div>
-  )
+  );
 }

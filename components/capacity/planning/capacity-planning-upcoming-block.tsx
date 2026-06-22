@@ -1,6 +1,6 @@
 import { connection } from 'next/server'
 
-import { CapacityDataError, CapacityEmptyMonths } from '@/components/capacity/_shared/capacity-data-error'
+import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import { CapacityPlanningUpcomingAvailabilityCard } from '@/components/capacity/planning/capacity-planning-upcoming-availability-card'
 import { loadPlanningWorkspaceCached } from '@/lib/capacity/planning/load-planning-workspace'
 
@@ -14,8 +14,8 @@ export async function CapacityPlanningUpcomingBlock({
   await connection()
 
   const workspaceResult = await loadPlanningWorkspaceCached(fromParam, toParam)
-  if (workspaceResult.error) return <CapacityDataError message={workspaceResult.error} />
-  if (!workspaceResult.data) return <CapacityEmptyMonths />
+  if (workspaceResult.error) return <SectionDataError message={workspaceResult.error} />
+  if (!workspaceResult.data) return <SectionEmptyState />
 
   const { upcomingAvailabilityByBand, period } = workspaceResult.data
 

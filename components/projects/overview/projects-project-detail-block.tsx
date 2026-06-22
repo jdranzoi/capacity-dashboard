@@ -1,6 +1,6 @@
 import { connection } from 'next/server'
 
-import { ProjectsDataError } from '@/components/projects/_shared/projects-data-error'
+import { SectionDataError } from '@/components/ui/section-data-states'
 import { ProjectsProjectDetailPanelWithNav } from '@/components/projects/overview/projects-project-detail-panel-client'
 import { ProjectsProjectDetailEmpty } from '@/components/projects/overview/projects-project-detail-empty'
 import { perfSpan } from '@/lib/dev/perf-log'
@@ -26,7 +26,7 @@ export async function ProjectsProjectDetailBlock({
 
     const monthCtxRes = await getProjectsMonthContext(monthStr, routeFilters.category)
     if (monthCtxRes.error) {
-      return <ProjectsDataError message={`Could not load month context: ${monthCtxRes.error}`} />
+      return <SectionDataError message={`Could not load month context: ${monthCtxRes.error}`} />
     }
     if (!monthCtxRes.data) {
       return <ProjectsProjectDetailEmpty />
@@ -39,7 +39,7 @@ export async function ProjectsProjectDetailBlock({
     })
 
     if (detailRes.error) {
-      return <ProjectsDataError message={`Could not load project detail: ${detailRes.error}`} />
+      return <SectionDataError message={`Could not load project detail: ${detailRes.error}`} />
     }
     if (!detailRes.data) {
       return <ProjectsProjectDetailEmpty />

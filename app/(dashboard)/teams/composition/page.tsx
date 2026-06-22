@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import { TeamsCompositionBlock } from '@/components/teams/composition/teams-composition-block'
 import { TeamsCompositionChromeBlock } from '@/components/teams/composition/teams-composition-chrome-block'
 import { TeamsRoutePendingShell } from '@/components/teams/_shared/teams-route-pending-shell'
-import { TeamsRouteSection } from '@/components/teams/_shared/teams-route-section'
+import { TeamsRouteSection } from '@/components/teams/_shared/teams-route-pending-shell'
 import {
   TeamsCompositionGridSkeleton,
   TeamsPageSkeleton,
@@ -36,16 +36,24 @@ async function TeamsCompositionPageContent({ searchParams }: TeamsCompositionPag
   const monthStr = Array.isArray(monthParam) ? monthParam[0] : monthParam
 
   return (
-    <div className="flex flex-col gap-8">
-      <TeamsRouteSection fallback={<DashboardSectionHeaderSkeleton filterCount={3} />}>
-        <TeamsCompositionChromeBlock monthStr={monthStr} routeFilters={routeFilters} />
+    <div className="flex flex-col gap-6">
+      <TeamsRouteSection
+        fallback={<DashboardSectionHeaderSkeleton filterCount={3} />}
+      >
+        <TeamsCompositionChromeBlock
+          monthStr={monthStr}
+          routeFilters={routeFilters}
+        />
       </TeamsRouteSection>
 
       <Suspense fallback={<TeamsCompositionGridSkeleton />}>
         <TeamsRouteSection fallback={<TeamsCompositionGridSkeleton />}>
-          <TeamsCompositionBlock monthStr={monthStr} routeFilters={routeFilters} />
+          <TeamsCompositionBlock
+            monthStr={monthStr}
+            routeFilters={routeFilters}
+          />
         </TeamsRouteSection>
       </Suspense>
     </div>
-  )
+  );
 }

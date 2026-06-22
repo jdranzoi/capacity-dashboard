@@ -1,10 +1,7 @@
 import { connection } from 'next/server'
 
 import { TeamsCompositionFilters } from '@/components/teams/composition/teams-composition-filters'
-import {
-  TeamsDataError,
-  TeamsEmptyMonths,
-} from '@/components/teams/_shared/teams-data-error'
+import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import { DashboardSectionHeader } from '@/components/layout/dashboard-section-header'
 import { perfSpan } from '@/lib/dev/perf-log'
 import { loadCompositionFilterSuggestions } from '@/lib/teams/composition/load-composition-filter-suggestions'
@@ -22,10 +19,10 @@ export async function TeamsCompositionChromeBlock({
     await connection()
     const ctx = await getTeamsMonthContext(monthStr)
     if (ctx.error) {
-      return <TeamsDataError message={ctx.error} />
+      return <SectionDataError message={ctx.error} />
     }
     if (!ctx.data) {
-      return <TeamsEmptyMonths />
+      return <SectionEmptyState />
     }
 
     const { selected } = ctx.data
@@ -36,7 +33,7 @@ export async function TeamsCompositionChromeBlock({
 
     if (suggestionsResult.error || !suggestionsResult.data) {
       return (
-        <TeamsDataError
+        <SectionDataError
           message={suggestionsResult.error ?? 'Could not load composition filter suggestions.'}
         />
       )

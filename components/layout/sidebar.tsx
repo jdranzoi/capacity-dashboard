@@ -20,7 +20,7 @@ import {
 import { cn } from '@/lib/utils'
 
 const linkBase =
-  'flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 text-sm transition-colors duration-150'
+  "flex cursor-pointer items-center gap-6 rounded-md px-2 py-1.5 text-sm transition-colors duration-150";
 
 function isOverviewActive(pathname: string): boolean {
   return pathname === '/'
@@ -37,23 +37,30 @@ function isRootGroupHighlighted(pathname: string, group: SidebarNavGroup): boole
 
 function SidebarBrand({ collapsed }: { collapsed: boolean }) {
   return (
-    <div className={cn('mb-3 flex items-center gap-2.5 px-1', collapsed && 'justify-center px-0')}>
+    <div
+      className={cn(
+        "mb-3 flex items-center gap-3 px-1",
+        collapsed && "justify-center px-0",
+      )}
+    >
       <div className="flex h-6 w-6 shrink-0 select-none items-center justify-center rounded bg-foreground text-[10px] font-bold tracking-tight text-background">
         M
       </div>
       <div
         className={cn(
-          'overflow-hidden transition-[max-width,opacity] duration-180',
-          collapsed ? 'max-w-0 opacity-0' : 'max-w-50 opacity-100'
+          "overflow-hidden transition-[max-width,opacity] duration-180",
+          collapsed ? "max-w-0 opacity-0" : "max-w-50 opacity-100",
         )}
       >
         <p className="whitespace-nowrap text-[10px] font-semibold uppercase leading-none tracking-widest text-muted-foreground">
           Mira Commerce
         </p>
-        <p className="whitespace-nowrap text-sm font-semibold leading-tight">Workforce</p>
+        <p className="whitespace-nowrap text-sm font-semibold leading-tight">
+          Workforce
+        </p>
       </div>
     </div>
-  )
+  );
 }
 
 function SidebarNavLink({
@@ -107,7 +114,7 @@ function SidebarRootNav({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname()
 
   return (
-    <nav className="flex flex-col gap-0.5" aria-label="Main">
+    <nav className="flex flex-col gap-3" aria-label="Main">
       <SidebarNavLink
         href={SIDEBAR_OVERVIEW.href}
         label={SIDEBAR_OVERVIEW.label}
@@ -126,13 +133,16 @@ function SidebarRootNav({ collapsed }: { collapsed: boolean }) {
           collapsed={collapsed}
           trailing={
             !collapsed ? (
-              <ChevronRight className="h-4 w-4 text-muted-foreground/70" aria-hidden />
+              <ChevronRight
+                className="h-4 w-4 text-muted-foreground/70"
+                aria-hidden
+              />
             ) : undefined
           }
         />
       ))}
     </nav>
-  )
+  );
 }
 
 function SidebarSectionSubLink({
@@ -185,11 +195,11 @@ function SidebarSectionNav({
   collapsed: boolean
 }) {
   return (
-    <nav className="flex flex-col gap-0.5" aria-label={`${group.label} sections`}>
+    <nav className="flex flex-col gap-3" aria-label={`${group.label} sections`}>
       <div
         className={cn(
-          'mb-2 flex items-center gap-1',
-          collapsed ? 'justify-center px-0' : 'px-1'
+          "mb-2 flex items-center",
+          collapsed ? "justify-center px-0" : "px-1",
         )}
         data-slot="sidebar-section-header"
       >
@@ -199,11 +209,13 @@ function SidebarSectionNav({
             aria-label="Back to main navigation"
             title="Back to main navigation"
             className={cn(
-              'flex min-w-0 flex-1 items-center gap-1 rounded-md px-1 py-1 text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground'
+              "flex min-w-0 flex-1 items-center rounded-md px-1 py-1 text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground",
             )}
           >
             <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
-            <span className="truncate text-sm font-semibold text-foreground">{group.label}</span>
+            <span className="truncate text-sm font-semibold text-foreground">
+              {group.label}
+            </span>
           </Link>
         ) : (
           <Link
@@ -218,10 +230,14 @@ function SidebarSectionNav({
       </div>
 
       {group.items.map((item) => (
-        <SidebarSectionSubLink key={item.href} item={item} collapsed={collapsed} />
+        <SidebarSectionSubLink
+          key={item.href}
+          item={item}
+          collapsed={collapsed}
+        />
       ))}
     </nav>
-  )
+  );
 }
 
 function SidebarUtilityFooter({ collapsed }: { collapsed: boolean }) {
@@ -230,11 +246,11 @@ function SidebarUtilityFooter({ collapsed }: { collapsed: boolean }) {
   return (
     <div
       className={cn(
-        'mt-2 shrink-0 border-t border-sidebar-border pt-3',
-        collapsed && 'flex flex-col items-center'
+        "mt-2 shrink-0 border-t border-sidebar-border pt-3",
+        collapsed && "flex flex-col items-center",
       )}
     >
-      <nav className="flex w-full flex-col gap-0.5" aria-label="Utilities">
+      <nav className="flex w-full flex-col gap-3" aria-label="Utilities">
         <SidebarNavLink
           href={SIDEBAR_UTILITY.href}
           label={SIDEBAR_UTILITY.label}
@@ -244,7 +260,7 @@ function SidebarUtilityFooter({ collapsed }: { collapsed: boolean }) {
         />
       </nav>
     </div>
-  )
+  );
 }
 
 function SidebarChrome({ collapsed }: { collapsed: boolean }) {

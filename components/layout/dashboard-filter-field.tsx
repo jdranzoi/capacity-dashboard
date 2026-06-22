@@ -14,12 +14,16 @@ export function DashboardFilterField({
   className?: string
 }) {
   return (
-    <div className={cn('flex min-w-[9.5rem] flex-col gap-1', className)}>
+    <div className={cn("flex min-w-[9.5rem] flex-col gap-3", className)}>
       <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </span>
       {children}
-      {hint ? <div className="text-[0.7rem] text-muted-foreground tabular-nums">{hint}</div> : null}
+      {hint ? (
+        <div className="text-[0.7rem] text-muted-foreground tabular-nums">
+          {hint}
+        </div>
+      ) : null}
     </div>
-  )
+  );
 }

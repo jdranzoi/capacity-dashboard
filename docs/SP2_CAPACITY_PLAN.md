@@ -32,7 +32,7 @@ Each Level 2 sub-section is an **independent track**: own route, loader, compone
 | --- | --- | --- |
 | Sub-section page (`app/.../capacity/{x}/page.tsx`) | Its own loader + `_shared` + `lib/domain` + existing public loaders (`lib/overview`, `lib/team`) | Other sub-section loaders or `components/capacity/{other}/` |
 | Sub-section loader (`lib/capacity/{x}/load-*.ts`) | `lib/capacity/shared/*`, `lib/data/*`, `lib/domain/*`, `lib/overview/*`, `lib/team/*` (read-only reuse) | Other sub-section loader folders |
-| Sub-section UI (`components/capacity/{x}/*`) | `_shared`, `components/ui`, `components/dashboard`, overview chart primitives | Other sub-section component folders |
+| Sub-section UI (`components/capacity/{x}/*`) | `_shared`, `components/ui`, overview chart primitives | Other sub-section component folders |
 | `lib/domain/workload-metrics.ts` | Pure math only | Supabase, React, sub-section loaders |
 
 ### File ownership matrix
@@ -79,7 +79,7 @@ Build once before sub-section tracks. Treat as a **frozen contract** — extend 
 | `lib/capacity/shared/capacity-route-filters.ts` | Parse `?month=&role=&zone=&project=&projectType=` |
 | `lib/capacity/shared/load-capacity-month-context.ts` | Resolve month, snapshot, filter scope |
 | `lib/capacity/shared/capacity-page-cache.ts` | `cacheLife` profile for capacity loaders |
-| `components/capacity/_shared/capacity-route-section.tsx` | Suspense boundary |
+| `components/capacity/_shared/capacity-route-pending-shell.tsx` | Route pending shell + `CapacityRouteSection` |
 | `components/capacity/_shared/capacity-route-pending-shell.tsx` | Pending shell |
 | `components/capacity/_shared/capacity-section-skeletons.tsx` | Loading skeletons |
 | `components/capacity/_shared/capacity-header-block.tsx` | Title + sync freshness |
@@ -93,7 +93,7 @@ Build once before sub-section tracks. Treat as a **frozen contract** — extend 
 | `loadOverviewMonthOptions` | Month picker options |
 | `getLatestSyncSnapshot` | Snapshot anchor |
 | `resolveFilteredPersonIds` (`lib/team`) | Filter scope |
-| `KpiMetricCard` (`components/dashboard`) | KPI rows |
+| `KpiMetricCard` (`components/ui/kpi-metric-card`) | KPI rows |
 | `fmtHoursKpi`, `fmtPct` (`lib/overview/overview-metrics.ts`) | Display |
 
 ### SP-2.0 checklist

@@ -25,11 +25,18 @@ export function TeamsCompositionProjectCard({
   )
 
   return (
-    <Card size="sm" className="h-full" data-slot="teams-composition-project-card">
+    <Card
+      size="sm"
+      className="h-full"
+      data-slot="teams-composition-project-card"
+    >
       <CardHeader className="border-b border-border/60 pb-2.5">
         <CardTitle className="min-w-0 truncate whitespace-nowrap text-sm leading-snug tracking-tight">
-          <span className="font-mono">{highlightTextMatch(project.projectKey, projectQuery)}</span>
-          {project.projectName?.trim() && project.projectName.trim() !== project.projectKey ? (
+          <span className="font-mono">
+            {highlightTextMatch(project.projectKey, projectQuery)}
+          </span>
+          {project.projectName?.trim() &&
+          project.projectName.trim() !== project.projectKey ? (
             <>
               <span className="font-sans text-muted-foreground"> — </span>
               <span className="font-sans font-medium">
@@ -49,7 +56,7 @@ export function TeamsCompositionProjectCard({
             {rows.map((row) => (
               <li
                 key={row.key}
-                className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] items-center gap-2 whitespace-nowrap text-sm leading-none"
+                className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] items-center gap-3 whitespace-nowrap text-sm leading-none"
               >
                 <span className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                   {row.roleLabel}
@@ -63,5 +70,5 @@ export function TeamsCompositionProjectCard({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,7 +1,7 @@
 import { connection } from 'next/server'
 
 import { UtilizationStaffingGrid } from '@/components/capacity/utilization/utilization-staffing-grid'
-import { CapacityDataError } from '@/components/capacity/_shared/capacity-data-error'
+import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import { perfSpan } from '@/lib/dev/perf-log'
 import {
   getUtilizationMonthKpisCached,
@@ -30,7 +30,7 @@ export async function UtilizationStaffingBlock({
   ])
 
   if (staffingResult.error) {
-    return <CapacityDataError message={`Could not load staffing grid: ${staffingResult.error}`} />
+    return <SectionDataError message={`Could not load staffing grid: ${staffingResult.error}`} />
   }
 
   const asOfDate = kpisResult.data?.asOfDate ?? null

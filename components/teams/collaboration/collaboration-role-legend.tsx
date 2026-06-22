@@ -26,17 +26,17 @@ export function CollaborationRoleLegend({
   return (
     <div
       className={cn(
-        'flex flex-col gap-2 rounded-lg border border-border px-3 py-2 text-[var(--collab-role-legend-fg)]',
-        className
+        "flex flex-col gap-3 rounded-lg border border-border px-3 py-2 text-[var(--collab-role-legend-fg)]",
+        className,
       )}
-      style={{ backgroundColor: 'var(--collab-role-legend-bg)' }}
+      style={{ backgroundColor: "var(--collab-role-legend-bg)" }}
       data-slot="collaboration-role-legend"
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <span className="text-[0.7rem] font-medium uppercase tracking-wide text-[var(--collab-role-legend-muted)]">
           Roles
         </span>
-        <div className="flex gap-2 text-[0.7rem]">
+        <div className="flex gap-3 text-[0.7rem]">
           <button
             type="button"
             disabled={allVisible}
@@ -55,15 +55,15 @@ export function CollaborationRoleLegend({
           </button>
         </div>
       </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-2">
+      <div className="flex flex-wrap gap-3">
         {roles.map((role) => {
-          const checked = visibleRoleKeys.has(role.key)
+          const checked = visibleRoleKeys.has(role.key);
           return (
             <label
               key={role.key}
               className={cn(
-                'flex cursor-pointer items-center gap-2 transition-opacity',
-                !checked && 'opacity-55'
+                "flex cursor-pointer items-center gap-3 transition-opacity",
+                !checked && "opacity-55",
               )}
             >
               <input
@@ -74,9 +74,9 @@ export function CollaborationRoleLegend({
               />
               <RoleBadge roleKey={role.key}>{role.label}</RoleBadge>
             </label>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }

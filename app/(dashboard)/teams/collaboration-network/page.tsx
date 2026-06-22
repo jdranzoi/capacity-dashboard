@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 
 import { CollaborationNetworkBlock } from '@/components/teams/collaboration/collaboration-network-block'
 import { TeamsRoutePendingShell } from '@/components/teams/_shared/teams-route-pending-shell'
-import { TeamsRouteSection } from '@/components/teams/_shared/teams-route-section'
+import { TeamsRouteSection } from '@/components/teams/_shared/teams-route-pending-shell'
 import {
   TeamsCollaborationPageSkeleton,
   TeamsCollaborationSkeleton,

@@ -64,11 +64,13 @@ export function NavigationSearchTrigger({
       type="button"
       onClick={() => setOpen(true)}
       aria-label="Search menu"
-      title={collapsed ? 'Search menu (⌘K)' : undefined}
+      title={collapsed ? "Search menu (⌘K)" : undefined}
       className={cn(
-        'flex items-center gap-2 rounded-md border border-sidebar-border bg-muted/20 text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground',
-        collapsed ? 'mx-auto h-8 w-8 justify-center px-0' : 'h-8 w-full px-2.5 text-xs',
-        className
+        "flex items-center gap-3 rounded-md border border-sidebar-border bg-muted/20 text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground",
+        collapsed
+          ? "mx-auto h-8 w-8 justify-center px-0"
+          : "h-8 w-full px-2.5 text-xs",
+        className,
       )}
     >
       <Search className="h-3.5 w-3.5 shrink-0" />
@@ -81,7 +83,7 @@ export function NavigationSearchTrigger({
         </>
       ) : null}
     </button>
-  )
+  );
 }
 
 export function NavigationCommandDialog({
@@ -171,8 +173,11 @@ export function NavigationCommandDialog({
         aria-label="Search navigation"
         className="relative z-10 w-full max-w-lg overflow-hidden rounded-xl border border-border bg-popover shadow-lg"
       >
-        <div className="flex items-center gap-2 border-b border-border px-3">
-          <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+        <div className="flex items-center gap-3 border-b border-border px-3">
+          <Search
+            className="h-4 w-4 shrink-0 text-muted-foreground"
+            aria-hidden
+          />
           <input
             ref={inputRef}
             type="search"
@@ -190,7 +195,9 @@ export function NavigationCommandDialog({
 
         <div className="max-h-[min(24rem,50vh)] overflow-y-auto p-1.5">
           {results.length === 0 ? (
-            <p className="px-3 py-6 text-center text-sm text-muted-foreground">No matches</p>
+            <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+              No matches
+            </p>
           ) : (
             results.map((entry, index) => (
               <NavigationSearchResult
@@ -204,5 +211,5 @@ export function NavigationCommandDialog({
         </div>
       </div>
     </div>
-  )
+  );
 }

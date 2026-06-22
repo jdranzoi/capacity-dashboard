@@ -2,7 +2,7 @@ import {
   KPI_METRICS_GRID_CLASS,
   KpiMetricCard,
   KpiMetricSubline,
-} from '@/components/dashboard/kpi-metric-card'
+} from '@/components/ui/kpi-metric-card'
 import { fmtHeadcountKpi } from '@/lib/overview/overview-metrics'
 import type { TeamsOverviewPayload } from '@/lib/teams/overview/load-teams-overview'
 

@@ -184,8 +184,8 @@ export function FilterSuggestInput({
     <div
       ref={rootRef}
       className={cn(
-        'relative flex min-w-[10rem] flex-1 flex-col gap-1.5 sm:max-w-xs',
-        containerClassName
+        "relative flex min-w-[10rem] flex-1 flex-col gap-1 sm:max-w-xs",
+        containerClassName,
       )}
     >
       <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -211,10 +211,10 @@ export function FilterSuggestInput({
           aria-label={ariaLabel}
           placeholder={placeholder}
           className={cn(
-            'h-9 w-full rounded-lg border border-border bg-muted/25 py-1.5 pr-8 pl-2.5 text-sm text-foreground',
-            'ring-1 ring-foreground/10 placeholder:text-muted-foreground',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-            isDisabled && 'cursor-not-allowed opacity-70'
+            "h-9 w-full rounded-lg border border-border bg-muted/25 py-1.5 pr-8 pl-2.5 text-sm text-foreground",
+            "ring-1 ring-foreground/10 placeholder:text-muted-foreground",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            isDisabled && "cursor-not-allowed opacity-70",
           )}
         />
         {isPending ? (
@@ -240,9 +240,9 @@ export function FilterSuggestInput({
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => selectSuggestion(option)}
                   className={cn(
-                    'flex w-full items-center justify-between gap-3 px-2.5 py-2 text-left text-sm',
-                    'hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none',
-                    index === highlightIndex && 'bg-muted/60'
+                    "flex w-full items-center justify-between gap-3 px-2.5 py-2 text-left text-sm",
+                    "hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none",
+                    index === highlightIndex && "bg-muted/60",
                   )}
                 >
                   <span className="min-w-0 truncate">
@@ -260,5 +260,5 @@ export function FilterSuggestInput({
         ) : null}
       </div>
     </div>
-  )
+  );
 }

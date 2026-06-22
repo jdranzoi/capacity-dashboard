@@ -14,7 +14,7 @@
 | Phase   | Scope                                                        | Status          |
 | ------- | ------------------------------------------------------------ | --------------- |
 | Phase 0 | Foundation: auth, layout, sidebar, data plumbing             | **Done**        |
-| Phase 1 | Active sections: Overview, Capacity, People, Teams, Projects | **In progress** |
+| Phase 1 | Active sections: Overview, Capacity, Teams, Projects | **In progress** |
 | Phase 2 | Intelligence layer: Insights, Reports                        | Not started     |
 
 ---
@@ -26,7 +26,7 @@
 | SP-0 | Navigation architecture | —          | 1     | — |
 | SP-1 | Overview                | SP-0       | 1     | § SP-1 below (**deferred**) |
 | SP-2 | Capacity                | SP-0       | 1     | **[SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md)** |
-| SP-3 | People                  | SP-0       | 1     | § SP-3 below |
+| SP-3 | People                  | SP-0       | —     | **Removed** — no `/people` section; person-level views live under Capacity Utilization and Teams |
 | SP-4 | Teams                   | SP-0       | 1     | [TEAM_DASHBOARD_PLAN.md](./TEAM_DASHBOARD_PLAN.md) |
 | SP-5 | Projects                | SP-0       | 1     | § SP-5 below |
 | SP-6 | Insights                | SP-1–5     | 2     | § SP-6 below |
@@ -64,7 +64,6 @@ The sidebar has no Level 2 navigation. All pages are flat.
 Sidebar (Level 1 — always visible):
   Overview         /
   Capacity         /capacity
-  People           /people
   Teams            /teams
   Projects         /projects
   ─────────────────────────
@@ -82,7 +81,7 @@ Sections NOT in sidebar (deactivated for Phase 1):
 ### Implementation steps
 
 - [x] **SP-0.1** Define route structure — new folders under `app/(dashboard)/`
-  - `/capacity`, `/people`, `/teams`, `/projects`
+  - `/capacity`, `/teams`, `/projects`
   - Each with `page.tsx` (initial shell) and `layout.tsx` (for Level 2 nav)
 - [x] **SP-0.2** Update `components/layout/sidebar.tsx`
   - Replace flat `navItems` array with Phase 1 sections only
@@ -224,7 +223,9 @@ Route shells exist (`app/(dashboard)/capacity/*` → placeholders). Overview pag
 
 ---
 
-## SP-3 — People
+## SP-3 — People (removed)
+
+> **Out of scope.** The `/people` route tree and nav domain were removed. Individual workload and roster views are covered by **Capacity → Utilization** (person-level staffing grid) and **Teams** (composition, collaboration). Do not reintroduce a top-level People section without updating `NAVIGATION_FUNCTIONAL.md` and this plan.
 
 > Answers: "Who is overloaded?"
 

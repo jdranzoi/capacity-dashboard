@@ -1,6 +1,6 @@
 import { connection } from 'next/server'
 
-import { CapacityDataError } from '@/components/capacity/_shared/capacity-data-error'
+import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import { CapacityPlanningAvailablePeopleCard } from '@/components/capacity/planning/capacity-planning-available-people-card'
 import { loadPlanningAvailablePeople } from '@/lib/capacity/planning/load-planning-available-people'
 import { loadPlanningMonthOptions } from '@/lib/capacity/planning/load-planning-month-options'
@@ -32,8 +32,8 @@ export async function CapacityPlanningAvailablePeopleBlock({
     }),
   ])
 
-  if (monthOptErr) return <CapacityDataError message={monthOptErr} />
-  if (result.error) return <CapacityDataError message={result.error} />
+  if (monthOptErr) return <SectionDataError message={monthOptErr} />
+  if (result.error) return <SectionDataError message={result.error} />
 
   const period = resolvePlanningPeriod(options, fromParam, toParam)
   if (!period) return null

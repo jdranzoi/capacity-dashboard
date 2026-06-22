@@ -4,7 +4,6 @@ import {
   Gauge,
   LayoutDashboard,
   MessageSquare,
-  User,
   Users,
 } from 'lucide-react'
 
@@ -111,57 +110,6 @@ export const NAV_DOMAINS: NavigationDomainConfig[] = [
         'Scenarios',
         '/capacity/scenarios',
         'What-if simulations. Hiring simulations, project expansion impact, PTO stress testing, staffing redistribution.',
-        'future'
-      ),
-    ],
-  },
-  {
-    id: 'people',
-    label: 'People',
-    coreQuestion: 'Who is overloaded?',
-    description:
-      'Analyze individual workload and operational load. Utilization per person, fragmentation, PTO, performance indicators, workload distribution, cross-team allocation.',
-    icon: User,
-    defaultHref: '/people/directory',
-    items: [
-      domainItem(
-        'People',
-        'Directory',
-        '/people/directory',
-        'Searchable people index. Roles, teams, seniority, regions, project participation.'
-      ),
-      domainItem(
-        'People',
-        'Utilization',
-        '/people/utilization',
-        'Individual workload analysis. Capacity fill, logged hours, billable %, operational load, overtime indicators.'
-      ),
-      domainItem(
-        'People',
-        'Fragmentation',
-        '/people/fragmentation',
-        'Too many projects per person, context switching, split allocations, organizational inefficiency.',
-        'coming-soon'
-      ),
-      domainItem(
-        'People',
-        'Availability',
-        '/people/availability',
-        'Future open capacity. Upcoming PTO, allocation gaps, staffing readiness.',
-        'coming-soon'
-      ),
-      domainItem(
-        'People',
-        'Performance',
-        '/people/performance',
-        'Operational delivery metrics (not HR). Allocation consistency, delivery participation, utilization balance, workload stability.',
-        'coming-soon'
-      ),
-      domainItem(
-        'People',
-        'Skills',
-        '/people/skills',
-        'Skill inventory and capability map.',
         'future'
       ),
     ],

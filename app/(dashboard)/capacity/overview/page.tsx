@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 
 import { CapacityRoutePendingShell } from '@/components/capacity/_shared/capacity-route-pending-shell'
-import { CapacityRouteSection } from '@/components/capacity/_shared/capacity-route-section'
+import { CapacityRouteSection } from '@/components/capacity/_shared/capacity-route-pending-shell'
 import {
   CapacityChartsSkeleton,
   CapacityKpiRowSkeleton,
@@ -40,14 +40,14 @@ async function CapacityOverviewPageContent({ searchParams }: CapacityOverviewPag
   const monthStr = Array.isArray(monthParam) ? monthParam[0] : monthParam
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <CapacityRouteSection fallback={<DashboardSectionHeaderSkeleton />}>
         <CapacityOverviewChromeBlock monthStr={monthStr} />
       </CapacityRouteSection>
 
       <Suspense
         fallback={
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-6">
             <CapacityKpiRowSkeleton />
             <CapacityChartsSkeleton />
             <CapacityRoleSummarySkeleton />
@@ -56,16 +56,19 @@ async function CapacityOverviewPageContent({ searchParams }: CapacityOverviewPag
       >
         <CapacityRouteSection
           fallback={
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-6">
               <CapacityKpiRowSkeleton />
               <CapacityChartsSkeleton />
               <CapacityRoleSummarySkeleton />
             </div>
           }
         >
-          <CapacityOverviewBlock monthStr={monthStr} routeFilters={routeFilters} />
+          <CapacityOverviewBlock
+            monthStr={monthStr}
+            routeFilters={routeFilters}
+          />
         </CapacityRouteSection>
       </Suspense>
     </div>
-  )
+  );
 }

@@ -1,10 +1,7 @@
 import { connection } from 'next/server'
 
-import { TeamsMonthPicker } from '@/components/teams/_shared/teams-month-picker'
-import {
-  TeamsDataError,
-  TeamsEmptyMonths,
-} from '@/components/teams/_shared/teams-data-error'
+import { OverviewMonthPicker } from '@/components/overview/overview-month-picker'
+import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import { DashboardFilterField } from '@/components/layout/dashboard-filter-field'
 import { DashboardSectionHeader } from '@/components/layout/dashboard-section-header'
 import { perfSpan } from '@/lib/dev/perf-log'
@@ -20,10 +17,10 @@ export async function TeamsOverviewChromeBlock({
     const { options, selected, error } = await getTeamsMonthSelection(monthStr)
 
     if (error) {
-      return <TeamsDataError message={`Could not load month options: ${error}`} />
+      return <SectionDataError message={`Could not load month options: ${error}`} />
     }
     if (!selected) {
-      return <TeamsEmptyMonths />
+      return <SectionEmptyState />
     }
 
     return (
@@ -32,7 +29,7 @@ export async function TeamsOverviewChromeBlock({
         subtitle="Organizational structure for the planning roster"
         filters={
           <DashboardFilterField label="Period">
-            <TeamsMonthPicker options={options} selectedMonthKey={selected.monthKey} />
+            <OverviewMonthPicker options={options} selectedMonthKey={selected.monthKey} />
           </DashboardFilterField>
         }
       />

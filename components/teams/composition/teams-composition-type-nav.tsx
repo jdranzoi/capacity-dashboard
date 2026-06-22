@@ -17,10 +17,10 @@ export function TeamsCompositionTypeNav({ data }: { data: TeamsCompositionPayloa
               key={group.projectType}
               href={`#${compositionSectionId(group.projectType)}`}
               className={cn(
-                'inline-flex shrink-0 items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors',
-                'ring-1 ring-transparent hover:bg-muted/50 hover:ring-foreground/10',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                isEmpty && 'text-muted-foreground'
+                "inline-flex shrink-0 items-center gap-3 rounded-md px-3 py-1.5 text-sm transition-colors",
+                "ring-1 ring-transparent hover:bg-muted/50 hover:ring-foreground/10",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                isEmpty && "text-muted-foreground",
               )}
             >
               <span>{group.label}</span>
@@ -28,7 +28,7 @@ export function TeamsCompositionTypeNav({ data }: { data: TeamsCompositionPayloa
                 {count}
               </span>
             </a>
-          )
+          );
         })}
       </div>
     </nav>

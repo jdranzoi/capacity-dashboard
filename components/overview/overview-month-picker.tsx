@@ -5,15 +5,15 @@ import { Check, ChevronDown, Loader2 } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 
-import { useOverviewRoutePending } from '@/components/overview/overview-route-pending-shell'
+import { useResolvedSectionRoutePending } from "@/components/ui/use-resolved-section-route-pending";
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
 import { cn } from '@/lib/utils'
 
 const triggerClassName = cn(
-  'flex h-9 w-full min-w-[11.5rem] items-center justify-between gap-2 rounded-lg border border-border bg-muted/25 py-1.5 pr-2 pl-3 text-sm text-foreground',
-  'ring-1 ring-foreground/10',
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-)
+  "flex h-9 w-full min-w-[11.5rem] items-center justify-between gap-3 rounded-lg border border-border bg-muted/25 py-1.5 pr-2 pl-3 text-sm text-foreground",
+  "ring-1 ring-foreground/10",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+);
 
 export function OverviewMonthPicker({
   options,
@@ -33,7 +33,7 @@ export function OverviewMonthPicker({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const routePending = useOverviewRoutePending()
+  const routePending = useResolvedSectionRoutePending();
   const effectivePending = pendingNavigation ?? routePending
   const listboxId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
@@ -133,23 +133,26 @@ export function OverviewMonthPicker({
                   role="option"
                   aria-selected={isSelected}
                   onClick={() => {
-                    onChange(option.monthKey)
-                    setOpen(false)
+                    onChange(option.monthKey);
+                    setOpen(false);
                   }}
                   className={cn(
-                    'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm transition-colors hover:bg-muted/40',
-                    isCurrentMonth && 'bg-muted/55',
-                    isSelected && 'font-medium'
+                    "flex w-full items-center gap-3 px-3 py-1.5 text-left text-sm transition-colors hover:bg-muted/40",
+                    isCurrentMonth && "bg-muted/55",
+                    isSelected && "font-medium",
                   )}
                 >
                   <Check
                     aria-hidden
-                    className={cn('size-3.5 shrink-0', isSelected ? 'opacity-100' : 'opacity-0')}
+                    className={cn(
+                      "size-3.5 shrink-0",
+                      isSelected ? "opacity-100" : "opacity-0",
+                    )}
                   />
                   <span className="truncate">{option.label}</span>
                 </button>
               </li>
-            )
+            );
           })}
         </ul>
       ) : null}

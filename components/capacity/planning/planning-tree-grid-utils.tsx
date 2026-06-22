@@ -27,30 +27,37 @@ export function PlanningTreeNameCell({
   const isGroup = GROUP_KINDS.has(kind)
 
   return (
-    <div className="flex min-w-0 items-center gap-1" style={{ paddingLeft: `${depth * 0.75}rem` }}>
+    <div
+      className="flex min-w-0 items-center gap-3"
+      style={{ paddingLeft: `${depth * 0.75}rem` }}
+    >
       {canExpand ? (
         <button
           type="button"
-          aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
+          aria-label={isExpanded ? "Collapse row" : "Expand row"}
           className="inline-flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
           onClick={onToggle}
         >
-          {isExpanded ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+          {isExpanded ? (
+            <ChevronDown className="size-3.5" />
+          ) : (
+            <ChevronRight className="size-3.5" />
+          )}
         </button>
       ) : (
         <span className="inline-block size-5 shrink-0" aria-hidden />
       )}
       <span
         className={cn(
-          'min-w-0 truncate text-foreground',
-          isGroup ? 'font-medium' : 'font-normal text-foreground/90'
+          "min-w-0 truncate text-foreground",
+          isGroup ? "font-medium" : "font-normal text-foreground/90",
         )}
         title={label}
       >
         {label}
       </span>
     </div>
-  )
+  );
 }
 
 export function PlanningMetricCell({

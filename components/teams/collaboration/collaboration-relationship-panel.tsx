@@ -113,7 +113,7 @@ export function CollaborationRelationshipPanel({
       )}
       data-slot="collaboration-relationship"
     >
-      <div className="mb-3 flex items-start justify-between gap-2">
+      <div className="mb-3 flex items-start justify-between gap-3">
         <h3 className="text-sm font-medium">Selected relationship</h3>
         <button
           type="button"
@@ -125,13 +125,13 @@ export function CollaborationRelationshipPanel({
         </button>
       </div>
 
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
         <PersonHeading node={pm} onSelectNode={onSelectNode} />
         <span className="text-muted-foreground">↔</span>
         <PersonHeading node={tl} onSelectNode={onSelectNode} />
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-2">
+      <div className="mt-3 grid grid-cols-3 gap-3">
         <MetricCell
           label={edge.relationshipMetrics.isFutureFilter ? "From" : "Since"}
           value={formatDate(edge.relationshipMetrics.periodStartDate)}
@@ -174,7 +174,7 @@ export function CollaborationRelationshipPanel({
           <p className="mb-1.5 text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
             Team members in common
           </p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-3">
             {sharedTeamMembers.map((member) => (
               <button
                 key={member.id}
