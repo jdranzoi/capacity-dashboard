@@ -2,6 +2,7 @@
 export type TeamsRouteFilters = {
   personQuery: string | null
   projectQuery: string | null
+  pmQuery: string | null
 }
 
 export function parseTeamsRouteFilters(
@@ -15,5 +16,9 @@ export function parseTeamsRouteFilters(
   const projectRaw = Array.isArray(projectParam) ? projectParam[0] : projectParam
   const projectQuery = projectRaw?.trim() ? projectRaw.trim() : null
 
-  return { personQuery, projectQuery }
+  const pmParam = raw.pm
+  const pmRaw = Array.isArray(pmParam) ? pmParam[0] : pmParam
+  const pmQuery = pmRaw?.trim() ? pmRaw.trim() : null
+
+  return { personQuery, projectQuery, pmQuery }
 }

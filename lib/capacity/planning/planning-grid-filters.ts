@@ -6,6 +6,7 @@ import { plannedPct } from '@/lib/domain/workload-metrics'
 import type { ProjectSpaceTypeFilter } from '@/lib/domain/project-types'
 import type { PlanningPeopleNode, PlanningProjectNode } from '@/lib/capacity/planning/planning-types'
 import type { StaffFilterMode } from '@/lib/ui/staff-filter-mode'
+import { matchesProjectManagerQuery } from '@/lib/workforce/project-manager'
 
 export type PlanningUtilizationBand = PlannedUtilizationBand
 export type PlanningProjectTypeFilter = ProjectSpaceTypeFilter
@@ -49,6 +50,16 @@ export function filterProjectTreeByType(
 ): PlanningProjectNode[] {
   if (typeFilter === 'all') return rows
   return rows.filter((row) => row.kind === 'project' && row.projectType === typeFilter)
+}
+
+export function filterProjectTreeByPm(
+  rows: PlanningProjectNode[],
+  pmValue: string
+): PlanningProjectNode[] {
+  if (!pmValue.trim()) return rows
+  return rows.filter(
+    (row) => row.kind === 'project' && matchesProjectManagerQuery(row.pmName, pmValue)
+  )
 }
 
 export type PlanningStaffFilterMode = StaffFilterMode

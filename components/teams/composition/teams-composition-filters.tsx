@@ -25,6 +25,7 @@ export function TeamsCompositionFilters({
 
   const personDisplay = routeFilters.personQuery ?? ''
   const projectDisplay = routeFilters.projectQuery ?? ''
+  const pmDisplay = routeFilters.pmQuery ?? ''
 
   const personSuggestions = useMemo(
     () => suggestions.people.map((option) => ({ ...option })),
@@ -33,6 +34,10 @@ export function TeamsCompositionFilters({
   const projectSuggestions = useMemo(
     () => suggestions.projects.map((option) => ({ ...option })),
     [suggestions.projects]
+  )
+  const pmSuggestions = useMemo(
+    () => suggestions.projectManagers.map((option) => ({ ...option })),
+    [suggestions.projectManagers]
   )
 
   return (
@@ -59,6 +64,17 @@ export function TeamsCompositionFilters({
         selectedParamValue={routeFilters.projectQuery}
         displayValue={projectDisplay}
         suggestions={projectSuggestions}
+        pendingNavigation={teamsPending}
+        containerClassName="min-w-[12rem] sm:max-w-md"
+      />
+      <FilterSuggestInput
+        paramKey="pm"
+        label="Project manager"
+        placeholder="Search PM…"
+        ariaLabel="Filter projects by project manager name"
+        selectedParamValue={routeFilters.pmQuery}
+        displayValue={pmDisplay}
+        suggestions={pmSuggestions}
         pendingNavigation={teamsPending}
         containerClassName="min-w-[12rem] sm:max-w-md"
       />

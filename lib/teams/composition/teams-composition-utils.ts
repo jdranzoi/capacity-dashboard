@@ -1,5 +1,6 @@
 import type { ProjectSpaceType } from '@/lib/domain/project-types'
 import { isTlRoleKey, roleSortIndex } from '@/lib/domain/role-keys'
+import { matchesProjectManagerQuery } from '@/lib/workforce/project-manager'
 
 export type TeamsCompositionMember = {
   personId: string
@@ -37,6 +38,7 @@ export type TeamsCompositionPayload = {
   syncCreatedAt: string | null
   personQuery: string | null
   projectQuery: string | null
+  pmQuery: string | null
   groups: TeamsCompositionTypeGroup[]
   totalProjectCount: number
   visibleProjectCount: number
@@ -165,9 +167,11 @@ export function projectMatchesCompositionFilters(
   filters: {
     personQuery?: string | null
     projectQuery?: string | null
+    pmQuery?: string | null
   }
 ): boolean {
   if (!projectMatchesProjectQuery(project, filters.projectQuery)) return false
+  if (!matchesProjectManagerQuery(project.pmName, filters.pmQuery)) return false
   return projectMatchesPersonQuery(project, filters.personQuery)
 }
 
@@ -176,6 +180,7 @@ export function filterProjectsByCompositionQueries(
   filters: {
     personQuery?: string | null
     projectQuery?: string | null
+    pmQuery?: string | null
   }
 ): TeamsCompositionProject[] {
   return projects.filter((project) => projectMatchesCompositionFilters(project, filters))
@@ -195,6 +200,7 @@ export function buildTypeGroup(
   filters: {
     personQuery?: string | null
     projectQuery?: string | null
+    pmQuery?: string | null
   }
 ): TeamsCompositionTypeGroup {
   const sorted = sortCompositionProjects(projects)

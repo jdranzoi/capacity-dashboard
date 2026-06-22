@@ -26,6 +26,7 @@ import {
 } from '@/components/capacity/planning/planning-tree-grid-utils'
 import { SortableHeader } from '@/components/ui/data-table/sortable-header'
 import {
+  filterProjectTreeByPm,
   filterProjectTreeByRoleOrName,
   filterProjectTreeByType,
   type PlanningProjectTypeFilter,
@@ -65,6 +66,7 @@ export function CapacityPlanningProjectGrid({
   const [filterMode, setFilterMode] = useState<PlanningStaffFilterMode>('role')
   const [roleFilter, setRoleFilter] = useState('')
   const [nameQuery, setNameQuery] = useState('')
+  const [pmFilter, setPmFilter] = useState('')
   const [projectType, setProjectType] = useState<PlanningProjectTypeFilter>('all')
   const [monthVisibility, setMonthVisibility] = useState<PlanningMonthVisibilityFilter>(
     PLANNING_MONTH_VISIBILITY_ALL
@@ -85,10 +87,20 @@ export function CapacityPlanningProjectGrid({
     setExpanded(value === 'expand' ? true : {})
   }
 
+  const pmOptions = useMemo(() => {
+    const names = new Set<string>()
+    for (const row of rows) {
+      if (row.kind !== 'project' || !row.pmName) continue
+      names.add(row.pmName)
+    }
+    return Array.from(names).sort((a, b) => a.localeCompare(b, 'en'))
+  }, [rows])
+
   const filteredRows = useMemo(() => {
-    const byType = filterProjectTreeByType(rows, projectType)
+    const byPm = filterProjectTreeByPm(rows, pmFilter)
+    const byType = filterProjectTreeByType(byPm, projectType)
     return filterProjectTreeByRoleOrName(byType, filterMode, roleFilter, nameQuery)
-  }, [rows, projectType, filterMode, roleFilter, nameQuery])
+  }, [rows, pmFilter, projectType, filterMode, roleFilter, nameQuery])
 
   const columns = useMemo(() => {
     const nameCol = columnHelper.accessor('label', {
@@ -164,6 +176,9 @@ export function CapacityPlanningProjectGrid({
         nameQuery={nameQuery}
         onNameQueryChange={setNameQuery}
         roleOptions={roleOptions}
+        pmValue={pmFilter}
+        onPmChange={setPmFilter}
+        pmOptions={pmOptions}
         projectType={projectType}
         onProjectTypeChange={setProjectType}
         monthKeys={monthKeys}

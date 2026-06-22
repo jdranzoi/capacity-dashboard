@@ -16,6 +16,7 @@ import {
   usesProjectsProgressMonthPicker,
 } from '@/lib/projects/overview/projects-progress-month-options'
 import { parseProjectsRouteFilters } from '@/lib/projects/overview/projects-route-filters'
+import { loadPmFilterSuggestions } from '@/lib/workforce/load-pm-filter-suggestions'
 
 export async function ProjectsOverviewGridBlock({
   listParams,
@@ -30,6 +31,7 @@ export async function ProjectsOverviewGridBlock({
       view: listParams.view,
       category: listParams.category,
       q: listParams.q,
+      pm: listParams.pm,
     })
 
     const monthCtxRes = await getProjectsMonthContext(
@@ -56,6 +58,7 @@ export async function ProjectsOverviewGridBlock({
             monthContext: monthCtxRes.data,
             category: routeFilters.category,
             searchQuery: routeFilters.searchQuery,
+            pmQuery: routeFilters.pmQuery,
           })
 
     if (listRes.error) {
@@ -70,6 +73,17 @@ export async function ProjectsOverviewGridBlock({
       ? pickRecentMonthOptions(monthCtxRes.data.options)
       : []
 
+    const pmSuggestionsRes = showMonthPicker
+      ? await loadPmFilterSuggestions({
+          snapshotId: monthCtxRes.data.snapshot.id,
+          monthStartStr: monthCtxRes.data.monthStartStr,
+        })
+      : { options: [], error: null }
+
+    if (pmSuggestionsRes.error) {
+      return <SectionDataError message={`Could not load PM filter options: ${pmSuggestionsRes.error}`} />
+    }
+
     return (
       <ProjectsOverviewGridBody
         payload={listRes.data}
@@ -77,6 +91,8 @@ export async function ProjectsOverviewGridBlock({
         showMonthPicker={showMonthPicker}
         monthOptions={progressMonthOptions}
         selectedMonthKey={monthCtxRes.data.selected.monthKey}
+        pmQuery={routeFilters.pmQuery}
+        pmSuggestions={pmSuggestionsRes.options}
       />
     )
   })

@@ -26,6 +26,7 @@ export async function ProjectsOverviewKpiBlock({
       view: listParams.view,
       category: listParams.category,
       q: listParams.q,
+      pm: listParams.pm,
     })
 
     const monthCtxRes = await getProjectsMonthContext(
@@ -51,6 +52,7 @@ export async function ProjectsOverviewKpiBlock({
             monthContext: monthCtxRes.data,
             category: routeFilters.category,
             searchQuery: routeFilters.searchQuery,
+            pmQuery: routeFilters.pmQuery,
           })
 
     if (listRes.error) {

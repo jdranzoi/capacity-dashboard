@@ -35,6 +35,7 @@ export async function TeamsCompositionBlock({
       snapshot,
       personQuery: routeFilters.personQuery,
       projectQuery: routeFilters.projectQuery,
+      pmQuery: routeFilters.pmQuery,
     })
 
     if (result.error || !result.data) {

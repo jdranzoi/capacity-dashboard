@@ -26,6 +26,9 @@ import type {
   ProjectsOverviewPayload,
 } from '@/lib/projects/overview/projects-types'
 import type { ProjectsMonthContext } from '@/lib/projects/overview/projects-page-cache'
+import { createServiceClientCached } from '@/lib/supabase/server'
+import { matchesProjectManagerQuery } from '@/lib/workforce/project-manager'
+import { resolvePmNamesByProjectFromPlanRows } from '@/lib/workforce/resolve-project-pm-names'
 
 function buildOverviewRows(params: {
   projects: Awaited<ReturnType<typeof loadActiveProjects>>['rows']
@@ -33,9 +36,11 @@ function buildOverviewRows(params: {
   loggedByProject: Map<string, number>
   billableByProject: Map<string, number>
   burnByProject: Map<string, number[]>
+  pmNamesByProjectId: Map<string, string | null>
   requireActivityInMonth: boolean
   category: ProjectsCategoryFilter
   searchQuery: string | null
+  pmQuery: string | null
 }): ProjectOverviewRow[] {
   const rows: ProjectOverviewRow[] = []
 
@@ -44,6 +49,9 @@ function buildOverviewRows(params: {
     if (!matchesProjectsSearch(project.project_key, project.project_name, params.searchQuery)) {
       continue
     }
+
+    const pmName = params.pmNamesByProjectId.get(project.id) ?? null
+    if (!matchesProjectManagerQuery(pmName, params.pmQuery)) continue
 
     const plannedHours = roundDisplayStat(params.plannedByProject.get(project.id) ?? 0)
     const loggedHours = roundDisplayStat(params.loggedByProject.get(project.id) ?? 0)
@@ -60,6 +68,7 @@ function buildOverviewRows(params: {
       projectKey: project.project_key,
       projectName: project.project_name,
       projectType: project.project_type,
+      pmName,
       status: project.status,
       startDate: project.start_date,
       budgetHours: project.budget_hours,
@@ -101,8 +110,9 @@ export async function loadProjectsOverviewMonthly(params: {
   monthContext: ProjectsMonthContext
   category: ProjectsCategoryFilter
   searchQuery: string | null
+  pmQuery: string | null
 }): Promise<{ data: ProjectsOverviewPayload | null; error: string | null }> {
-  const { monthContext, category, searchQuery } = params
+  const { monthContext, category, searchQuery, pmQuery } = params
   const { snapshot, monthStartStr, monthLabel, options } = monthContext
 
   const burnMonthKeys = lastNMonthStarts(monthStartStr, 3)
@@ -118,6 +128,10 @@ export async function loadProjectsOverviewMonthly(params: {
   if (actualsRes.error) return { data: null, error: actualsRes.error }
   if (plansRes.error) return { data: null, error: plansRes.error }
   if (burnActualsRes.error) return { data: null, error: burnActualsRes.error }
+
+  const supabase = createServiceClientCached()
+  const pmNamesRes = await resolvePmNamesByProjectFromPlanRows(supabase, plansRes.rows)
+  if (pmNamesRes.error) return { data: null, error: pmNamesRes.error }
 
   const plannedByProject = sumPlannedHoursByProject(plansRes.rows)
   const loggedByProject = new Map<string, number>()
@@ -158,9 +172,11 @@ export async function loadProjectsOverviewMonthly(params: {
     loggedByProject,
     billableByProject,
     burnByProject,
+    pmNamesByProjectId: pmNamesRes.pmNamesByProjectId,
     requireActivityInMonth: true,
     category,
     searchQuery,
+    pmQuery,
   })
 
   const orgBurnMonths = burnMonthKeys.map((monthKey) =>

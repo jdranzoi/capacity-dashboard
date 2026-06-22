@@ -4,6 +4,7 @@ export type ProjectsListSearchParams = {
   view?: string
   category?: string
   q?: string
+  pm?: string
 }
 
 export function pickProjectsListSearchParams(
@@ -13,11 +14,13 @@ export function pickProjectsListSearchParams(
   const view = raw.view
   const category = raw.category
   const q = raw.q
+  const pm = raw.pm
 
   return {
     month: Array.isArray(month) ? month[0] : month,
     view: Array.isArray(view) ? view[0] : view,
     category: Array.isArray(category) ? category[0] : category,
     q: Array.isArray(q) ? q[0] : q,
+    pm: Array.isArray(pm) ? pm[0] : pm,
   }
 }

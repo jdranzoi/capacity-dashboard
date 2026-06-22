@@ -184,16 +184,19 @@ export async function loadTeamsComposition(params: {
   snapshot: { id: string; createdAt: string }
   personQuery?: string | null
   projectQuery?: string | null
+  pmQuery?: string | null
 }): Promise<{ data: TeamsCompositionPayload | null; error: string | null }> {
-  const { monthStartStr, monthLabel, snapshot, personQuery, projectQuery } = params
+  const { monthStartStr, monthLabel, snapshot, personQuery, projectQuery, pmQuery } = params
   const snapshotId = snapshot.id
   const referenceDate = parse(monthStartStr, 'yyyy-MM-dd', new Date())
   const monthEndStr = format(endOfMonth(referenceDate), 'yyyy-MM-dd')
   const normalizedPersonQuery = personQuery?.trim() || null
   const normalizedProjectQuery = projectQuery?.trim() || null
+  const normalizedPmQuery = pmQuery?.trim() || null
   const filters = {
     personQuery: normalizedPersonQuery,
     projectQuery: normalizedProjectQuery,
+    pmQuery: normalizedPmQuery,
   }
 
   try {
@@ -251,6 +254,7 @@ export async function loadTeamsComposition(params: {
           syncCreatedAt: snapshot.createdAt,
           personQuery: normalizedPersonQuery,
           projectQuery: normalizedProjectQuery,
+          pmQuery: normalizedPmQuery,
         }),
         error: null,
       }
@@ -273,6 +277,7 @@ export async function loadTeamsComposition(params: {
           syncCreatedAt: snapshot.createdAt,
           personQuery: normalizedPersonQuery,
           projectQuery: normalizedProjectQuery,
+          pmQuery: normalizedPmQuery,
         }),
         error: null,
       }
@@ -369,6 +374,7 @@ export async function loadTeamsComposition(params: {
         syncCreatedAt: snapshot.createdAt,
         personQuery: normalizedPersonQuery,
         projectQuery: normalizedProjectQuery,
+        pmQuery: normalizedPmQuery,
         groups,
         totalProjectCount,
         visibleProjectCount,
@@ -387,6 +393,7 @@ function emptyPayload(params: {
   syncCreatedAt: string | null
   personQuery: string | null
   projectQuery: string | null
+  pmQuery: string | null
 }): TeamsCompositionPayload {
   return {
     monthLabel: params.monthLabel,
@@ -394,6 +401,7 @@ function emptyPayload(params: {
     syncCreatedAt: params.syncCreatedAt,
     personQuery: params.personQuery,
     projectQuery: params.projectQuery,
+    pmQuery: params.pmQuery,
     groups: PROJECT_SPACE_TYPES.map((section) => ({
       projectType: section.value,
       label: section.label,

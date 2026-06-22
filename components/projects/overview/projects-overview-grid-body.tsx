@@ -5,6 +5,8 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { ProjectsProgressChart } from '@/components/projects/overview/projects-progress-chart'
 import { ProjectsProgressMonthControl } from '@/components/projects/overview/projects-progress-month-control'
+import { ProjectsProgressPmFilter } from '@/components/projects/overview/projects-progress-pm-filter'
+import type { FilterSuggestOption } from '@/lib/format/filter-suggest-utils'
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
 import type { ProjectsCategoryFilter } from '@/lib/projects/overview/projects-route-filters'
 import type { ProjectsOverviewPayload } from '@/lib/projects/overview/projects-types'
@@ -15,12 +17,16 @@ export function ProjectsOverviewGridBody({
   showMonthPicker,
   monthOptions,
   selectedMonthKey,
+  pmQuery,
+  pmSuggestions,
 }: {
   payload: ProjectsOverviewPayload
   category: ProjectsCategoryFilter
   showMonthPicker: boolean
   monthOptions: OverviewMonthOption[]
   selectedMonthKey: string
+  pmQuery: string | null
+  pmSuggestions: FilterSuggestOption[]
 }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -53,10 +59,13 @@ export function ProjectsOverviewGridBody({
         chartTitle={chartTitle}
         headerAction={
           showMonthPicker ? (
-            <ProjectsProgressMonthControl
-              monthOptions={monthOptions}
-              selectedMonthKey={selectedMonthKey}
-            />
+            <div className="flex flex-wrap items-end gap-3">
+              <ProjectsProgressPmFilter pmQuery={pmQuery} suggestions={pmSuggestions} />
+              <ProjectsProgressMonthControl
+                monthOptions={monthOptions}
+                selectedMonthKey={selectedMonthKey}
+              />
+            </div>
           ) : undefined
         }
       />

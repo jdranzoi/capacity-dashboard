@@ -16,6 +16,7 @@ type TeamsCompositionPageProps = {
     month?: string
     q?: string
     project?: string
+    pm?: string
   }>
 }
 
@@ -38,7 +39,7 @@ async function TeamsCompositionPageContent({ searchParams }: TeamsCompositionPag
   return (
     <div className="flex flex-col gap-6">
       <TeamsRouteSection
-        fallback={<DashboardSectionHeaderSkeleton filterCount={3} />}
+        fallback={<DashboardSectionHeaderSkeleton filterCount={4} />}
       >
         <TeamsCompositionChromeBlock
           monthStr={monthStr}

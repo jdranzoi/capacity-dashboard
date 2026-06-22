@@ -14,6 +14,7 @@ import type {
   PlanningProjectNode,
 } from '@/lib/capacity/planning/planning-types'
 import { roundDisplayStat } from '@/lib/format/display-stats'
+import { PM_ROLE_KEY } from '@/lib/domain/role-keys'
 
 export function buildPlanningPeopleTree(
   period: PlanningPeriod,
@@ -146,6 +147,22 @@ function projectSortPlanned(months: Record<string, PlanningProjectMonthCell>): n
   return Object.values(months).reduce((s, c) => s + c.plannedHours, 0)
 }
 
+function resolvePmNameForProjectBucket(
+  roles: Map<string, { roleKey: string; people: Map<string, { personName: string }> }>
+): string | null {
+  const pmNames: string[] = []
+
+  for (const role of roles.values()) {
+    if (role.roleKey !== PM_ROLE_KEY) continue
+    for (const person of role.people.values()) {
+      pmNames.push(person.personName)
+    }
+  }
+
+  if (pmNames.length === 0) return null
+  return pmNames.sort((a, b) => a.localeCompare(b, 'en'))[0] ?? null
+}
+
 export function buildPlanningProjectTree(
   period: PlanningPeriod,
   monthFacts: PlanningMonthFacts[]
@@ -252,6 +269,7 @@ export function buildPlanningProjectTree(
         label: proj.meta.projectName,
         depth: 0 as const,
         projectId: proj.meta.projectId,
+        pmName: resolvePmNameForProjectBucket(proj.roles),
         ...(proj.meta.projectType ? { projectType: proj.meta.projectType } : {}),
         months: mergeProjectMonthMaps(roleNodes.map((r) => r.months)),
         subRows: roleNodes,

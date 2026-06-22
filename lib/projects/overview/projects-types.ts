@@ -5,6 +5,7 @@ export type ProjectOverviewRow = {
   projectKey: string
   projectName: string | null
   projectType: ProjectSpaceType
+  pmName: string | null
   status: string
   startDate: string | null
   budgetHours: number | null

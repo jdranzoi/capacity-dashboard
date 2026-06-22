@@ -13,6 +13,7 @@ export type ProjectsRouteFilters = {
   category: ProjectsCategoryFilter
   searchQuery: string | null
   projectKey: string | null
+  pmQuery: string | null
 }
 
 function firstParam(value: string | string[] | undefined): string | undefined {
@@ -46,12 +47,14 @@ export function parseProjectsRouteFilters(
 
   const q = firstParam(raw.q)?.trim()
   const project = firstParam(raw.project)?.trim()
+  const pm = firstParam(raw.pm)?.trim()
 
   return {
     view,
     category,
     searchQuery: q && q.length > 0 ? q : null,
     projectKey: project && project.length > 0 ? project : null,
+    pmQuery: pm && pm.length > 0 ? pm : null,
   }
 }
 

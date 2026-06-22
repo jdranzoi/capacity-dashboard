@@ -152,6 +152,7 @@ export async function loadProjectsOverviewGlobal(params: {
       projectKey: project.project_key,
       projectName: project.project_name,
       projectType: project.project_type,
+      pmName: null,
       status: project.status,
       startDate: project.start_date,
       budgetHours: project.budget_hours,

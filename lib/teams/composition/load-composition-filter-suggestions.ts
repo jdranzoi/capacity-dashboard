@@ -7,6 +7,7 @@ import {
   projectSpaceTypeLabel,
 } from '@/lib/domain/project-types'
 import { projectCardTitle } from '@/lib/teams/composition/teams-composition-utils'
+import { loadPmFilterSuggestions } from '@/lib/workforce/load-pm-filter-suggestions'
 import { createServiceClientCached } from '@/lib/supabase/server'
 import type { Database } from '@/lib/supabase/database.types'
 
@@ -34,6 +35,7 @@ async function pagedQuery<T>(
 export type CompositionFilterSuggestions = {
   people: CompositionSuggestOption[]
   projects: CompositionSuggestOption[]
+  projectManagers: CompositionSuggestOption[]
 }
 
 export async function loadCompositionFilterSuggestions(params: {
@@ -86,22 +88,25 @@ export async function loadCompositionFilterSuggestions(params: {
       if (row.project_id) projectIds.add(row.project_id)
     }
 
-    if (personIds.size === 0 && projectIds.size === 0) {
-      return { data: { people: [], projects: [] }, error: null }
-    }
-
-    const [peopleResult, projectsResult] = await Promise.all([
-      loadPeopleSuggestions(supabase, Array.from(personIds)),
-      loadProjectSuggestions(supabase, Array.from(projectIds)),
+    const [peopleResult, projectsResult, pmResult] = await Promise.all([
+      personIds.size > 0
+        ? loadPeopleSuggestions(supabase, Array.from(personIds))
+        : Promise.resolve({ options: [], error: null }),
+      projectIds.size > 0
+        ? loadProjectSuggestions(supabase, Array.from(projectIds))
+        : Promise.resolve({ options: [], error: null }),
+      loadPmFilterSuggestions({ snapshotId, monthStartStr }),
     ])
 
     if (peopleResult.error) return { data: null, error: peopleResult.error }
     if (projectsResult.error) return { data: null, error: projectsResult.error }
+    if (pmResult.error) return { data: null, error: pmResult.error }
 
     return {
       data: {
         people: peopleResult.options,
         projects: projectsResult.options,
+        projectManagers: pmResult.options,
       },
       error: null,
     }

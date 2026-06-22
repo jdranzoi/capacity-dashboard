@@ -41,6 +41,7 @@ export type PlanningProjectNode = {
   depth: 0 | 1 | 2
   projectId?: string
   projectType?: ProjectSpaceType
+  pmName?: string | null
   roleKey?: string
   personId?: string
   months: Record<string, PlanningProjectMonthCell>

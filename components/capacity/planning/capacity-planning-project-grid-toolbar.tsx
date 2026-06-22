@@ -2,6 +2,7 @@
 
 import { PlanningGridToolbarShell } from '@/components/capacity/planning/planning-grid-toolbar-shell'
 import { PlanningMonthVisibilityControl } from '@/components/capacity/planning/planning-month-visibility-control'
+import { PlanningToolbarSelect } from '@/components/capacity/planning/planning-toolbar-primitives'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { RoleNameStaffFilter } from '@/components/ui/role-name-staff-filter'
 import {
@@ -23,6 +24,9 @@ export function CapacityPlanningProjectGridToolbar({
   nameQuery,
   onNameQueryChange,
   roleOptions,
+  pmValue,
+  onPmChange,
+  pmOptions,
   projectType,
   onProjectTypeChange,
   monthKeys,
@@ -39,6 +43,9 @@ export function CapacityPlanningProjectGridToolbar({
   nameQuery: string
   onNameQueryChange: (value: string) => void
   roleOptions: string[]
+  pmValue: string
+  onPmChange: (value: string) => void
+  pmOptions: string[]
   projectType: PlanningProjectTypeFilter
   onProjectTypeChange: (value: PlanningProjectTypeFilter) => void
   monthKeys: string[]
@@ -68,6 +75,20 @@ export function CapacityPlanningProjectGridToolbar({
         onNameQueryChange={onNameQueryChange}
         roleOptions={roleOptions}
       />
+
+      <PlanningToolbarSelect
+        label="Project manager"
+        value={pmValue}
+        onChange={onPmChange}
+        className="w-[11rem]"
+      >
+        <option value="">All PMs</option>
+        {pmOptions.map((pm) => (
+          <option key={pm} value={pm}>
+            {pm}
+          </option>
+        ))}
+      </PlanningToolbarSelect>
 
       <SegmentedControl
         label="Project type"

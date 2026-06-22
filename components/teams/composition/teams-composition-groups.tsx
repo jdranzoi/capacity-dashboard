@@ -17,7 +17,7 @@ export function TeamsCompositionGroups({ data }: { data: TeamsCompositionPayload
 }
 
 export function TeamsCompositionAlerts({ data }: { data: TeamsCompositionPayload }) {
-  const hasActiveFilters = Boolean(data.personQuery || data.projectQuery)
+  const hasActiveFilters = Boolean(data.personQuery || data.projectQuery || data.pmQuery)
   const filterMiss =
     hasActiveFilters && data.totalProjectCount > 0 && data.visibleProjectCount === 0
 
@@ -29,7 +29,7 @@ export function TeamsCompositionAlerts({ data }: { data: TeamsCompositionPayload
     <div className="flex flex-col gap-3" data-slot="teams-composition-alerts">
       {filterMiss ? (
         <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground ring-1 ring-foreground/10">
-          No projects match the current name or project filters for this month.
+          No projects match the current filters for this month.
         </div>
       ) : null}
       {data.totalProjectCount === 0 && !hasActiveFilters ? (
