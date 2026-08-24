@@ -1,11 +1,12 @@
 /**
  * Canonical Capacity KPI labels and formula footnotes.
  *
- * Three org-level percentage KPIs (do not conflate with C-005 billable utilization):
+ * Org-level percentage KPIs (do not conflate with C-005 billable utilization):
  *
  * - **Capacity fill** — logged / net capacity (org hour roll-up)
  * - **Utilization** — mean per-person pace: logged / (net elapsed working days × 8h)
  * - **Planned** — planned / net capacity (org hour roll-up)
+ * - **Commercial utilization** — commercial logged / elapsed capacity (org hour roll-up)
  *
  * Implement formulas in `lib/domain/workload-metrics.ts`. UI must import labels from here.
  */
@@ -24,4 +25,9 @@ export const UTILIZATION_KPI = {
 export const PLANNED_KPI = {
   label: 'Planned',
   formulaFootnote: 'Planned / net capacity',
+} as const
+
+export const COMMERCIAL_UTILIZATION_KPI = {
+  label: 'Commercial utilization',
+  formulaFootnote: 'Commercial hours / elapsed capacity',
 } as const

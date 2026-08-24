@@ -5,11 +5,11 @@ import type { Database } from '@/lib/supabase/database.types'
 
 const PAGE = 1000
 const PERSON_IN_BATCH = 100
+const EMPTY_SCOPED: ProjectScopedHours = { plannedHours: 0, loggedHoursMtd: 0 }
 
 export type ProjectScopedHours = {
   plannedHours: number
   loggedHoursMtd: number
-  billableHoursMtd: number
 }
 
 type PagedBatch<T> = { rows: T[]; error: string | null }
@@ -31,7 +31,7 @@ async function pagedQuery<T>(
 }
 
 /**
- * Sums planned and worklog hours for a single `dim_project` row, aligned with overview:
+ * Sums planned and logged hours for a single `dim_project` row, aligned with overview:
  * - Plans: `fact_plans` for snapshot + month, `is_pto = false`
  * - Worklogs: non-PTO, `log_date` in [monthStart, logThroughStr] (MTD / sync cap)
  *
@@ -51,14 +51,7 @@ export async function loadProjectScopedHours(
   const { snapshotId, monthStartStr, logThroughStr, projectId, personIdFilter } = params
 
   if (personIdFilter && personIdFilter.size === 0) {
-    return {
-      data: {
-        plannedHours: 0,
-        loggedHoursMtd: 0,
-        billableHoursMtd: 0,
-      },
-      error: null,
-    }
+    return { data: EMPTY_SCOPED, error: null }
   }
 
   let plannedTotal = 0
@@ -88,27 +81,25 @@ export async function loadProjectScopedHours(
 
   if (personIdFilter == null) {
     const err = await sumPlansBatch(null)
-    if (err) return { data: { plannedHours: 0, loggedHoursMtd: 0, billableHoursMtd: 0 }, error: err }
+    if (err) return { data: EMPTY_SCOPED, error: err }
   } else {
     const list = Array.from(personIdFilter)
     for (let i = 0; i < list.length; i += PERSON_IN_BATCH) {
       const slice = list.slice(i, i + PERSON_IN_BATCH)
       const err = await sumPlansBatch(slice)
-      if (err) return { data: { plannedHours: 0, loggedHoursMtd: 0, billableHoursMtd: 0 }, error: err }
+      if (err) return { data: EMPTY_SCOPED, error: err }
     }
   }
 
   let loggedTotal = 0
-  let billableTotal = 0
 
   const sumLogsBatch = async (personIds: string[] | null) => {
     const { rows, error } = await pagedQuery<{
       logged_seconds: number
-      billable_seconds: number
     }>(async (from) => {
       let q = supabase
         .from('fact_worklogs')
-        .select('logged_seconds, billable_seconds')
+        .select('logged_seconds')
         .eq('project_id', projectId)
         .eq('is_pto', false)
         .gte('log_date', monthStartStr)
@@ -123,20 +114,19 @@ export async function loadProjectScopedHours(
     if (error) return error
     for (const r of rows) {
       loggedTotal += Number(r.logged_seconds) / 3600
-      billableTotal += Number(r.billable_seconds) / 3600
     }
     return null
   }
 
   if (personIdFilter == null) {
     const err = await sumLogsBatch(null)
-    if (err) return { data: { plannedHours: 0, loggedHoursMtd: 0, billableHoursMtd: 0 }, error: err }
+    if (err) return { data: EMPTY_SCOPED, error: err }
   } else {
     const list = Array.from(personIdFilter)
     for (let i = 0; i < list.length; i += PERSON_IN_BATCH) {
       const slice = list.slice(i, i + PERSON_IN_BATCH)
       const err = await sumLogsBatch(slice)
-      if (err) return { data: { plannedHours: 0, loggedHoursMtd: 0, billableHoursMtd: 0 }, error: err }
+      if (err) return { data: EMPTY_SCOPED, error: err }
     }
   }
 
@@ -144,7 +134,6 @@ export async function loadProjectScopedHours(
     data: {
       plannedHours: roundDisplayStat(plannedTotal),
       loggedHoursMtd: roundDisplayStat(loggedTotal),
-      billableHoursMtd: roundDisplayStat(billableTotal),
     },
     error: null,
   }

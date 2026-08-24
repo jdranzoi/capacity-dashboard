@@ -328,6 +328,8 @@ and `capacity/doc/DECISIONS.md` before changing any code here.
 
 **Overview workload KPIs** (logged utilization, productivity, efficiency, weekly billable vs capacity, capacity-share ratios) live in `lib/domain/workload-metrics.ts`; keep UI and loaders free of duplicated formulas. **Display** of those KPIs uses integer rounding via `roundDisplayStat` and the shared formatters in `lib/overview/overview-metrics.ts` (see *Display statistics (KPIs)*).
 
+**Capacity Overview and Utilization ops KPIs** share `components/capacity/_shared/capacity-ops-kpi-columns.tsx`: net vs elapsed capacity, commercial vs non-commercial logged hours, capacity fill (`logged / net capacity`), utilization (per-person pace), commercial utilization (`commercial hours / elapsed capacity`). Tempo billable hours are not a headline KPI on those pages.
+
 ## Cross-repo coordination — READ FIRST
 
 Before making any decision that crosses repo boundaries, consult the central registry in the `capacity` repo:

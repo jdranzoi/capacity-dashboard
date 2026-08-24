@@ -6,8 +6,8 @@ import {
   getMonthFactBundle,
 } from '@/lib/data/load-month-fact-bundle'
 import {
-  billableVersusLoggedEfficiencyPct,
   capacityFillPct,
+  commercialUtilizationPct,
 } from '@/lib/domain/workload-metrics'
 import {
   loadWeeklyOverview,
@@ -18,20 +18,17 @@ import {
   loadProjectScopedHours,
   type ProjectScopedHours,
 } from '@/lib/capacity/utilization/load-project-scoped-hours'
-import { sumLoggedHoursByCommercial } from '@/lib/capacity/utilization/sum-logged-hours-by-commercial'
+import { sumLoggedHoursByCommercial } from '@/lib/capacity/shared/sum-logged-hours-by-commercial'
 import type { PersonScopeFilters } from '@/lib/workforce/person-scope-filters'
 
 export type { ProjectScopedHours }
 
 export type UtilizationMonthKpisPayload = {
-  monthLabel: string
   /** Worklog (`logged`/`billable`) upper bound (`yyyy-MM-dd`); aligns with overview. */
   asOfDate: string | null
-  snapshotId: string | null
-  syncCreatedAt: string | null
   rollupHours: OrgMonthRollupHours
   /**
-   * When URL `project` is set: planned + non-PTO logged/billable on that project only
+   * When URL `project` is set: planned + non-PTO logged on that project only
    * (same snapshot, month, person scope, and worklog `asOfDate` cap). Null when no project filter.
    */
   projectScopedHours: ProjectScopedHours | null
@@ -46,8 +43,11 @@ export type UtilizationMonthKpisPayload = {
    * is active (not project-scoped hours).
    */
   utilizationPct: number | null
-  /** Uses project-scoped billable/logged when `projectScopedHours` is set. */
-  billableEfficiencyPct: number | null
+  /**
+   * **Commercial utilization** — commercial logged (MTD) / elapsed capacity.
+   * Uses project-scoped commercial hours when `projectScopedHours` is set.
+   */
+  commercialUtilizationPct: number | null
   /** Non-PTO logged hours where `fact_worklogs.is_commercial` is false (MTD worklog cap). */
   nonCommercialLoggedHoursMtd: number
   /** Non-PTO logged hours where `fact_worklogs.is_commercial` is true (MTD worklog cap). */
@@ -115,7 +115,6 @@ export async function loadUtilizationMonthKpis(
       projectScopedHours = {
         plannedHours: 0,
         loggedHoursMtd: 0,
-        billableHoursMtd: 0,
       }
     }
   }
@@ -142,30 +141,25 @@ export async function loadUtilizationMonthKpis(
     sumLoggedHoursByCommercial(wlRows)
 
   const loggedForUtil = projectScopedHours?.loggedHoursMtd ?? rollupHours.loggedHoursMtd
-  const billableForEff = projectScopedHours?.billableHoursMtd ?? rollupHours.billableHoursMtd
-  const loggedForEff = projectScopedHours?.loggedHoursMtd ?? rollupHours.loggedHoursMtd
 
   const capacityFillPctValue = capacityFillPct(
     loggedForUtil,
     rollupHours.netCapacityHours
   )
   const utilizationPctValue = overview.utilizationPct
-  const billableEfficiencyPct = billableVersusLoggedEfficiencyPct(
-    billableForEff,
-    loggedForEff
+  const commercialUtilizationPctValue = commercialUtilizationPct(
+    commercialLoggedHoursMtd,
+    rollupHours.elapsedCapacityHours
   )
 
   return {
     data: {
-      monthLabel: overview.monthLabel,
       asOfDate: overview.asOfDate,
-      snapshotId: overview.snapshotId,
-      syncCreatedAt: overview.syncCreatedAt,
       rollupHours,
       projectScopedHours,
       capacityFillPct: capacityFillPctValue,
       utilizationPct: utilizationPctValue,
-      billableEfficiencyPct,
+      commercialUtilizationPct: commercialUtilizationPctValue,
       nonCommercialLoggedHoursMtd,
       commercialLoggedHoursMtd,
     },

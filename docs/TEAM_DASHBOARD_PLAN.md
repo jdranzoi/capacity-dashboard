@@ -19,7 +19,7 @@ Charts and cards consume DTOs shaped in loaders using domain functions.
 | Period (month) | `fact_capacity.month_date` / month spine; same pattern as overview (`?month=`) | Reuse or extract `loadOverviewMonthOptions`. |
 | “Current operations” vs “future planning” | Not a first-class schema toggle | Phase 2+: UI-only mode or disabled until product definition. |
 | Filters: role, project, region | `dim_role`, `dim_zone`, `dim_project` + plans/worklogs joins | URL query params; filter in loader. `dim_project.project_type` comes from Jira category at sync (**D-011**). No `team` / `client` text columns — see **D-021** (`capacity/doc/DECISIONS.md`). |
-| KPI cards: net capacity, planned, logged, billable, utilization, billable efficiency, PTO | `fact_capacity`, `fact_plans` (`is_pto`), `fact_worklogs` | Org-level or filtered rollups; PTO from worklogs with `is_pto = true`. |
+| KPI cards: net / elapsed capacity, planned, PTO, logged, commercial / non-commercial hours, capacity fill, utilization, commercial utilization | `fact_capacity`, `fact_plans` (`is_pto`), `fact_worklogs` (`is_commercial`) | Shared `CapacityOpsKpiColumns` on Overview + Utilization. PTO from worklogs with `is_pto = true`. Commercial utilization = commercial hours / elapsed capacity. |
 | Utilization (multiple surfaces) | Capacity + worklogs + working-day math (overview-aligned) | Reuse `personLoggedUtilizationPct` / C-005 per surface definition. |
 | Skills / demand | **`dim_person` has no skills column**; `dim_project.tech_stack` is project-level | (A) Derive from assigned projects via `fact_plans`, or (B) defer section until a skill dimension exists. |
 | Employment type | **Not in current `dim_person` types** | Placeholder column or hide until ingestion adds field. |
@@ -63,7 +63,7 @@ Suggested components (create incrementally):
 | **1** | SLOT-A + minimal SLOT-B: title + month picker via `?month=` (same as `/`) | `loadOverviewMonthOptions` or shared helper. |
 | **2** | SLOT-C: real **org-aggregated** KPIs for selected month | Latest `sync_snapshot`; sums from `fact_capacity`, `fact_plans`, `fact_bench`, `fact_worklogs` with worklog date cap aligned to overview. Domain: extend/reuse `workload-metrics.ts` and `utilization.ts` as appropriate. |
 | **3** | Prior-month comparison + optional `%` change on cards | **Cancelled for now** — revisit after P5/P7 if still needed. |
-| **4** | Filters (query params) on aggregates + downstream sections | Person scope via `resolveFilteredPersonIds` → `loadWeeklyOverview`. With `?project=`, **Planned / Logged / Billable** (+ utilization & efficiency) use **project-scoped** sums (`load-project-scoped-hours.ts`, same snapshot/month, overview `asOfDate` cap). |
+| **4** | Filters (query params) on aggregates + downstream sections | Person scope via `resolveFilteredPersonIds` → `loadWeeklyOverview`. With `?project=`, **Planned / Logged** (+ capacity fill) use **project-scoped** sums (`load-project-scoped-hours.ts`, same snapshot/month, overview `asOfDate` cap). Commercial hours stay worklog-flag scoped. |
 | **5** | SLOT-D1–D3: role / group aggregates | Group-by in loader; Recharts consistent with overview. |
 | **6** | SLOT-D4 skills or explicit placeholder | **On hold** — product wants historical / longitudinal tracking; revisit after data model review (not current-performance-only). |
 | **7** | SLOT-E: staffing grid by person | Loader: `fact_capacity` roster + per-person rollups; TanStack Table + pagination (`components/team/team-staffing-grid.tsx`, `lib/team/load-team-staffing-rows.ts`). |
@@ -96,7 +96,7 @@ Suggested components (create incrementally):
 
 Phase 7 is implemented: person-level staffing grid with URL-filter scope, overview-aligned worklog bounds, sortable columns (TanStack), column order Person → Role → Net capacity → Planned → PTO → Logged → Util. → Eff. → Projects (`project_key` list for logged MTD projects), plus rounded hours / percents per display rules.
 
-Phase 2 remains: org monthly rollup from `loadWeeklyOverview` as `orgMonthRollupHours`, wrapped by `lib/team/load-team-month-kpis.ts` (`overviewWeeklyLoggedUtilizationPct`, `billableVersusLoggedEfficiencyPct`).
+Phase 2 remains: org monthly rollup from `loadWeeklyOverview` as `orgMonthRollupHours`, wrapped by `lib/capacity/utilization/load-month-kpis.ts` (`capacityFillPct`, `commercialUtilizationPct`).
 
 ## References
 

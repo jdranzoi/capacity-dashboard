@@ -199,7 +199,7 @@ Route shells exist (`app/(dashboard)/capacity/*` → placeholders). Overview pag
 | Track | Route | Data | Plan section |
 | ----- | ----- | ---- | ------------ |
 | Foundation | — | Shared month context | [SP-2.0](./SP2_CAPACITY_PLAN.md#shared-foundation-sp-20) |
-| Overview | `/capacity/overview` | ✅ `fact_capacity`, `fact_bench` | [SP-2.2](./SP2_CAPACITY_PLAN.md#sp-22--overview-capacityoverview) |
+| Overview | `/capacity/overview` | ✅ `fact_capacity`, `fact_worklogs` (commercial split) | [SP-2.2](./SP2_CAPACITY_PLAN.md#sp-22--overview-capacityoverview) |
 | Operations | `/capacity/operations` | ✅ `fact_worklogs`, `fact_capacity` | [SP-2.3](./SP2_CAPACITY_PLAN.md#sp-23--operations-capacityoperations) |
 | Planning | `/capacity/planning` | ✅ `fact_plans` (project grain) | [SP-2.4](./SP2_CAPACITY_PLAN.md#sp-24--planning-capacityplanning) |
 | Allocations | `/capacity/allocations` | ✅ `fact_plans`, dims | [SP-2.5](./SP2_CAPACITY_PLAN.md#sp-25--allocations-capacityallocations) |
@@ -212,10 +212,10 @@ Route shells exist (`app/(dashboard)/capacity/*` → placeholders). Overview pag
 - [x] **SP-2.0** Shared foundation — filters, month context, `_shared` UI shell
 - [x] **SP-2.2** Overview sub-page
 - [ ] **SP-2.3** Operations sub-page
-- [ ] **SP-2.4** Planning sub-page
+- [x] **SP-2.4** Planning sub-page
 - [ ] **SP-2.5** Allocations sub-page
 - [ ] **SP-2.6** Bench sub-page
-- [ ] **SP-2.7** Forecast + Scenarios stubs (optional lite trend charts)
+- [x] **SP-2.7** Forecast merged into Planning; Scenarios stub
 
 **SP-1 deferred** until Capacity widgets exist for selective reuse on Overview.
 

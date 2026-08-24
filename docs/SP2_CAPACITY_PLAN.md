@@ -85,6 +85,8 @@ Build once before sub-section tracks. Treat as a **frozen contract** — extend 
 | `components/capacity/_shared/capacity-header-block.tsx` | Title + sync freshness |
 | `components/capacity/_shared/capacity-toolbar-block.tsx` | Month picker (+ filter slots per page) |
 | `components/capacity/_shared/capacity-coming-soon.tsx` | Forecast / Scenarios stub |
+| `components/capacity/_shared/capacity-ops-kpi-columns.tsx` | Shared three-column ops KPI grid (Overview + Utilization) |
+| `lib/capacity/shared/sum-logged-hours-by-commercial.ts` | Commercial vs non-commercial logged hours (`is_commercial`) |
 
 ### Reuse from existing code (read-only)
 
@@ -93,7 +95,6 @@ Build once before sub-section tracks. Treat as a **frozen contract** — extend 
 | `loadOverviewMonthOptions` | Month picker options |
 | `getLatestSyncSnapshot` | Snapshot anchor |
 | `resolveFilteredPersonIds` (`lib/team`) | Filter scope |
-| `KpiMetricCard` (`components/ui/kpi-metric-card`) | KPI rows |
 | `fmtHoursKpi`, `fmtPct` (`lib/overview/overview-metrics.ts`) | Display |
 
 ### SP-2.0 checklist
@@ -110,16 +111,18 @@ Add to `lib/domain/workload-metrics.ts` as needed. Display at UI boundary via `r
 
 | Metric | Formula | Primary tracks |
 | --- | --- | --- |
-| Capacity fill | `logged_mtd / net_capacity × 100` (`capacityFillPct`) | Overview, Operations |
-| Utilization | mean per-person `logged / (elapsed net weekdays × 8h)` | Overview, Operations |
-| Planned | `planned / net_capacity × 100` (`plannedPct`) | Overview, Planning |
-| Bench rate (hours) | `sum(availability_hours) / sum(net_capacity) × 100` | Overview, Bench |
+| Capacity fill | `logged_mtd / net_capacity × 100` (`capacityFillPct`) | Overview, Utilization |
+| Utilization | mean per-person `logged / (elapsed net weekdays × 8h)` | Overview, Utilization |
+| Elapsed capacity | `sum(elapsed net weekdays × 8h)` | Overview, Utilization |
+| Commercial utilization | `commercial_logged_mtd / elapsed_capacity × 100` (`commercialUtilizationPct`) | Overview, Utilization |
+| Planned | `planned / net_capacity × 100` (`plannedPct`) | Overview, Utilization, Planning |
+| Bench rate (hours) | `sum(availability_hours) / sum(net_capacity) × 100` | Bench |
 | Bench headcount | `count(is_bench = true)` | Bench |
 | Allocation % | `planned_hours_on_project / net_capacity × 100` | Allocations |
 | Operational saturation | `max(planned, logged_mtd) / net_capacity × 100` | Operations |
 | Plan vs actual gap | `planned − logged_mtd` (hours) | Operations, Planning |
 | Productivity | `loggedVersusPlannedProductivityPct` | Operations |
-| Efficiency | `billableVersusLoggedEfficiencyPct` | Operations |
+| Efficiency | `billableVersusLoggedEfficiencyPct` | Operations (staffing grid Eff. column still uses this) |
 | Split allocation | person with ≥2 non-PTO projects in `fact_plans` | Allocations |
 
 **Not C-005:** Formal billable utilization stays in `lib/domain/utilization.ts`. Capacity surfaces use **logged vs capacity** unless explicitly labeled otherwise.
@@ -153,15 +156,19 @@ All Phase 1 sub-sections consume existing v2 ingestion. No new sync work require
 
 #### Metrics
 
-| KPI | Source |
-| --- | --- |
-| Net capacity | `orgMonthRollupHours.netCapacityHours` |
-| Planned | `orgMonthRollupHours.plannedHours` |
-| Logged (MTD) | `orgMonthRollupHours.loggedHoursMtd` |
-| Bench hours | `sum(fact_bench.availability_hours)` |
-| Capacity fill | `capacityFillPct` |
-| Utilization | `loadWeeklyOverview.utilizationPct` |
-| Planned | `plannedPct` |
+Shared three-column ops KPI grid (`CapacityOpsKpiColumns`) with Utilization. Bench hours belong on SP-2.6, not this row.
+
+| Column | KPI | Source |
+| --- | --- | --- |
+| Capacity | Net capacity | Full-month `fact_capacity.net_capacity_hours` |
+| Capacity | Elapsed capacity | Sum of elapsed net weekdays × 8h (share of net shown on card) |
+| Capacity | Planned | Non-PTO `fact_plans` (share of net shown on card) |
+| Capacity | PTO | PTO worklogs through calendar month end |
+| Hours (MTD) | Logged | Non-PTO `fact_worklogs` through overview as-of cap |
+| Hours (MTD) | Non-commercial / Commercial | Same worklogs split by `is_commercial` |
+| Metrics | Capacity fill | `logged_mtd / net_capacity` (`capacityFillPct`) |
+| Metrics | Utilization | Mean per-person pace (`loadWeeklyOverview.utilizationPct`) |
+| Metrics | Commercial utilization | `commercial_logged_mtd / elapsed_capacity` |
 
 #### Charts
 
@@ -173,11 +180,11 @@ All Phase 1 sub-sections consume existing v2 ingestion. No new sync work require
 
 #### Loader
 
-`lib/capacity/overview/load-capacity-overview.ts` — thin wrapper: `loadWeeklyOverview` + bench summary DTO.
+`lib/capacity/overview/load-capacity-overview.ts` — `loadWeeklyOverview` + commercial hours from `fact_worklogs` + role summary. No `fact_bench` on this page.
 
 #### Components
 
-`components/capacity/overview/capacity-overview-page.tsx`, `capacity-overview-kpi-block.tsx`, `capacity-overview-charts-block.tsx`
+`components/capacity/overview/capacity-overview-kpi-section.tsx` (wraps shared `CapacityOpsKpiColumns`), `capacity-overview-charts-section.tsx`, `capacity-overview-role-summary.tsx`.
 
 #### Checklist
 
@@ -405,6 +412,7 @@ Update the row for the track you ship. Do not mark other tracks.
 | Capacity track | Teams / People / Overview |
 | --- | --- |
 | **Overview** | Org capacity *position* — not executive health score (SP-1) |
+| **Utilization** | Logged/commercial consumption vs capacity — not bench slack (SP-2.6) |
 | **Operations** | Saturation, PTO, efficiency — not team composition (Teams) |
 | **Planning** | Forward *commitments* — not individual overload (People) |
 | **Allocations** | Person×project *mapping* — not fragmentation flags (People) |
@@ -436,4 +444,4 @@ When SP-1 resumes, import from Capacity sub-section components (props-only):
 
 ---
 
-*Last updated: SP-2.0 Foundation + SP-2.2 Overview shipped; next = SP-2.6 Bench.*
+*Last updated: Overview + Utilization share compact three-column ops KPIs (commercial utilization, elapsed vs net capacity). Next = SP-2.6 Bench.*

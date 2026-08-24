@@ -9,6 +9,7 @@
  * | Capacity fill | logged / net capacity | {@link capacityFillPct} |
  * | Utilization | mean per-person logged / (elapsed net weekdays × 8h) | {@link personLoggedUtilizationPct}, {@link meanPersonLoggedUtilizationPct} |
  * | Planned | planned / net capacity | {@link plannedPct} |
+ * | Commercial utilization | commercial logged / elapsed capacity | {@link commercialUtilizationPct} |
  *
  * UI layers must not embed these formulas — import from here so period / role / person rollups
  * stay consistent when definitions change.
@@ -123,12 +124,20 @@ export function capacityFillPct(
   return roundDisplayStat((loggedHours / netCapacityHours) * 100)
 }
 
-/** @deprecated Use {@link capacityFillPct}. */
-export function overviewWeeklyLoggedUtilizationPct(
-  loggedHours: number,
-  netCapacityHours: number
+/**
+ * **Commercial utilization** (org roll-up): commercial logged hours vs elapsed capacity.
+ *
+ * Uses `fact_worklogs.is_commercial` (stamped at sync), not Tempo billable.
+ * Denominator is elapsed net weekdays × 8h (same MTD window as Utilization pace).
+ * Null when commercial hours or elapsed capacity are non-positive.
+ *
+ * **Return value** is rounded to the nearest integer (`roundDisplayStat`).
+ */
+export function commercialUtilizationPct(
+  commercialHours: number,
+  elapsedCapacityHours: number
 ): number | null {
-  return capacityFillPct(loggedHours, netCapacityHours)
+  return capacityFillPct(commercialHours, elapsedCapacityHours)
 }
 
 /**
@@ -137,23 +146,4 @@ export function overviewWeeklyLoggedUtilizationPct(
 export function plannedPct(plannedHours: number, netCapacityHours: number): number | null {
   if (netCapacityHours <= 0 || plannedHours < 0) return null
   return roundDisplayStat((plannedHours / netCapacityHours) * 100)
-}
-
-/** @deprecated Use {@link plannedPct}. */
-export function plannedUtilizationPct(
-  plannedHours: number,
-  netCapacityHours: number
-): number | null {
-  return plannedPct(plannedHours, netCapacityHours)
-}
-
-/**
- * Bench / open hours as a share of net capacity (%). Null when net capacity ≤ 0.
- */
-export function benchRateHoursPct(
-  benchHours: number,
-  netCapacityHours: number
-): number | null {
-  if (netCapacityHours <= 0 || benchHours < 0) return null
-  return roundDisplayStat((benchHours / netCapacityHours) * 100)
 }

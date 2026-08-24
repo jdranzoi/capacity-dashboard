@@ -4,7 +4,7 @@ import { CapacityRoutePendingShell } from '@/components/capacity/_shared/capacit
 import { CapacityRouteSection } from '@/components/capacity/_shared/capacity-route-pending-shell'
 import {
   CapacityChartsSkeleton,
-  CapacityKpiRowSkeleton,
+  CapacityOpsKpiSkeleton,
   CapacityPageSkeleton,
   CapacityRoleSummarySkeleton,
 } from '@/components/capacity/_shared/capacity-section-skeletons'
@@ -48,7 +48,7 @@ async function CapacityOverviewPageContent({ searchParams }: CapacityOverviewPag
       <Suspense
         fallback={
           <div className="flex flex-col gap-6">
-            <CapacityKpiRowSkeleton />
+            <CapacityOpsKpiSkeleton />
             <CapacityChartsSkeleton />
             <CapacityRoleSummarySkeleton />
           </div>
@@ -57,7 +57,7 @@ async function CapacityOverviewPageContent({ searchParams }: CapacityOverviewPag
         <CapacityRouteSection
           fallback={
             <div className="flex flex-col gap-6">
-              <CapacityKpiRowSkeleton />
+              <CapacityOpsKpiSkeleton />
               <CapacityChartsSkeleton />
               <CapacityRoleSummarySkeleton />
             </div>

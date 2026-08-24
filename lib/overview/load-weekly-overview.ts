@@ -47,6 +47,11 @@ export type WeeklyHeadline = {
 export type OrgMonthRollupHours = {
   /** Sum of `fact_capacity.net_capacity_hours` across people (adds duplicate `source` rows per person). */
   netCapacityHours: number
+  /**
+   * MTD capacity budget: sum of elapsed net weekdays × 8h (same window as Utilization pace).
+   * At month end this converges on `netCapacityHours` when people work standard 8h days.
+   */
+  elapsedCapacityHours: number
   /** Non-PTO `fact_plans` hours for org. */
   plannedHours: number
   /** Non-PTO worklogs summed through overview MTD cap (`asOf`). */
@@ -163,6 +168,7 @@ export async function loadWeeklyOverview(
       })
       const zeros: OrgMonthRollupHours = {
         netCapacityHours: 0,
+        elapsedCapacityHours: 0,
         plannedHours: 0,
         loggedHoursMtd: 0,
         billableHoursMtd: 0,
@@ -263,6 +269,7 @@ export async function loadWeeklyOverview(
     }
 
     const utilizationSamples: number[] = []
+    let elapsedCapacityHoursRaw = 0
     for (const pid of capacityPersonIds) {
       const zoneId = personZoneById.get(pid) ?? null
       const zoneHolidayDates =
@@ -272,6 +279,7 @@ export async function loadWeeklyOverview(
         zoneHolidayDates,
         personPtoWeekdayDates: ptoWeekdayDatesByPerson.get(pid) ?? NO_WEEKDAY_DATES,
       })
+      elapsedCapacityHoursRaw += elapsed * STANDARD_WORKDAY_HOURS
       const logged = loggedHoursByPerson.get(pid) ?? 0
       const pct = personLoggedUtilizationPct(logged, elapsed, STANDARD_WORKDAY_HOURS)
       if (pct !== null) utilizationSamples.push(pct)
@@ -293,6 +301,7 @@ export async function loadWeeklyOverview(
 
     const orgMonthRollupHours: OrgMonthRollupHours = {
       netCapacityHours: roundDisplayStat(totalNetCapacity),
+      elapsedCapacityHours: roundDisplayStat(elapsedCapacityHoursRaw),
       plannedHours: roundDisplayStat(totalPlanned),
       loggedHoursMtd: roundDisplayStat(loggedHoursOrgTotal),
       billableHoursMtd: roundDisplayStat(billableHoursOrgTotal),

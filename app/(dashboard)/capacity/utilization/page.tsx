@@ -4,7 +4,7 @@ import { CapacityRoutePendingShell } from '@/components/capacity/_shared/capacit
 import { CapacityRouteSection } from '@/components/capacity/_shared/capacity-route-pending-shell'
 import {
   UtilizationAnalyticsSkeleton,
-  UtilizationKpiRowSkeleton,
+  CapacityOpsKpiSkeleton,
   UtilizationPageSkeleton,
 } from '@/components/capacity/_shared/capacity-section-skeletons'
 import { UtilizationAnalyticsBlock } from '@/components/capacity/utilization/utilization-analytics-block'
@@ -49,8 +49,8 @@ async function CapacityUtilizationPageContent({ searchParams }: CapacityUtilizat
         />
       </CapacityRouteSection>
 
-      <Suspense fallback={<UtilizationKpiRowSkeleton />}>
-        <CapacityRouteSection fallback={<UtilizationKpiRowSkeleton />}>
+      <Suspense fallback={<CapacityOpsKpiSkeleton />}>
+        <CapacityRouteSection fallback={<CapacityOpsKpiSkeleton />}>
           <UtilizationKpiBlock
             monthStr={monthStr}
             routeFilters={routeFilters}

@@ -1,8 +1,15 @@
+import { endOfMonth, format, parse } from 'date-fns'
+
 import {
   capacityFillPct,
-  plannedPct,
+  commercialUtilizationPct,
 } from '@/lib/domain/workload-metrics'
-import { loadCapacityBenchSummary } from '@/lib/capacity/overview/load-capacity-bench-summary'
+import {
+  filterRowsByPerson,
+  filterWorklogsThrough,
+  getMonthFactBundle,
+} from '@/lib/data/load-month-fact-bundle'
+import { sumLoggedHoursByCommercial } from '@/lib/capacity/shared/sum-logged-hours-by-commercial'
 import {
   loadWeeklyOverview,
   type OrgMonthRollupHours,
@@ -12,19 +19,14 @@ import { createServiceClientCached } from '@/lib/supabase/server'
 import { loadRoleAnalytics, type RoleAnalyticsRow } from '@/lib/capacity/shared/load-role-analytics'
 
 export type CapacityOverviewPayload = {
-  monthLabel: string
   asOfDate: string | null
-  snapshotId: string | null
-  syncCreatedAt: string | null
   orgMonthRollupHours: OrgMonthRollupHours
   weeks: WeeklyHeadline[]
   utilizationPct: number | null
   capacityFillPct: number | null
-  plannedPct: number | null
-  benchHours: number
-  benchHeadcount: number
-  benchRatePct: number | null
-  capacityHeadcount: number
+  commercialUtilizationPct: number | null
+  nonCommercialLoggedHoursMtd: number
+  commercialLoggedHoursMtd: number
   roleSummary: RoleAnalyticsRow[]
 }
 
@@ -36,6 +38,10 @@ export async function loadCapacityOverview(params: {
   now?: Date
 }): Promise<{ data: CapacityOverviewPayload | null; error: string | null }> {
   const { monthStartStr, snapshot, personIdFilter, referenceDate, now } = params
+  const monthEndStr = format(
+    endOfMonth(parse(monthStartStr, 'yyyy-MM-dd', new Date())),
+    'yyyy-MM-dd'
+  )
 
   const overview = await loadWeeklyOverview(
     referenceDate,
@@ -53,16 +59,10 @@ export async function loadCapacityOverview(params: {
     return { data: null, error: 'Overview did not produce org rollup hours (unexpected).' }
   }
 
-  const supabase = createServiceClientCached()
-
-  const [benchResult, roleResult] = await Promise.all([
-    loadCapacityBenchSummary(supabase, {
-      snapshotId: snapshot.id,
-      monthStartStr,
-      personIdFilter,
-      netCapacityHours: rollup.netCapacityHours,
-    }),
-    loadRoleAnalytics(supabase, {
+  const logThroughStr = overview.asOfDate ?? monthEndStr
+  const [bundleResult, roleResult] = await Promise.all([
+    getMonthFactBundle(snapshot.id, monthStartStr, monthEndStr),
+    loadRoleAnalytics(createServiceClientCached(), {
       monthStartStr,
       snapshot,
       personIdFilter,
@@ -70,21 +70,33 @@ export async function loadCapacityOverview(params: {
     }),
   ])
 
-  if (benchResult.error || !benchResult.data) {
+  if (bundleResult.error || !bundleResult.data) {
     return {
       data: null,
-      error: benchResult.error ?? 'Could not load bench summary.',
+      error: bundleResult.error
+        ? `Could not load month facts: ${bundleResult.error}`
+        : 'Could not load month facts (unexpected).',
     }
   }
   if (roleResult.error) {
     return { data: null, error: roleResult.error }
   }
 
+  const wlRows = filterWorklogsThrough(
+    filterRowsByPerson(bundleResult.data.worklogs, personIdFilter),
+    logThroughStr
+  )
+  const { nonCommercialLoggedHoursMtd, commercialLoggedHoursMtd } =
+    sumLoggedHoursByCommercial(wlRows)
+
   const capacityFillPctValue = capacityFillPct(
     rollup.loggedHoursMtd,
     rollup.netCapacityHours
   )
-  const plannedPctValue = plannedPct(rollup.plannedHours, rollup.netCapacityHours)
+  const commercialUtilizationPctValue = commercialUtilizationPct(
+    commercialLoggedHoursMtd,
+    rollup.elapsedCapacityHours
+  )
 
   const roleSummary = [...roleResult.data].sort(
     (a, b) => b.netCapacityHours - a.netCapacityHours
@@ -92,19 +104,14 @@ export async function loadCapacityOverview(params: {
 
   return {
     data: {
-      monthLabel: overview.monthLabel,
       asOfDate: overview.asOfDate,
-      snapshotId: overview.snapshotId,
-      syncCreatedAt: overview.syncCreatedAt,
       orgMonthRollupHours: rollup,
       weeks: overview.weeks,
       utilizationPct: overview.utilizationPct,
       capacityFillPct: capacityFillPctValue,
-      plannedPct: plannedPctValue,
-      benchHours: benchResult.data.benchHours,
-      benchHeadcount: benchResult.data.benchHeadcount,
-      benchRatePct: benchResult.data.benchRatePct,
-      capacityHeadcount: overview.capacityHeadcount,
+      commercialUtilizationPct: commercialUtilizationPctValue,
+      nonCommercialLoggedHoursMtd,
+      commercialLoggedHoursMtd,
       roleSummary,
     },
     error: null,

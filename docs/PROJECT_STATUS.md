@@ -56,8 +56,8 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | Route | Label | Notes |
 |---|---|---|
 | `/` | Overview | **Substantial** — weekly cards, KPIs, charts |
-| `/capacity/overview` | Capacity → Overview | **Shipped** — KPIs, charts, role summary |
-| `/capacity/utilization` | Capacity → Utilization | **Shipped** — role/person dashboard (`components/capacity/utilization/`) |
+| `/capacity/overview` | Capacity → Overview | **Shipped** — shared ops KPI grid, charts, role summary |
+| `/capacity/utilization` | Capacity → Utilization | **Shipped** — same ops KPI grid + role/person dashboard |
 | `/capacity/planning` | Capacity → Planning | **Shipped** — dual-tab workspace (People + Project planning) |
 | `/teams` | Teams | Redirects → `/teams/overview` |
 | `/teams/overview` | Teams → Overview | **Shipped** — org structure snapshot |
@@ -116,4 +116,4 @@ Ask         /ask
 
 ---
 
-*Last updated: SP-2.4 Planning workspace shipped (`/capacity/planning` — People + Project tabs).*
+*Last updated: Capacity Overview + Utilization share compact three-column ops KPIs (commercial utilization, elapsed vs net capacity).*
