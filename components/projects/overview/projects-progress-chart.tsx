@@ -18,7 +18,7 @@ import type { ProjectOverviewRow } from '@/lib/projects/overview/projects-types'
 import { cn } from '@/lib/utils'
 import { dashboardSurfaceClass } from '@/lib/ui/dashboard-surface'
 
-type SortColumn = 'project' | 'planned' | 'logged' | 'budgetUsed'
+type SortColumn = 'project' | 'budget' | 'planned' | 'logged' | 'used'
 
 export function ProjectsProgressChart({
   rows,
@@ -33,7 +33,7 @@ export function ProjectsProgressChart({
   chartTitle: string
   headerAction?: ReactNode
 }) {
-  const [sortColumn, setSortColumn] = useState<SortColumn>('budgetUsed')
+  const [sortColumn, setSortColumn] = useState<SortColumn>('used')
   const [sortDir, setSortDir] = useState<SortableHeaderDirection>('desc')
 
   const toggleSort = (column: SortColumn) => {
@@ -57,6 +57,11 @@ export function ProjectsProgressChart({
             sensitivity: 'base',
           })
         )
+      }
+      if (sortColumn === 'budget') {
+        const aBudget = a.budgetHours ?? -1
+        const bBudget = b.budgetHours ?? -1
+        return dir * (aBudget - bBudget)
       }
       if (sortColumn === 'planned') return dir * (a.plannedHours - b.plannedHours)
       if (sortColumn === 'logged') return dir * (a.loggedHours - b.loggedHours)
@@ -90,6 +95,7 @@ export function ProjectsProgressChart({
             <col className="w-[4.5rem]" />
             <col className="w-[4.5rem]" />
             <col className="w-[4.5rem]" />
+            <col className="w-[4.5rem]" />
           </colgroup>
           <thead>
             <tr className="border-b border-border text-left text-muted-foreground">
@@ -119,7 +125,17 @@ export function ProjectsProgressChart({
               </th>
               <th className="pb-2 pr-2 text-right font-medium">
                 <SortableHeaderButton
-                  label="Planned (h)"
+                  label="Budget"
+                  title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.budget}
+                  active={sortColumn === "budget"}
+                  direction={sortDirectionFor("budget")}
+                  align="right"
+                  onClick={() => toggleSort("budget")}
+                />
+              </th>
+              <th className="pb-2 pr-2 text-right font-medium">
+                <SortableHeaderButton
+                  label="Planned"
                   title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.planned}
                   active={sortColumn === "planned"}
                   direction={sortDirectionFor("planned")}
@@ -129,7 +145,7 @@ export function ProjectsProgressChart({
               </th>
               <th className="pb-2 pr-2 text-right font-medium">
                 <SortableHeaderButton
-                  label="Logged (h)"
+                  label="Logged"
                   title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.logged}
                   active={sortColumn === "logged"}
                   direction={sortDirectionFor("logged")}
@@ -139,12 +155,12 @@ export function ProjectsProgressChart({
               </th>
               <th className="pb-2 text-right font-medium">
                 <SortableHeaderButton
-                  label="Budget used"
-                  title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.budgetUsed}
-                  active={sortColumn === "budgetUsed"}
-                  direction={sortDirectionFor("budgetUsed")}
+                  label="Used"
+                  title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.used}
+                  active={sortColumn === "used"}
+                  direction={sortDirectionFor("used")}
                   align="right"
-                  onClick={() => toggleSort("budgetUsed")}
+                  onClick={() => toggleSort("used")}
                 />
               </th>
             </tr>
@@ -185,6 +201,12 @@ export function ProjectsProgressChart({
                       overrunHours={row.overrunHours}
                       trackClassName="h-2.5"
                     />
+                  </td>
+                  <td
+                    className="py-2.5 pr-2 text-right tabular-nums text-muted-foreground"
+                    title={PROJECTS_PROGRESS_COLUMN_TOOLTIPS.budget}
+                  >
+                    {row.budgetHours != null ? fmtHoursKpi(row.budgetHours) : "—"}
                   </td>
                   <td
                     className="py-2.5 pr-2 text-right tabular-nums text-muted-foreground"

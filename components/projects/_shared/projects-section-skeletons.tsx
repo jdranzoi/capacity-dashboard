@@ -19,12 +19,12 @@ export function ProjectsPageSkeleton() {
 
 export function ProjectsKpiRowSkeleton() {
   return (
-    <div className={cn(KPI_METRICS_GRID_CLASS, 'xl:grid-cols-6')}>
+    <div className={cn(KPI_METRICS_GRID_CLASS, "xl:grid-cols-6")}>
       {Array.from({ length: 6 }).map((_, i) => (
-        <Skeleton key={i} className={cn(dashboardSurfaceClass('h-[5.5rem]'))} />
+        <Skeleton key={i} className={cn(dashboardSurfaceClass("h-[5.5rem]"))} />
       ))}
     </div>
-  )
+  );
 }
 
 export function ProjectsProgressChartSkeleton() {
