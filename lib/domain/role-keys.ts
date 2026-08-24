@@ -89,3 +89,9 @@ export function roleColorTokenForKey(roleKey: string): string | null {
   if (!isDimRoleKey(roleKey)) return null
   return ROLE_COLOR_TOKEN_BY_KEY[roleKey]
 }
+
+/** Display acronym for `dim_role.key` (FSD, FED, PM, …). */
+export function roleKeyAcronym(roleKey: string): string {
+  if (!roleKey || roleKey === 'unassigned') return '—'
+  return roleKey.toUpperCase()
+}

@@ -14,16 +14,18 @@ export function SegmentedControl<T extends string>({
   onChange,
   options,
   className,
+  hideLabel = false,
 }: {
   label: string
   value: T
   onChange: (value: T) => void
   options: readonly SegmentedControlOption<T>[]
   className?: string
+  hideLabel?: boolean
 }) {
   return (
     <fieldset className={cn('flex flex-col gap-1', className)}>
-      <legend className={TOOLBAR_FIELD_LABEL_CLASS}>{label}</legend>
+      <legend className={hideLabel ? 'sr-only' : TOOLBAR_FIELD_LABEL_CLASS}>{label}</legend>
       <div className="flex min-h-8 items-center rounded-lg border border-border bg-muted/20 p-0.5">
         {options.map((option) => (
           <button

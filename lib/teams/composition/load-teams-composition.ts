@@ -9,6 +9,7 @@ import {
   buildMemberRoleGroups,
   buildTypeGroup as buildCompositionTypeGroup,
   resolvePmForMembers,
+  resolvePmMembersForMembers,
   type TeamsCompositionMember,
   type TeamsCompositionPayload,
   type TeamsCompositionProject,
@@ -338,6 +339,7 @@ export async function loadTeamsComposition(params: {
 
       const memberGroups = buildMemberRoleGroups(members)
       const { pmName, pmSortKey } = resolvePmForMembers(members)
+      const pmMembers = resolvePmMembersForMembers(members)
       const projectType = project.project_type as TeamsCompositionProject['projectType']
       const card: TeamsCompositionProject = {
         projectId: project.id,
@@ -346,6 +348,7 @@ export async function loadTeamsComposition(params: {
         projectType,
         pmName,
         pmSortKey,
+        pmMembers,
         memberGroups,
       }
 

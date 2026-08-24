@@ -1,4 +1,8 @@
 import { DashboardSectionHeaderSkeleton } from '@/components/layout/dashboard-section-header-skeleton'
+import {
+  TEAMS_COMPOSITION_CARD_GRID_CLASS,
+  TEAMS_COMPOSITION_STICKY_NAV_CLASS,
+} from '@/components/teams/composition/teams-composition-layout'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export function TeamsKpiRowSkeleton({ count = 4 }: { count?: number }) {
@@ -32,31 +36,59 @@ export function TeamsFutureCardsSkeleton() {
   );
 }
 
+export function TeamsCompositionAnchorNavSkeleton() {
+  return (
+    <div className="flex min-w-0 flex-1 gap-1 overflow-hidden">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton key={i} className="h-8 w-20 shrink-0 rounded-md" />
+      ))}
+    </div>
+  )
+}
+
+export function TeamsCompositionViewToggleSkeleton() {
+  return <Skeleton className="h-8 w-44 shrink-0 rounded-lg" />
+}
+
+export function TeamsCompositionCardsSkeleton() {
+  return (
+    <div className="flex flex-col gap-6">
+      {Array.from({ length: 2 }).map((_, sectionIndex) => (
+        <div key={sectionIndex} className="scroll-mt-14 space-y-3">
+          <div className="flex items-baseline justify-between gap-3 border-b border-border/50 pb-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-3 w-6" />
+          </div>
+          <div className={TEAMS_COMPOSITION_CARD_GRID_CLASS}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="overflow-hidden rounded-xl border border-border">
+                <div className="border-b border-border/60 px-3 py-2">
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+                <div className="space-y-1.5 px-3 py-2">
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-5/6" />
+                  <Skeleton className="h-3 w-2/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function TeamsCompositionGridSkeleton() {
   return (
     <div className="flex flex-col gap-3">
-      <div className="sticky top-0 z-30 -mx-8 flex gap-3 border-b border-border bg-background px-8 py-2.5 shadow-sm">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-8 w-24 shrink-0 rounded-md" />
-        ))}
+      <div className={TEAMS_COMPOSITION_STICKY_NAV_CLASS}>
+        <TeamsCompositionAnchorNavSkeleton />
+        <TeamsCompositionViewToggleSkeleton />
       </div>
-      <div className="flex flex-col gap-6">
-        {Array.from({ length: 2 }).map((_, sectionIndex) => (
-          <div key={sectionIndex} className="space-y-3">
-            <Skeleton className="h-4 w-24" />
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton
-                  key={i}
-                  className="h-48 rounded-xl border border-border"
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+      <TeamsCompositionCardsSkeleton />
     </div>
-  );
+  )
 }
 
 export function TeamsCollaborationSkeleton() {
@@ -85,7 +117,7 @@ export function TeamsPageSkeleton({ variant = 'overview' }: { variant?: 'overvie
   return (
     <div className="flex flex-col gap-6">
       <DashboardSectionHeaderSkeleton
-        filterCount={variant === "composition" ? 3 : 1}
+        filterCount={variant === "composition" ? 4 : 1}
       />
       {variant === "composition" ? (
         <TeamsCompositionGridSkeleton />

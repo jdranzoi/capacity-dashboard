@@ -5,15 +5,18 @@ import { SectionDataError, SectionEmptyState } from '@/components/ui/section-dat
 import { DashboardSectionHeader } from '@/components/layout/dashboard-section-header'
 import { perfSpan } from '@/lib/dev/perf-log'
 import { loadCompositionFilterSuggestions } from '@/lib/teams/composition/load-composition-filter-suggestions'
+import type { CompositionView } from '@/lib/teams/composition/teams-composition-utils'
 import { getTeamsMonthContext } from '@/lib/teams/shared/teams-page-cache'
 import type { TeamsRouteFilters } from '@/lib/teams/shared/teams-route-filters'
 
 export async function TeamsCompositionChromeBlock({
   monthStr,
   routeFilters,
+  view,
 }: {
   monthStr: string | undefined
   routeFilters: TeamsRouteFilters
+  view: CompositionView
 }) {
   return perfSpan('teams/composition/chrome', async () => {
     await connection()
@@ -42,7 +45,11 @@ export async function TeamsCompositionChromeBlock({
     return (
       <DashboardSectionHeader
         title="Teams composition"
-        subtitle="Project teams grouped by delivery type"
+        subtitle={
+          view === 'pm'
+            ? 'Project teams grouped by project manager'
+            : 'Project teams grouped by delivery type'
+        }
         filters={
           <TeamsCompositionFilters
             monthOptions={ctx.data.options}

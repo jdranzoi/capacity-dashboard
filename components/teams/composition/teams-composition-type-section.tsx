@@ -1,4 +1,5 @@
 import { TeamsCompositionProjectCard } from '@/components/teams/composition/teams-composition-project-card'
+import { TEAMS_COMPOSITION_CARD_GRID_CLASS } from '@/components/teams/composition/teams-composition-layout'
 import {
   compositionSectionId,
   type TeamsCompositionTypeGroup,
@@ -32,7 +33,7 @@ export function TeamsCompositionTypeSection({
           No active {group.label.toLowerCase()} projects for the current filters.
         </p>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className={TEAMS_COMPOSITION_CARD_GRID_CLASS}>
           {group.projects.map((project) => (
             <TeamsCompositionProjectCard
               key={project.projectId}

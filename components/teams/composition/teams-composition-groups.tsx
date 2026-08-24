@@ -1,7 +1,36 @@
+import { TeamsCompositionProjectCard } from '@/components/teams/composition/teams-composition-project-card'
+import { TeamsCompositionPmSection } from '@/components/teams/composition/teams-composition-pm-section'
 import { TeamsCompositionTypeSection } from '@/components/teams/composition/teams-composition-type-section'
-import type { TeamsCompositionPayload } from '@/lib/teams/composition/teams-composition-utils'
+import type {
+  CompositionView,
+  TeamsCompositionPayload,
+  TeamsCompositionPmGroup,
+} from '@/lib/teams/composition/teams-composition-utils'
 
-export function TeamsCompositionGroups({ data }: { data: TeamsCompositionPayload }) {
+export function TeamsCompositionGroups({
+  data,
+  view,
+  pmGroups,
+}: {
+  data: TeamsCompositionPayload
+  view: CompositionView
+  pmGroups: TeamsCompositionPmGroup[]
+}) {
+  if (view === 'pm') {
+    return (
+      <div className="flex flex-col gap-6" data-slot="teams-composition-groups">
+        {pmGroups.map((group) => (
+          <TeamsCompositionPmSection
+            key={group.personId ?? 'unassigned'}
+            group={group}
+            personQuery={data.personQuery}
+            projectQuery={data.projectQuery}
+          />
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-6" data-slot="teams-composition-groups">
       {data.groups.map((group) => (
@@ -13,7 +42,7 @@ export function TeamsCompositionGroups({ data }: { data: TeamsCompositionPayload
         />
       ))}
     </div>
-  );
+  )
 }
 
 export function TeamsCompositionAlerts({ data }: { data: TeamsCompositionPayload }) {

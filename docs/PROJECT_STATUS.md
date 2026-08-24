@@ -43,7 +43,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | Track | Route | Status | Notes |
 |---|---|---|---|
 | SP-4.1 Teams Overview | `/teams/overview` | **Done** | Org-structure snapshot: headcount, roles, geographic distribution + coming-soon placeholders |
-| SP-4.2 Teams Composition | `/teams/composition` | **Done** | Project teams cards grouped by build/support, ordered by PM, `?q=` name filter |
+| SP-4.2 Teams Composition | `/teams/composition` | **Done** | Project team cards grouped by type or project manager (`?view=pm`); `?q=` / `?project=` / `?pm=` filters |
 | SP-4.3 Teams Collaboration | `/teams/collaboration-network` | **Done** | Cross-project collaboration network graph + KPI row |
 | SP-4.x other Teams sub-sections | `/teams/*` | Placeholders | Staffing, Dependencies, Health, Skills coverage — to be planned per track |
 
@@ -61,7 +61,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | `/capacity/planning` | Capacity → Planning | **Shipped** — dual-tab workspace (People + Project planning) |
 | `/teams` | Teams | Redirects → `/teams/overview` |
 | `/teams/overview` | Teams → Overview | **Shipped** — org structure snapshot |
-| `/teams/composition` | Teams → Composition | **Shipped** — project team cards by type |
+| `/teams/composition` | Teams → Composition | **Shipped** — project team cards by type or project manager (`?view=`) |
 | `/teams/*` (other) | Teams sub-sections | Placeholders |
 | `/projects/overview` | Projects → Overview | **Shipped** — delivery KPIs, progress chart, detail sheet |
 | `/projects/*` (other) | Projects sub-sections | Placeholders (redirect `/projects` → overview) |
