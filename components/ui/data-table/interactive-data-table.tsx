@@ -37,6 +37,10 @@ export type InteractiveDataTableProps<T> = {
   tableClassName?: string
   isRightAligned?: (columnId: string) => boolean
   wrapperClassName?: string
+  /** Scroll region around the table — set a height here to cap the visible rows. */
+  bodyClassName?: string
+  /** Pins the header and column-filter rows while the body scrolls. */
+  stickyHeader?: boolean
   /** When true, parent panel supplies the card shell — table body only. */
   embedded?: boolean
   footnote?: string | null
@@ -55,6 +59,8 @@ export function InteractiveDataTable<T>({
   tableClassName = 'w-full min-w-xl border-collapse text-sm',
   isRightAligned = () => false,
   wrapperClassName,
+  bodyClassName,
+  stickyHeader = false,
   embedded = false,
   footnote,
 }: InteractiveDataTableProps<T>) {
@@ -106,7 +112,7 @@ export function InteractiveDataTable<T>({
     >
       <div
         className={cn(
-          "flex flex-wrap items-center justify-between gap-3 border-b border-border px-3 py-2 sm:px-4",
+          "flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border px-3 py-2 sm:px-4",
           embedded && "px-0",
         )}
       >
@@ -138,10 +144,16 @@ export function InteractiveDataTable<T>({
         className={cn(
           "overflow-x-auto p-3 pt-2 sm:p-4 sm:pt-3",
           embedded && "px-0 pt-0",
+          bodyClassName,
         )}
       >
         <table className={tableClassName}>
-          <thead>
+          <thead
+            className={cn(
+              stickyHeader &&
+                "sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--border)]",
+            )}
+          >
             {table.getHeaderGroups().map((hg) => (
               <tr
                 key={hg.id}

@@ -10,6 +10,9 @@ export const CACHE_TAG_PROJECTS_GLOBAL = 'projects-global'
 /** Latest `sync_snapshot` anchor (badge, loaders, sync-version baseline). */
 export const CACHE_TAG_SYNC_LATEST = 'sync-latest'
 
+/** MCT training issues + issue-grain worklogs. */
+export const CACHE_TAG_TRAINING = 'training-issues'
+
 export function cacheTagSnapshot(snapshotId: string): string {
   return `snapshot-${snapshotId}`
 }

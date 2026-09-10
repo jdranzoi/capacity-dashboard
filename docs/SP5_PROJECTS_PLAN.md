@@ -17,6 +17,8 @@ Progressive build-out for `/projects/*`. Targets **v2 tables only** (`CLAUDE.md`
 | **SP-5.4** Health | `/projects/health` | Placeholder |
 | **SP-5.5** Delivery / Financials / Dependencies | — | Coming soon / future |
 | **SP-5.6** Zoho pipeline path | — | Documented in PLAN_MASTER |
+| **SP-5.7** Training | `/projects/training` | **Done** — MCT KPIs, version/area/topic grids, activity table. Needs migration 024 + `sync:training`. |
+| **SP-5.8** Training year | `/projects/training-year` | **Done** — month/role charts, same-period KPIs and role table across years; bar click slices. |
 
 When Overview shipped: add `/projects/overview` to [`lib/navigation/shipped-routes.ts`](../lib/navigation/shipped-routes.ts) (done).
 
@@ -61,6 +63,26 @@ When Overview shipped: add `/projects/overview` to [`lib/navigation/shipped-rout
 - Forecasted completion date
 - KPI month-over-month sublines (Phase 1b)
 - `account_manager` row scoping
+
+---
+
+## SP-5.7 Training
+
+- **Route:** `/projects/training`
+- **Data:** `dim_issue` + `fact_issue_worklogs` (capacity-mcp migration `024_dim_issue.sql`, `sync-training.ts`). MCT only. No `fact_plans`.
+- **Grain:** child tickets. Hours vs Jira Original Estimate. Month filter uses Tempo `log_date`.
+- **UI:** KPI row, three linked taxonomy grids (Versions → Areas → Topics, i.e. fix versions → components → labels), activity table, missing-value badges. Each grid is a fixed-height scroll panel so the activity table stays in view. Selecting a level narrows the grids to its right (`?version=`, `?component=`, `?topic=`) and resets the narrower ones. A ticket carrying several values is counted in each matching row, so the counts do not sum to the activity total.
+- **Code:** `lib/projects/training/`, `components/projects/training/`
+
+---
+
+## SP-5.8 Training year
+
+- **Route:** `/projects/training-year` (does not replace `/projects/training`)
+- **Scope:** current calendar year is the focus; month charts, YTD KPIs, and the role table include every year with child-ticket Tempo hours. No toolbar filters. Click a month, role, version or area (or a role table row) to slice (`?month=yyyy-MM`, `?role=`, `?version=`, `?component=`).
+- **Charts:** hours and trainings by month and by role, grouped by year. Child tickets only. Role from the person who logged. Role charts, KPIs, and the role table use the same months (Jan through the current month, or the selected month).
+- **Versions / Areas:** horizontal paired bars, current year against the same months of the prior year. Bar length toggles between logged hours and share of that year's training hours (share keeps a partial year comparable). Versions lists every fix version with hours; areas are capped at the top 12 components and scope to the selected version. All four slices (`month`, `role`, `version`, `component`) cross-filter the other charts and the KPI row.
+- **Code:** `lib/projects/training-year/`, `components/projects/training-year/`
 
 ---
 

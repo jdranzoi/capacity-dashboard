@@ -188,6 +188,18 @@ export const NAV_DOMAINS: NavigationDomainConfig[] = [
       ),
       domainItem(
         'Projects',
+        'Training',
+        '/projects/training',
+        'MCT learning backlog. Hours versus ticket estimate, progress by version, area and topic, missing-field highlights.'
+      ),
+      domainItem(
+        'Projects',
+        'Training year',
+        '/projects/training-year',
+        'Training hours and activity by month and role, compared across years. Click a bar to slice.'
+      ),
+      domainItem(
+        'Projects',
         'Health',
         '/projects/health',
         'Project operational health scoring. Delivery risk, staffing pressure, PTO impact, utilization imbalance, allocation instability.',

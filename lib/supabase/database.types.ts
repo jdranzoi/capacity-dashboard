@@ -301,6 +301,94 @@ export type Database = {
         }
         Relationships: []
       }
+      dim_issue: {
+        Row: {
+          assignee_person_id: string | null
+          components: string[]
+          first_seen_at: string
+          fix_versions: string[]
+          id: string
+          is_child: boolean
+          issue_key: string
+          issue_type: string
+          jira_created_at: string | null
+          jira_issue_id: number
+          jira_updated_at: string | null
+          labels: string[]
+          original_estimate_seconds: number | null
+          parent_issue_key: string | null
+          parent_summary: string | null
+          priority: string | null
+          project_id: string
+          resolved_at: string | null
+          status: string
+          status_category: string | null
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_person_id?: string | null
+          components?: string[]
+          first_seen_at?: string
+          fix_versions?: string[]
+          id?: string
+          issue_key: string
+          issue_type: string
+          jira_created_at?: string | null
+          jira_issue_id: number
+          jira_updated_at?: string | null
+          labels?: string[]
+          original_estimate_seconds?: number | null
+          parent_issue_key?: string | null
+          parent_summary?: string | null
+          priority?: string | null
+          project_id: string
+          resolved_at?: string | null
+          status: string
+          status_category?: string | null
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_person_id?: string | null
+          components?: string[]
+          first_seen_at?: string
+          fix_versions?: string[]
+          id?: string
+          issue_key?: string
+          issue_type?: string
+          jira_created_at?: string | null
+          jira_issue_id?: number
+          jira_updated_at?: string | null
+          labels?: string[]
+          original_estimate_seconds?: number | null
+          parent_issue_key?: string | null
+          parent_summary?: string | null
+          priority?: string | null
+          project_id?: string
+          resolved_at?: string | null
+          status?: string
+          status_category?: string | null
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dim_issue_assignee_person_id_fkey"
+            columns: ["assignee_person_id"]
+            isOneToOne: false
+            referencedRelation: "dim_person"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dim_issue_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "dim_project"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dim_sprint: {
         Row: {
           complete_date: string | null
@@ -659,6 +747,54 @@ export type Database = {
             columns: ["sprint_id"]
             isOneToOne: false
             referencedRelation: "dim_sprint"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fact_issue_worklogs: {
+        Row: {
+          billable_seconds: number
+          first_seen_at: string
+          id: string
+          issue_id: string
+          log_date: string
+          logged_seconds: number
+          person_id: string
+          updated_at: string
+        }
+        Insert: {
+          billable_seconds?: number
+          first_seen_at?: string
+          id?: string
+          issue_id: string
+          log_date: string
+          logged_seconds?: number
+          person_id: string
+          updated_at?: string
+        }
+        Update: {
+          billable_seconds?: number
+          first_seen_at?: string
+          id?: string
+          issue_id?: string
+          log_date?: string
+          logged_seconds?: number
+          person_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fact_issue_worklogs_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "dim_issue"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_issue_worklogs_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "dim_person"
             referencedColumns: ["id"]
           },
         ]

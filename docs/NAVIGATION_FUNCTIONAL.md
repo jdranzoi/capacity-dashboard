@@ -94,6 +94,8 @@ Operational workload and capacity-fill metrics belong under **Capacity → Utili
 
 #### Projects
 
+- **Training:** MCT learning backlog. Hours versus Jira Original Estimate (no Tempo plans), status mix, and linked version → area → topic drill-down. Route: `/projects/training`.
+- **Training year:** Hours and activity counts by month and role, grouped by year (same-period). Bar selection slices the other charts. Route: `/projects/training-year`.
 - **Portfolio:** High-level portfolio overview. Includes: active projects, delivery status, staffing distribution, portfolio load.
 - **Health:** Project operational health scoring. Includes: delivery risk, staffing pressure, PTO impact, utilization imbalance, allocation instability.
 - **Staffing:** Project staffing analysis. Includes: assigned people, allocation %, staffing gaps, cross-team staffing.

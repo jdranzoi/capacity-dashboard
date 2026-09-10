@@ -64,6 +64,8 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | `/teams/composition` | Teams → Composition | **Shipped** — project team cards by type or project manager (`?view=`) |
 | `/teams/*` (other) | Teams sub-sections | Placeholders |
 | `/projects/overview` | Projects → Overview | **Shipped** — delivery KPIs, progress chart, detail sheet |
+| `/projects/training` | Projects → Training | **Shipped** — MCT backlog KPIs, version/area/topic grids, activity table |
+| `/projects/training-year` | Projects → Training year | **Shipped** — month/role charts, version/area mix, same-period year comparison |
 | `/projects/*` (other) | Projects sub-sections | Placeholders (redirect `/projects` → overview) |
 | `/ask` | Ask | Transversal utility (sidebar bottom) |
 | `/team` | — | Permanent redirect → `/capacity/utilization` (`next.config.ts`) |
@@ -78,7 +80,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | SP-1 Overview | Weekly section, workload charts, KPI blocks, loaders in `lib/overview/` | **Deferred** — extend after Capacity widgets exist |
 | SP-2 Capacity | `/capacity/overview`, `/capacity/utilization`, `/capacity/planning` shipped; other tracks pending | [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md) |
 | SP-4 Teams | `/teams/overview`, `/teams/composition`, `/teams/collaboration-network` shipped | `/teams/*` remaining sub-sections |
-| SP-5 Projects | `/projects/overview` shipped | [SP5_PROJECTS_PLAN.md](./SP5_PROJECTS_PLAN.md) |
+| SP-5 Projects | `/projects/overview` + `/projects/training` + `/projects/training-year` shipped | [SP5_PROJECTS_PLAN.md](./SP5_PROJECTS_PLAN.md) |
 | SP-6 Insights | `/flags` proto | Phase 2 |
 | SP-7 Reports | None | Phase 2 |
 
@@ -116,4 +118,4 @@ Ask         /ask
 
 ---
 
-*Last updated: Capacity Overview + Utilization share compact three-column ops KPIs (commercial utilization, elapsed vs net capacity).*
+*Last updated: Projects → Training year — version and area mix charts against the prior year.*

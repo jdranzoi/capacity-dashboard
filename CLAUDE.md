@@ -53,6 +53,7 @@ Do not write new dashboard queries against v1 tables.
 | `dim_zone` | Holiday zones: `(id, key, label)` |
 | `dim_holiday` | Company-observed holidays with `zone_id FK → dim_zone` |
 | `dim_date` | Date spine for calendar joins |
+| `dim_issue` | Jira issues (MCT Training first consumer); taxonomy arrays + Original Estimate |
 
 **D-021 (formal model):** No denormalized text copies of FK-target values (e.g. dropped `dim_person.role` / `zone` / `team`, `dim_project.client`). Join `dim_role`, `dim_zone`, etc. See `capacity/doc/DECISIONS.md`.
 
@@ -74,6 +75,8 @@ Do not write new dashboard queries against v1 tables.
 | `fact_project_actuals` | Snapshot per sync | `(snapshot_id, project_id, month_date)` | Aggregate logged + billable hours per project |
 | `fact_fragmentation` | Snapshot per sync | `(snapshot_id, person_id, month_date, source)` | Pre-computed fragmentation flags |
 | `fact_bench` | Pre-computed per sync | `(snapshot_id, person_id, month_date)` | `availability_hours` is a generated column (`net_capacity_hours - planned_hours`) |
+| `dim_issue` | Upsert | `(project_id, issue_key)` | Jira issues; first consumer MCT Training. Arrays: fix_versions, components, labels. Estimate on the ticket. |
+| `fact_issue_worklogs` | Upsert | `(issue_id, person_id, log_date)` | Tempo hours at issue grain. Do not merge with `fact_worklogs`. |
 
 Write access: `audit_log` only (one row per `/api/chat` call).
 
@@ -89,6 +92,8 @@ Write access: `audit_log` only (one row per `/api/chat` call).
 | Same-period YoY | any fact table | `month_date` range spanning multiple years |
 | Utilization trend (intra-month) | `fact_project_actuals` filtered by `snapshot_id` | project, month |
 | Overview (weekly cards on `/`) | `sync_snapshot`, `fact_capacity`, `fact_plans`, `fact_worklogs` | `month_date`, `snapshot_id`, worklog `log_date` (see *Overview page (`/`) — weekly metrics*) |
+| Training (`/projects/training`) | `dim_issue`, `fact_issue_worklogs`, `dim_person` | MCT children; month on worklog `log_date`; taxonomy arrays (fix versions → components → labels) |
+| Training year (`/projects/training-year`) | `dim_issue`, `fact_issue_worklogs`, `dim_person`, `dim_role` | All years with hours; same-period KPIs, role charts, and table; version/area charts vs prior year; month, role, version and component slices |
 
 **Latest snapshot pattern:** For current-state views, always resolve the latest `snapshot_id` from
 `sync_snapshot` first (ordered by `created_at DESC`, limit 1), then join fact tables on that ID.
