@@ -528,6 +528,115 @@ export type Database = {
           },
         ]
       }
+      fact_month_ops: {
+        Row: {
+          commercial_logged_hours: number
+          elapsed_net_weekdays: number
+          id: string
+          logged_hours: number
+          month_date: string
+          net_capacity_hours: number
+          non_commercial_logged_hours: number
+          person_id: string
+          pto_hours: number
+          role_id: string | null
+          source_capacity_snapshot_id: string | null
+          updated_at: string
+          zone_id: string | null
+        }
+        Insert: {
+          commercial_logged_hours?: number
+          elapsed_net_weekdays?: number
+          id?: string
+          logged_hours?: number
+          month_date: string
+          net_capacity_hours?: number
+          non_commercial_logged_hours?: number
+          person_id: string
+          pto_hours?: number
+          role_id?: string | null
+          source_capacity_snapshot_id?: string | null
+          updated_at?: string
+          zone_id?: string | null
+        }
+        Update: {
+          commercial_logged_hours?: number
+          elapsed_net_weekdays?: number
+          id?: string
+          logged_hours?: number
+          month_date?: string
+          net_capacity_hours?: number
+          non_commercial_logged_hours?: number
+          person_id?: string
+          pto_hours?: number
+          role_id?: string | null
+          source_capacity_snapshot_id?: string | null
+          updated_at?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fact_month_ops_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "dim_person"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_month_ops_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "dim_role"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_month_ops_source_capacity_snapshot_id_fkey"
+            columns: ["source_capacity_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "sync_snapshot"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_month_ops_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "dim_zone"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fact_month_projects: {
+        Row: {
+          id: string
+          logged_hours: number
+          month_date: string
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          logged_hours?: number
+          month_date: string
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          logged_hours?: number
+          month_date?: string
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fact_month_projects_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "dim_project"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fact_capacity: {
         Row: {
           created_at: string | null

@@ -31,7 +31,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | Track | Route | Status | Plan anchor |
 |---|---|---|---|
 | SP-2.0 Foundation | — | **Done** | [§ SP-2.0](./SP2_CAPACITY_PLAN.md#shared-foundation-sp-20) |
-| SP-2.2 Overview | `/capacity/overview` | **Done** | [§ SP-2.2](./SP2_CAPACITY_PLAN.md#sp-22--overview-capacityoverview) |
+| SP-2.2 Overview | `/capacity/overview` | **Done** — current-month strip + YoY cards | [§ SP-2.2](./SP2_CAPACITY_PLAN.md#sp-22--overview-capacityoverview) |
 | SP-2.3 Operations | `/capacity/operations` | Not started | [§ SP-2.3](./SP2_CAPACITY_PLAN.md#sp-23--operations-capacityoperations) |
 | SP-2.4 Planning | `/capacity/planning` | **Done** | [§ SP-2.4](./SP2_CAPACITY_PLAN.md#sp-24--planning-capacityplanning) |
 | SP-2.5 Allocations | `/capacity/allocations` | Not started | [§ SP-2.5](./SP2_CAPACITY_PLAN.md#sp-25--allocations-capacityallocations) |
@@ -56,7 +56,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | Route | Label | Notes |
 |---|---|---|
 | `/` | Overview | **Substantial** — weekly cards, KPIs, charts |
-| `/capacity/overview` | Capacity → Overview | **Shipped** — shared ops KPI grid, charts, role summary |
+| `/capacity/overview` | Capacity → Overview | **Shipped** — current-month strip + same-period YoY cards, weekly trends |
 | `/capacity/utilization` | Capacity → Utilization | **Shipped** — same ops KPI grid + role/person dashboard |
 | `/capacity/planning` | Capacity → Planning | **Shipped** — dual-tab workspace (People + Project planning) |
 | `/teams` | Teams | Redirects → `/teams/overview` |
@@ -78,7 +78,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | Subplan | Built today | Target |
 |---|---|---|
 | SP-1 Overview | Weekly section, workload charts, KPI blocks, loaders in `lib/overview/` | **Deferred** — extend after Capacity widgets exist |
-| SP-2 Capacity | `/capacity/overview`, `/capacity/utilization`, `/capacity/planning` shipped; other tracks pending | [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md) |
+| SP-2 Capacity | `/capacity/overview` YoY + `/capacity/utilization` + `/capacity/planning` shipped; other tracks pending | [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md) |
 | SP-4 Teams | `/teams/overview`, `/teams/composition`, `/teams/collaboration-network` shipped | `/teams/*` remaining sub-sections |
 | SP-5 Projects | `/projects/overview` + `/projects/training` + `/projects/training-year` shipped | [SP5_PROJECTS_PLAN.md](./SP5_PROJECTS_PLAN.md) |
 | SP-6 Insights | `/flags` proto | Phase 2 |
@@ -118,4 +118,4 @@ Ask         /ask
 
 ---
 
-*Last updated: Projects → Training year — version and area mix charts against the prior year.*
+*Last updated: Capacity Overview — current-month strip plus nine YoY cards (hours, %, headcount, projects).*

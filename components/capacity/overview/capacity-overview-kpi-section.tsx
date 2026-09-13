@@ -6,6 +6,7 @@ export function CapacityOverviewKpiSection({ data }: { data: CapacityOverviewPay
 
   return (
     <CapacityOpsKpiColumns
+      showColumnTitles={false}
       values={{
         netCapacityHours: r.netCapacityHours,
         elapsedCapacityHours: r.elapsedCapacityHours,

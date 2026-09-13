@@ -78,11 +78,22 @@ export function CapacityRoleSummarySkeleton() {
   return <Skeleton className="h-64 rounded-xl border border-border" />
 }
 
+export function CapacityYearGridSkeleton() {
+  return (
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: 9 }).map((_, i) => (
+        <Skeleton key={i} className={cn(DASHBOARD_SURFACE, 'h-80')} />
+      ))}
+    </div>
+  )
+}
+
 export function CapacityPageSkeleton() {
   return (
     <div className="flex flex-col gap-6">
       <DashboardSectionHeaderSkeleton />
       <CapacityOpsKpiSkeleton />
+      <CapacityYearGridSkeleton />
       <CapacityChartsSkeleton />
       <CapacityRoleSummarySkeleton />
     </div>

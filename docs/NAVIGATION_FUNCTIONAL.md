@@ -72,7 +72,7 @@ Delivery intelligence.
 
 Implementation plan (isolated sub-section tracks): [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md)
 
-- **Overview:** High-level KPIs + summary. Same ops KPI grid as Utilization (net vs elapsed capacity, commercial hours, capacity fill, utilization, commercial utilization). Route: `/capacity/overview`.
+- **Overview:** Presentation page (no month filter). Collapsible current-month ops KPI strip plus nine same-period YoY cards (hours, utilization, PTO, headcount, projects) from `fact_month_ops` / `fact_month_projects`. Period detail stays on Utilization. Route: `/capacity/overview`.
 - **Utilization:** Role and person operational usage (migrated from legacy `/team`). Includes: capacity fill, commercial utilization, logged/commercial hours, PTO, staffing grid. Route: `/capacity/utilization`.
 - **Operations:** Current month operational usage. Includes: utilization, logged, billable, PTO, operational saturation.
 - **Planning:** Future planned allocations. Includes: planned utilization, role allocation, future staffing, monthly planning.

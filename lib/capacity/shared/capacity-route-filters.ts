@@ -5,6 +5,15 @@ export type CapacityRouteFilters = {
   projectTypeKey: string | null
 }
 
+export function emptyCapacityRouteFilters(): CapacityRouteFilters {
+  return {
+    roleKey: null,
+    zoneKey: null,
+    projectKey: null,
+    projectTypeKey: null,
+  }
+}
+
 export function parseCapacityRouteFilters(
   raw: Record<string, string | string[] | undefined>
 ): CapacityRouteFilters {

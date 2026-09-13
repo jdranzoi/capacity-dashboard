@@ -33,17 +33,19 @@ type CompactKpiCardData = {
 
 export function CapacityOpsKpiColumns({
   values,
+  showColumnTitles = true,
 }: {
   values: CapacityOpsKpiValues
+  showColumnTitles?: boolean
 }) {
   const columns = buildColumns(values)
 
   return (
     <section data-slot="capacity-ops-kpis" aria-label="Capacity KPIs">
       <div className="grid items-stretch gap-2 lg:grid-cols-3">
-        <KpiCardColumn title="Capacity" cards={columns.capacity} />
-        <KpiCardColumn title="Hours (MTD)" cards={columns.hours} />
-        <KpiCardColumn title="Metrics" cards={columns.metrics} />
+        <KpiCardColumn title={showColumnTitles ? 'Capacity' : undefined} cards={columns.capacity} />
+        <KpiCardColumn title={showColumnTitles ? 'Hours (MTD)' : undefined} cards={columns.hours} />
+        <KpiCardColumn title={showColumnTitles ? 'Metrics' : undefined} cards={columns.metrics} />
       </div>
     </section>
   )
@@ -152,12 +154,20 @@ function buildColumns(values: CapacityOpsKpiValues): {
   }
 }
 
-function KpiCardColumn({ title, cards }: { title: string; cards: CompactKpiCardData[] }) {
+function KpiCardColumn({
+  title,
+  cards,
+}: {
+  title?: string
+  cards: CompactKpiCardData[]
+}) {
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-        {title}
-      </p>
+      {title ? (
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          {title}
+        </p>
+      ) : null}
       <div className="flex min-h-0 flex-1 flex-col gap-2">
         {cards.map((card) => (
           <CompactKpiCard key={card.label} card={card} />

@@ -143,6 +143,7 @@ All Phase 1 sub-sections consume existing v2 ingestion. No new sync work require
 | `dim_person`, `dim_role`, `dim_zone`, `dim_project` | Labels, filters, grouping |
 | `dim_holiday` | Elapsed pace (reuse overview/team helpers) |
 | `v_dashboard_month_options` | Month spine |
+| `fact_month_ops` | Overview YoY cards (person-month hours + elapsed days) |
 
 **Note:** `lib/data/load-month-fact-bundle.ts` aggregates plans **by person** (no `project_id`). Planning and Allocations need dedicated loaders at project grain — do not extend the bundle in ways that affect Overview/Team consumers.
 
@@ -152,11 +153,13 @@ All Phase 1 sub-sections consume existing v2 ingestion. No new sync work require
 
 ### SP-2.2 — Overview (`/capacity/overview`)
 
-**Question:** What is our capacity position this month?
+**Question:** What is our capacity position this month, and how does the year compare to prior years?
 
 #### Metrics
 
-Shared three-column ops KPI grid (`CapacityOpsKpiColumns`) with Utilization. Bench hours belong on SP-2.6, not this row.
+Collapsible **this-month** strip: shared three-column ops KPI grid (`CapacityOpsKpiColumns`) with Utilization. Elapsed capacity and capacity fill stay on this strip only. Bench hours belong on SP-2.6, not this row.
+
+**Year section** (org-wide, no toolbar): nine cards (3 per row) — Net capacity / Headcount / Projects; Logged / Commercial hours / Non-commercial hours; Utilization / Commercial utilization / PTO. Hours and % cards are same-period YTD vs prior years plus a monthly line series per year. Headcount and Projects add the same YoY total lines, plus current-year stacked bars (role / `project_type`). Table values are unique people / projects in the window.
 
 | Column | KPI | Source |
 | --- | --- | --- |
@@ -180,11 +183,12 @@ Shared three-column ops KPI grid (`CapacityOpsKpiColumns`) with Utilization. Ben
 
 #### Loader
 
-`lib/capacity/overview/load-capacity-overview.ts` — `loadWeeklyOverview` + commercial hours from `fact_worklogs` + role summary. No `fact_bench` on this page.
+`lib/capacity/overview/load-capacity-overview.ts` — current-month strip (`loadWeeklyOverview` + commercial hours + role summary).  
+`lib/capacity/overview/load-capacity-year.ts` — YoY cards from `fact_month_ops` (D-026). No `fact_bench` on this page. No month / role / zone / project filters.
 
 #### Components
 
-`components/capacity/overview/capacity-overview-kpi-section.tsx` (wraps shared `CapacityOpsKpiColumns`), `capacity-overview-charts-section.tsx`, `capacity-overview-role-summary.tsx`.
+`components/capacity/overview/capacity-overview-kpi-section.tsx` (wraps shared `CapacityOpsKpiColumns`), `capacity-overview-month-strip.tsx`, `capacity-year-section.tsx`, `capacity-overview-charts-section.tsx`, `capacity-overview-role-summary.tsx`.
 
 #### Checklist
 
@@ -193,6 +197,7 @@ Shared three-column ops KPI grid (`CapacityOpsKpiColumns`) with Utilization. Ben
 - [x] **SP-2.2.3** Weekly evolution + composition charts
 - [x] **SP-2.2.4** Role summary table
 - [x] **SP-2.2.5** Wire route `app/(dashboard)/capacity/overview/page.tsx`
+- [x] **SP-2.2.6** Same-period YoY cards from `fact_month_ops` (strip stays current month, no period picker)
 
 ---
 

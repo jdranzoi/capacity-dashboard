@@ -13,6 +13,9 @@ export const CACHE_TAG_SYNC_LATEST = 'sync-latest'
 /** MCT training issues + issue-grain worklogs. */
 export const CACHE_TAG_TRAINING = 'training-issues'
 
+/** Person-month ops rollups (`fact_month_ops` / `fact_month_projects`). */
+export const CACHE_TAG_MONTH_OPS = 'month-ops'
+
 export function cacheTagSnapshot(snapshotId: string): string {
   return `snapshot-${snapshotId}`
 }

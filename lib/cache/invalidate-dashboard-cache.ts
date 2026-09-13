@@ -2,6 +2,7 @@ import { revalidateTag } from 'next/cache'
 
 import {
   CACHE_TAG_MONTH_FACTS,
+  CACHE_TAG_MONTH_OPS,
   CACHE_TAG_OVERVIEW_MONTHS,
   CACHE_TAG_PROJECTS_GLOBAL,
   CACHE_TAG_SYNC_LATEST,
@@ -32,6 +33,7 @@ export function invalidateDashboardCache(
   revalidateTag(CACHE_TAG_MONTH_FACTS, MONTH_FACTS_PROFILE)
   revalidateTag(CACHE_TAG_PROJECTS_GLOBAL, MONTH_FACTS_PROFILE)
   revalidateTag(CACHE_TAG_TRAINING, MONTH_FACTS_PROFILE)
+  revalidateTag(CACHE_TAG_MONTH_OPS, MONTH_FACTS_PROFILE)
   if (options.snapshotId) {
     revalidateTag(cacheTagSnapshot(options.snapshotId), MONTH_FACTS_PROFILE)
   }

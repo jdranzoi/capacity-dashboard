@@ -7,48 +7,34 @@ import {
   CapacityOpsKpiSkeleton,
   CapacityPageSkeleton,
   CapacityRoleSummarySkeleton,
+  CapacityYearGridSkeleton,
 } from '@/components/capacity/_shared/capacity-section-skeletons'
 import { CapacityOverviewBlock } from '@/components/capacity/overview/capacity-overview-block'
 import { CapacityOverviewChromeBlock } from '@/components/capacity/overview/capacity-overview-chrome-block'
 import { DashboardSectionHeaderSkeleton } from '@/components/layout/dashboard-section-header-skeleton'
-import { parseCapacityRouteFilters } from '@/lib/capacity/shared/capacity-route-filters'
 
-type CapacityOverviewPageProps = {
-  searchParams: Promise<{
-    month?: string
-    role?: string
-    zone?: string
-    project?: string
-    projectType?: string
-  }>
-}
-
-export default function CapacityOverviewPage({ searchParams }: CapacityOverviewPageProps) {
+export default function CapacityOverviewPage() {
   return (
     <CapacityRoutePendingShell>
       <Suspense fallback={<CapacityPageSkeleton />}>
-        <CapacityOverviewPageContent searchParams={searchParams} />
+        <CapacityOverviewPageContent />
       </Suspense>
     </CapacityRoutePendingShell>
   )
 }
 
-async function CapacityOverviewPageContent({ searchParams }: CapacityOverviewPageProps) {
-  const raw = await searchParams
-  const routeFilters = parseCapacityRouteFilters(raw)
-  const monthParam = raw.month
-  const monthStr = Array.isArray(monthParam) ? monthParam[0] : monthParam
-
+async function CapacityOverviewPageContent() {
   return (
     <div className="flex flex-col gap-6">
       <CapacityRouteSection fallback={<DashboardSectionHeaderSkeleton />}>
-        <CapacityOverviewChromeBlock monthStr={monthStr} />
+        <CapacityOverviewChromeBlock />
       </CapacityRouteSection>
 
       <Suspense
         fallback={
           <div className="flex flex-col gap-6">
             <CapacityOpsKpiSkeleton />
+            <CapacityYearGridSkeleton />
             <CapacityChartsSkeleton />
             <CapacityRoleSummarySkeleton />
           </div>
@@ -58,17 +44,15 @@ async function CapacityOverviewPageContent({ searchParams }: CapacityOverviewPag
           fallback={
             <div className="flex flex-col gap-6">
               <CapacityOpsKpiSkeleton />
+              <CapacityYearGridSkeleton />
               <CapacityChartsSkeleton />
               <CapacityRoleSummarySkeleton />
             </div>
           }
         >
-          <CapacityOverviewBlock
-            monthStr={monthStr}
-            routeFilters={routeFilters}
-          />
+          <CapacityOverviewBlock />
         </CapacityRouteSection>
       </Suspense>
     </div>
-  );
+  )
 }
