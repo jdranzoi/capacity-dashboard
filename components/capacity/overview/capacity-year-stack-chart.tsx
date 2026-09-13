@@ -172,7 +172,7 @@ export function CapacityYearStackChart({
                   y={part.y}
                   width={barW}
                   height={part.height}
-                  fill={part.color}
+                  style={{ fill: part.color }}
                 />
               ))}
             </g>

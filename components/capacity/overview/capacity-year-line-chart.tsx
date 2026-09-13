@@ -179,7 +179,7 @@ export function CapacityYearLineChart({
               key={item.year}
               fill="none"
               points={pts}
-              stroke={yearCompareColorVar(item.year, currentYear)}
+              style={{ stroke: yearCompareColorVar(item.year, currentYear) }}
               strokeWidth={item.year === currentYear ? 1.85 : 1.45}
               strokeLinejoin="round"
               strokeLinecap="round"
