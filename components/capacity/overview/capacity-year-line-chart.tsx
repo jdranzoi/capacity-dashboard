@@ -1,12 +1,22 @@
 'use client'
 
+import { useState } from 'react'
 import { format } from 'date-fns'
 
+import { CapacityYearHoverTip } from '@/components/capacity/overview/capacity-year-hover-tip'
 import { niceIntegerScale } from '@/lib/projects/training-year/training-year-chart-math'
 import { fmtHeadcountKpi, fmtHoursKpi, fmtPct } from '@/lib/overview/overview-metrics'
 import type { CapacityYearKpiKind, CapacityYearSeries } from '@/lib/capacity/overview/capacity-year-types'
 import { yearCompareColorVar } from '@/lib/ui/year-compare-colors'
 import { cn } from '@/lib/utils'
+
+type HoveredPoint = {
+  year: number
+  monthIndex: number
+  value: number
+  x: number
+  y: number
+}
 
 function formatTick(kind: CapacityYearKpiKind, value: number): string {
   if (kind === 'pct') return fmtPct(value)
@@ -102,6 +112,7 @@ export function CapacityYearLineChart({
   const xFor = (monthIndex: number) => padL + (monthIndex / 11) * plotW
   const yFor = (value: number) => padT + plotH - ((value - domainMin) / span) * plotH
   const monthTicks = [0, 3, 6, 9, 11]
+  const [hovered, setHovered] = useState<HoveredPoint | null>(null)
 
   return (
     <div className="mt-3 flex min-h-0 flex-1 flex-col">
@@ -174,16 +185,54 @@ export function CapacityYearLineChart({
         {series.map((item) => {
           const pts = polylinePoints(item, xFor, yFor)
           if (!pts) return null
+          const color = yearCompareColorVar(item.year, currentYear)
           return (
-            <polyline
-              key={item.year}
-              fill="none"
-              points={pts}
-              style={{ stroke: yearCompareColorVar(item.year, currentYear) }}
-              strokeWidth={item.year === currentYear ? 1.85 : 1.45}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
+            <g key={item.year}>
+              <polyline
+                fill="none"
+                points={pts}
+                style={{ stroke: color }}
+                strokeWidth={item.year === currentYear ? 1.85 : 1.45}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+              {item.points.map((point) => {
+                if (point.value == null) return null
+                const x = xFor(point.monthIndex)
+                const y = yFor(point.value)
+                const active =
+                  hovered?.year === item.year && hovered.monthIndex === point.monthIndex
+                return (
+                  <g key={`${item.year}-${point.monthIndex}`}>
+                    <circle
+                      cx={x}
+                      cy={y}
+                      r={active ? 3.1 : item.year === currentYear ? 2.2 : 1.9}
+                      style={{ fill: color }}
+                      className="pointer-events-none"
+                    />
+                    <circle
+                      cx={x}
+                      cy={y}
+                      r={8}
+                      fill="transparent"
+                      className="cursor-pointer"
+                      onMouseEnter={() =>
+                        setHovered({
+                          year: item.year,
+                          monthIndex: point.monthIndex,
+                          value: point.value as number,
+                          x,
+                          y,
+                        })
+                      }
+                      onMouseLeave={() => setHovered(null)}
+                      aria-label={formatTick(kind, point.value)}
+                    />
+                  </g>
+                )
+              })}
+            </g>
           )
         })}
         {monthTicks.map((monthIndex) => (
@@ -197,6 +246,14 @@ export function CapacityYearLineChart({
             {format(new Date(2020, monthIndex, 1), 'MMM')}
           </text>
         ))}
+        {hovered ? (
+          <CapacityYearHoverTip
+            x={hovered.x}
+            y={hovered.y}
+            value={formatTick(kind, hovered.value)}
+            chartWidth={width}
+          />
+        ) : null}
       </svg>
     </div>
   )

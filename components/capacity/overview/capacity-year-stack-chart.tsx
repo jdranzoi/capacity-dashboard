@@ -1,10 +1,18 @@
 'use client'
 
+import { useState } from 'react'
 import { format } from 'date-fns'
 
+import { CapacityYearHoverTip } from '@/components/capacity/overview/capacity-year-hover-tip'
 import { fmtHeadcountKpi } from '@/lib/overview/overview-metrics'
 import type { CapacityYearStackLayer } from '@/lib/capacity/overview/capacity-year-types'
 import { cn } from '@/lib/utils'
+
+type HoveredBar = {
+  value: number
+  x: number
+  y: number
+}
 
 const COUNT_AXIS_STEP = 5
 
@@ -61,6 +69,7 @@ export function CapacityYearStackChart({
   const yFor = (value: number) => padT + plotH - (value / domainMax) * plotH
   const barW = Math.min(16, plotW / 14)
   const monthTicks = [0, 3, 6, 9, 11]
+  const [hovered, setHovered] = useState<HoveredBar | null>(null)
 
   return (
     <div className={cn('mt-3 flex min-h-0 flex-col', compact ? 'flex-none' : 'flex-1')}>
@@ -138,7 +147,13 @@ export function CapacityYearStackChart({
         />
         {Array.from({ length: visibleMonths }, (_, monthIndex) => {
           let yCursor = padT + plotH
-          const parts: { key: string; y: number; height: number; color: string }[] = []
+          const parts: {
+            key: string
+            value: number
+            y: number
+            height: number
+            color: string
+          }[] = []
           for (const layer of layers) {
             const value = layer.points[monthIndex]?.value ?? 0
             if (value <= 0) continue
@@ -146,25 +161,15 @@ export function CapacityYearStackChart({
             yCursor -= heightPx
             parts.push({
               key: layer.key,
+              value,
               y: yCursor,
               height: heightPx,
               color: layer.colorVar,
             })
           }
-          const total = totals[monthIndex]
-          const tooltip = [
-            format(new Date(2020, monthIndex, 1), 'MMM'),
-            ...(total == null ? [] : [`${fmtHeadcountKpi(total)} total`]),
-            ...layers.flatMap((layer) => {
-              const value = layer.points[monthIndex]?.value
-              if (value == null || value <= 0) return []
-              return [`${layer.label} ${fmtHeadcountKpi(value)}`]
-            }),
-          ].join(' · ')
           const x = Math.max(padL, Math.min(xFor(monthIndex) - barW / 2, padL + plotW - barW))
           return (
             <g key={monthIndex}>
-              <title>{tooltip}</title>
               {parts.map((part) => (
                 <rect
                   key={part.key}
@@ -172,7 +177,17 @@ export function CapacityYearStackChart({
                   y={part.y}
                   width={barW}
                   height={part.height}
+                  className="cursor-pointer"
                   style={{ fill: part.color }}
+                  aria-label={fmtHeadcountKpi(part.value)}
+                  onMouseEnter={() =>
+                    setHovered({
+                      value: part.value,
+                      x: x + barW / 2,
+                      y: part.y,
+                    })
+                  }
+                  onMouseLeave={() => setHovered(null)}
                 />
               ))}
             </g>
@@ -189,6 +204,14 @@ export function CapacityYearStackChart({
             {format(new Date(2020, monthIndex, 1), 'MMM')}
           </text>
         ))}
+        {hovered ? (
+          <CapacityYearHoverTip
+            x={hovered.x}
+            y={hovered.y}
+            value={fmtHeadcountKpi(hovered.value)}
+            chartWidth={width}
+          />
+        ) : null}
       </svg>
     </div>
   )
