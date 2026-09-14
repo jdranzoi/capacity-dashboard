@@ -6,6 +6,8 @@ import { format } from 'date-fns'
 import { CapacityYearHoverTip } from '@/components/capacity/overview/capacity-year-hover-tip'
 import { fmtHeadcountKpi } from '@/lib/overview/overview-metrics'
 import type { CapacityYearStackLayer } from '@/lib/capacity/overview/capacity-year-types'
+import { isActivityProjectType } from '@/lib/domain/project-types'
+import { openProjectsActivityTab } from '@/lib/projects/activity/projects-activity-href'
 import { cn } from '@/lib/utils'
 
 type HoveredBar = {
@@ -34,12 +36,16 @@ export function CapacityYearStackChart({
   label,
   caption,
   compact = false,
+  activityDrill = false,
+  currentYear,
 }: {
   layers: CapacityYearStackLayer[]
   throughMonthIndex: number
   label: string
   caption?: string
   compact?: boolean
+  activityDrill?: boolean
+  currentYear?: number
 }) {
   const visibleMonths = throughMonthIndex + 1
   const totals = Array.from({ length: 12 }, (_, monthIndex) => {
@@ -74,7 +80,10 @@ export function CapacityYearStackChart({
   return (
     <div className={cn('mt-3 flex min-h-0 flex-col', compact ? 'flex-none' : 'flex-1')}>
       {caption ? (
-        <p className="mb-1 text-[0.65rem] text-muted-foreground">{caption}</p>
+        <p className="mb-1 text-[0.65rem] text-muted-foreground">
+          {caption}
+          {activityDrill ? ' · click a segment for that month' : null}
+        </p>
       ) : null}
       {layers.length > 0 ? (
         <ol className="mb-1 flex flex-wrap justify-end gap-x-2 gap-y-0.5 text-[0.65rem] text-muted-foreground">
@@ -179,7 +188,12 @@ export function CapacityYearStackChart({
                   height={part.height}
                   className="cursor-pointer"
                   style={{ fill: part.color }}
-                  aria-label={fmtHeadcountKpi(part.value)}
+                  role={activityDrill ? 'link' : undefined}
+                  aria-label={
+                    activityDrill
+                      ? `${fmtHeadcountKpi(part.value)} — open ${part.key} project list`
+                      : fmtHeadcountKpi(part.value)
+                  }
                   onMouseEnter={() =>
                     setHovered({
                       value: part.value,
@@ -188,6 +202,16 @@ export function CapacityYearStackChart({
                     })
                   }
                   onMouseLeave={() => setHovered(null)}
+                  onClick={
+                    activityDrill && currentYear != null
+                      ? () =>
+                          openProjectsActivityTab({
+                            year: currentYear,
+                            monthIndex,
+                            type: isActivityProjectType(part.key) ? part.key : undefined,
+                          })
+                      : undefined
+                  }
                 />
               ))}
             </g>

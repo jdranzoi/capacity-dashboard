@@ -44,6 +44,8 @@ export type InteractiveDataTableProps<T> = {
   /** When true, parent panel supplies the card shell — table body only. */
   embedded?: boolean
   footnote?: string | null
+  onRowClick?: (row: T) => void
+  isRowSelected?: (row: T) => boolean
 }
 
 export function InteractiveDataTable<T>({
@@ -63,6 +65,8 @@ export function InteractiveDataTable<T>({
   stickyHeader = false,
   embedded = false,
   footnote,
+  onRowClick,
+  isRowSelected,
 }: InteractiveDataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>(initialSorting)
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -225,7 +229,24 @@ export function InteractiveDataTable<T>({
               table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="border-b border-border/60 last:border-b-0"
+                  className={cn(
+                    "border-b border-border/60 last:border-b-0",
+                    onRowClick && "cursor-pointer hover:bg-muted/30",
+                    isRowSelected?.(row.original) && "bg-muted/40",
+                  )}
+                  role={onRowClick ? "button" : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                  onKeyDown={
+                    onRowClick
+                      ? (event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault()
+                            onRowClick(row.original)
+                          }
+                        }
+                      : undefined
+                  }
                 >
                   {row.getVisibleCells().map((cell) => {
                     const id = cell.column.id;

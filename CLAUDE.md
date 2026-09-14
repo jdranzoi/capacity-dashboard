@@ -92,11 +92,12 @@ Write access: `audit_log` only (one row per `/api/chat` call).
 | Bench grid | `fact_bench` (latest `snapshot_id`) | role, month |
 | Fragmentation | `fact_fragmentation`, `fact_plans`, `dim_person`, `dim_project` | role, month, source |
 | Same-period YoY | any fact table | `month_date` range spanning multiple years |
-| Capacity Overview YoY | `fact_month_ops`, `fact_month_projects`, `dim_role`, `dim_project` | year; join project type on `dim_project` |
+| Capacity Overview YoY | `fact_month_ops`, `fact_month_projects`, `dim_role`, `dim_project` | year; Projects card joins `is_commercial` (and type) on `dim_project` |
 | Utilization trend (intra-month) | `fact_project_actuals` filtered by `snapshot_id` | project, month |
 | Overview (weekly cards on `/`) | `sync_snapshot`, `fact_capacity`, `fact_plans`, `fact_worklogs` | `month_date`, `snapshot_id`, worklog `log_date` (see *Overview page (`/`) — weekly metrics*) |
 | Training (`/projects/training`) | `dim_issue`, `fact_issue_worklogs`, `dim_person` | MCT children; month on worklog `log_date`; taxonomy arrays (fix versions → components → labels) |
 | Training year (`/projects/training-year`) | `dim_issue`, `fact_issue_worklogs`, `dim_person`, `dim_role` | All years with hours; same-period KPIs, role charts, and table; version/area charts vs prior year; month, role, version and component slices |
+| Project activity (`/projects/activity`) | `fact_month_projects`, `dim_project` | Month; optional type; project key opens Overview detail panel |
 
 **Latest snapshot pattern:** For current-state views, always resolve the latest `snapshot_id` from
 `sync_snapshot` first (ordered by `created_at DESC`, limit 1), then join fact tables on that ID.

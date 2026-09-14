@@ -373,6 +373,7 @@ The existing `/pipeline` route (proto-Projects) contains a deal list for pre-sal
 - [x] **SP-5.2** Projects → Overview sub-page (`/projects/overview` — delivery KPIs, progress chart, drill-down)
 - [x] **SP-5.7** Projects → Training (`/projects/training` — MCT backlog, estimate vs logged, version/area/topic grids)
 - [x] **SP-5.8** Projects → Training year (`/projects/training-year` — month/role charts and same-period year comparison)
+- [x] **SP-5.9** Projects → Activity (`/projects/activity` — monthly logged-hours list grouped by type; Capacity Overview drill-down)
 - [ ] **SP-5.3** Projects → Staffing sub-page (people assigned per project, allocation %)
 - [ ] **SP-5.4** Projects → Health sub-page (risk indicators per project)
 - [ ] **SP-5.5** Mark Delivery, Financials, Dependencies as coming soon

@@ -14,10 +14,6 @@ import {
   compareRoleKeysByDisplayOrder,
   roleKeyAcronym,
 } from '@/lib/domain/role-keys'
-import {
-  isProjectSpaceType,
-  projectSpaceTypeLabel,
-} from '@/lib/domain/project-types'
 import { roleColorVar } from '@/lib/ui/collaboration-role-colors'
 import {
   COMMERCIAL_UTILIZATION_KPI,
@@ -296,15 +292,9 @@ export function buildCapacityYear(
 }
 
 const UNASSIGNED_ROLE = { key: 'unassigned', label: 'Unassigned' } as const
-const OTHER_PROJECT_TYPE = 'other'
 
-const PROJECT_TYPE_COLOR: Record<string, string> = {
-  build: 'var(--overview-metric-billable)',
-  support: 'var(--overview-metric-logged)',
-  product: 'var(--overview-metric-planned)',
-  internal: 'var(--overview-metric-net)',
-  [OTHER_PROJECT_TYPE]: 'var(--muted-foreground)',
-}
+const PROJECT_COMMERCIAL_COLOR = 'var(--overview-metric-billable)'
+const PROJECT_OTHER_COLOR = 'color-mix(in oklch, var(--muted-foreground) 42%, transparent)'
 
 function uniqueCountDeltaRows(
   years: number[],
@@ -414,9 +404,18 @@ function buildHeadcountCard(
   }
 }
 
-function projectTypeKey(value: string | null): string {
-  if (value && isProjectSpaceType(value)) return value
-  return OTHER_PROJECT_TYPE
+function emptyMonthCounts(): number[] {
+  return Array.from({ length: 12 }, () => 0)
+}
+
+function countsToStackPoints(
+  counts: number[],
+  throughMonthIndex: number
+): CapacityYearStackLayer['points'] {
+  return counts.map((value, monthIndex) => ({
+    monthIndex,
+    value: monthIndex > throughMonthIndex ? null : value > 0 ? value : 0,
+  }))
 }
 
 function buildProjectCountCard(
@@ -425,57 +424,65 @@ function buildProjectCountCard(
   currentYear: number,
   throughMonthIndex: number
 ): CapacityYearKpiCard {
-  const projectsByYearMonth = new Map<number, Set<string>[]>()
-  const typeMonth = new Map<string, number[]>()
+  const commercialByYearMonth = new Map<number, Set<string>[]>()
+  const otherByYearMonth = new Map<number, Set<string>[]>()
+  const commercialMonth = emptyMonthCounts()
+  const otherMonth = emptyMonthCounts()
 
   for (const row of facts.projects) {
     const year = yearOf(row.month_date)
     const monthIndex = monthIndexOf(row.month_date)
     if (monthIndex < 0 || monthIndex > 11) continue
 
-    let months = projectsByYearMonth.get(year)
+    const target = row.is_commercial ? commercialByYearMonth : otherByYearMonth
+    let months = target.get(year)
     if (!months) {
       months = Array.from({ length: 12 }, () => new Set<string>())
-      projectsByYearMonth.set(year, months)
+      target.set(year, months)
     }
     months[monthIndex].add(row.project_id)
 
     if (year !== currentYear || monthIndex > throughMonthIndex) continue
-    const typeKey = projectTypeKey(row.project_type)
-    let counts = typeMonth.get(typeKey)
-    if (!counts) {
-      counts = Array.from({ length: 12 }, () => 0)
-      typeMonth.set(typeKey, counts)
-    }
-    counts[monthIndex] += 1
+    if (row.is_commercial) commercialMonth[monthIndex] += 1
+    else otherMonth[monthIndex] += 1
   }
 
-  const typeOrder = ['build', 'support', 'product', 'internal', OTHER_PROJECT_TYPE]
-  const stacks: CapacityYearStackLayer[] = [...typeMonth.keys()]
-    .sort((a, b) => {
-      const ia = typeOrder.indexOf(a)
-      const ib = typeOrder.indexOf(b)
-      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
-    })
-    .map((typeKey) => {
-      const counts = typeMonth.get(typeKey)!
-      return {
-        key: typeKey,
-        label: typeKey === OTHER_PROJECT_TYPE ? 'Other' : projectSpaceTypeLabel(typeKey),
-        colorVar: PROJECT_TYPE_COLOR[typeKey] ?? PROJECT_TYPE_COLOR[OTHER_PROJECT_TYPE],
-        points: counts.map((value, monthIndex) => ({
-          monthIndex,
-          value: monthIndex > throughMonthIndex ? null : value > 0 ? value : 0,
-        })),
-      }
-    })
+  const ncSeries = monthlyTotalsFromIds(
+    years,
+    currentYear,
+    throughMonthIndex,
+    otherByYearMonth
+  )
+    .map((series) => ({
+      ...series,
+      id: `nc-${series.year}`,
+      label: `NC ${series.year}`,
+      muted: true,
+    }))
+    .filter((series) => series.points.some((point) => point.value != null))
 
   return {
     key: 'projectCount',
     label: 'Projects',
     kind: 'count',
-    years: uniqueCountDeltaRows(years, currentYear, throughMonthIndex, projectsByYearMonth),
-    series: monthlyTotalsFromIds(years, currentYear, throughMonthIndex, projectsByYearMonth),
-    stacks,
+    years: uniqueCountDeltaRows(years, currentYear, throughMonthIndex, commercialByYearMonth),
+    series: [
+      ...monthlyTotalsFromIds(years, currentYear, throughMonthIndex, commercialByYearMonth),
+      ...ncSeries,
+    ],
+    stacks: [
+      {
+        key: 'commercial',
+        label: 'Commercial',
+        colorVar: PROJECT_COMMERCIAL_COLOR,
+        points: countsToStackPoints(commercialMonth, throughMonthIndex),
+      },
+      {
+        key: 'noncommercial',
+        label: 'Other',
+        colorVar: PROJECT_OTHER_COLOR,
+        points: countsToStackPoints(otherMonth, throughMonthIndex),
+      },
+    ],
   }
 }

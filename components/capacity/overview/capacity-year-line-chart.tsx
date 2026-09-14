@@ -7,10 +7,12 @@ import { CapacityYearHoverTip } from '@/components/capacity/overview/capacity-ye
 import { niceIntegerScale } from '@/lib/projects/training-year/training-year-chart-math'
 import { fmtHeadcountKpi, fmtHoursKpi, fmtPct } from '@/lib/overview/overview-metrics'
 import type { CapacityYearKpiKind, CapacityYearSeries } from '@/lib/capacity/overview/capacity-year-types'
+import { openProjectsActivityTab } from '@/lib/projects/activity/projects-activity-href'
 import { yearCompareColorVar } from '@/lib/ui/year-compare-colors'
 import { cn } from '@/lib/utils'
 
 type HoveredPoint = {
+  seriesKey: string
   year: number
   monthIndex: number
   value: number
@@ -76,20 +78,38 @@ function focusedPctScale(
   return { domainMin, domainMax, ticks }
 }
 
+function seriesKey(item: CapacityYearSeries): string {
+  return item.id ?? String(item.year)
+}
+
+function seriesColor(item: CapacityYearSeries, currentYear: number): string {
+  return yearCompareColorVar(item.year, currentYear)
+}
+
 export function CapacityYearLineChart({
   series,
   currentYear,
   kind,
   label,
+  caption,
   yFocus,
+  activityDrill = false,
 }: {
   series: CapacityYearSeries[]
   currentYear: number
   kind: CapacityYearKpiKind
   label: string
+  caption?: string
   yFocus?: { min: number; max: number }
+  activityDrill?: boolean
 }) {
-  const years = series.map((item) => item.year)
+  const legend = series.map((item) => ({
+    key: seriesKey(item),
+    label: item.label ?? String(item.year),
+    color: seriesColor(item, currentYear),
+    muted: item.muted === true,
+    emphasize: !item.muted && item.year === currentYear,
+  }))
   const values = series.flatMap((item) =>
     item.points.map((point) => point.value).filter((value): value is number => value != null)
   )
@@ -116,16 +136,30 @@ export function CapacityYearLineChart({
 
   return (
     <div className="mt-3 flex min-h-0 flex-1 flex-col">
-      {years.length > 1 ? (
+      {caption || activityDrill ? (
+        <p className="mb-1 text-[0.65rem] text-muted-foreground">
+          {caption}
+          {caption && activityDrill ? ' · ' : null}
+          {activityDrill ? 'click a point to open that month in a new tab' : null}
+        </p>
+      ) : null}
+      {legend.length > 1 ? (
         <ol className="mb-1 flex flex-wrap justify-end gap-x-2 gap-y-0.5 text-[0.65rem] text-muted-foreground">
-          {years.map((year) => (
-            <li key={year} className="flex items-center gap-1">
-              <span
-                className="inline-block size-1.5 rounded-full"
-                style={{ background: yearCompareColorVar(year, currentYear) }}
-              />
-              <span className={cn(year === currentYear && 'font-medium text-foreground')}>
-                {year}
+          {legend.map((item) => (
+            <li key={item.key} className="flex items-center gap-1">
+              {item.muted ? (
+                <span
+                  className="inline-block w-3 border-t border-dashed"
+                  style={{ borderColor: item.color }}
+                />
+              ) : (
+                <span
+                  className="inline-block size-1.5 rounded-full"
+                  style={{ background: item.color }}
+                />
+              )}
+              <span className={cn(item.emphasize && 'font-medium text-foreground')}>
+                {item.label}
               </span>
             </li>
           ))}
@@ -185,14 +219,16 @@ export function CapacityYearLineChart({
         {series.map((item) => {
           const pts = polylinePoints(item, xFor, yFor)
           if (!pts) return null
-          const color = yearCompareColorVar(item.year, currentYear)
+          const color = seriesColor(item, currentYear)
+          const itemKey = seriesKey(item)
           return (
-            <g key={item.year}>
+            <g key={itemKey}>
               <polyline
                 fill="none"
                 points={pts}
                 style={{ stroke: color }}
-                strokeWidth={item.year === currentYear ? 1.85 : 1.45}
+                strokeWidth={item.muted ? 1.2 : item.year === currentYear ? 1.85 : 1.45}
+                strokeDasharray={item.muted ? '3 3' : undefined}
                 strokeLinejoin="round"
                 strokeLinecap="round"
               />
@@ -201,13 +237,13 @@ export function CapacityYearLineChart({
                 const x = xFor(point.monthIndex)
                 const y = yFor(point.value)
                 const active =
-                  hovered?.year === item.year && hovered.monthIndex === point.monthIndex
+                  hovered?.seriesKey === itemKey && hovered.monthIndex === point.monthIndex
                 return (
-                  <g key={`${item.year}-${point.monthIndex}`}>
+                  <g key={`${itemKey}-${point.monthIndex}`}>
                     <circle
                       cx={x}
                       cy={y}
-                      r={active ? 3.1 : item.year === currentYear ? 2.2 : 1.9}
+                      r={active ? 3.1 : item.muted ? 1.6 : item.year === currentYear ? 2.2 : 1.9}
                       style={{ fill: color }}
                       className="pointer-events-none"
                     />
@@ -217,8 +253,10 @@ export function CapacityYearLineChart({
                       r={8}
                       fill="transparent"
                       className="cursor-pointer"
+                      role={activityDrill ? 'link' : undefined}
                       onMouseEnter={() =>
                         setHovered({
+                          seriesKey: itemKey,
                           year: item.year,
                           monthIndex: point.monthIndex,
                           value: point.value as number,
@@ -227,7 +265,20 @@ export function CapacityYearLineChart({
                         })
                       }
                       onMouseLeave={() => setHovered(null)}
-                      aria-label={formatTick(kind, point.value)}
+                      onClick={
+                        activityDrill
+                          ? () =>
+                              openProjectsActivityTab({
+                                year: item.year,
+                                monthIndex: point.monthIndex,
+                              })
+                          : undefined
+                      }
+                      aria-label={
+                        activityDrill
+                          ? `${formatTick(kind, point.value)} — open project list`
+                          : formatTick(kind, point.value)
+                      }
                     />
                   </g>
                 )

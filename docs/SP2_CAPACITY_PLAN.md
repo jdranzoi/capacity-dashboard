@@ -159,7 +159,7 @@ All Phase 1 sub-sections consume existing v2 ingestion. No new sync work require
 
 Collapsible **this-month** strip: shared three-column ops KPI grid (`CapacityOpsKpiColumns`) with Utilization. Elapsed capacity and capacity fill stay on this strip only. Bench hours belong on SP-2.6, not this row.
 
-**Year section** (org-wide, no toolbar): nine cards (3 per row) — Net capacity / Headcount / Projects; Logged / Commercial hours / Non-commercial hours; Utilization / Commercial utilization / PTO. Hours and % cards are same-period YTD vs prior years plus a monthly line series per year. Headcount and Projects add the same YoY total lines, plus current-year stacked bars (role / `project_type`). Table values are unique people / projects in the window.
+**Year section** (org-wide, no toolbar): nine cards (3 per row) — Net capacity / Headcount / Projects; Logged / Commercial hours / Non-commercial hours; Utilization / Commercial utilization / PTO. Hours and % cards are same-period YTD vs prior years plus a monthly line series per year. Headcount adds YoY unique-people lines plus current-year role stacks. Projects table and solid YoY lines are unique **commercial** projects (`dim_project.is_commercial` — build + support, same flag as commercial hours). Dotted YoY lines are **NC** (non-commercial) project counts, one series per year in that year’s compare color. A two-layer stack (commercial vs other) shows the current-year mix. Line dots and stacked-bar segments open `/projects/activity` in a new tab for that month.
 
 | Column | KPI | Source |
 | --- | --- | --- |

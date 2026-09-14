@@ -29,6 +29,9 @@ export type CapacityYearMonthPoint = {
 export type CapacityYearSeries = {
   year: number
   points: CapacityYearMonthPoint[]
+  id?: string
+  label?: string
+  muted?: boolean
 }
 
 export type CapacityYearStackLayer = {

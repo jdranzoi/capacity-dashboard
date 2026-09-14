@@ -82,6 +82,12 @@ export function CapacityYearKpiCard({
         currentYear={currentYear}
         kind={card.kind}
         label={card.label}
+        caption={
+          card.key === 'projectCount'
+            ? 'Solid: commercial · dotted: NC (non-commercial)'
+            : undefined
+        }
+        activityDrill={card.key === 'projectCount'}
         yFocus={
           card.key === 'utilizationPct'
             ? { min: 60, max: 80 }
@@ -95,8 +101,14 @@ export function CapacityYearKpiCard({
           layers={card.stacks}
           throughMonthIndex={throughMonthIndex}
           label={`${card.label} mix`}
-          caption={`${currentYear} mix`}
+          caption={
+            card.key === 'projectCount'
+              ? `${currentYear} mix · commercial vs other`
+              : `${currentYear} mix`
+          }
           compact
+          activityDrill={card.key === 'projectCount'}
+          currentYear={currentYear}
         />
       ) : null}
     </div>

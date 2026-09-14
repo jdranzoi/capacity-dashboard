@@ -72,7 +72,7 @@ Delivery intelligence.
 
 Implementation plan (isolated sub-section tracks): [SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md)
 
-- **Overview:** Presentation page (no month filter). Collapsible current-month ops KPI strip plus nine same-period YoY cards (hours, utilization, PTO, headcount, projects) from `fact_month_ops` / `fact_month_projects`. Period detail stays on Utilization. Route: `/capacity/overview`.
+- **Overview:** Presentation page (no month filter). Collapsible current-month ops KPI strip plus nine same-period YoY cards (hours, utilization, PTO, headcount, projects) from `fact_month_ops` / `fact_month_projects`. Projects dots and type bars open `/projects/activity` in a new tab. Period detail stays on Utilization. Route: `/capacity/overview`.
 - **Utilization:** Role and person operational usage (migrated from legacy `/team`). Includes: capacity fill, commercial utilization, logged/commercial hours, PTO, staffing grid. Route: `/capacity/utilization`.
 - **Operations:** Current month operational usage. Includes: utilization, logged, billable, PTO, operational saturation.
 - **Planning:** Future planned allocations. Includes: planned utilization, role allocation, future staffing, monthly planning.
@@ -94,6 +94,7 @@ Operational workload and capacity-fill metrics belong under **Capacity → Utili
 
 #### Projects
 
+- **Activity:** Projects with non-PTO logged hours in a selected month (`fact_month_projects`), grouped by type. Same population as Capacity Overview Projects. Row opens the existing delivery detail aside. Route: `/projects/activity`.
 - **Training:** MCT learning backlog. Hours versus Jira Original Estimate (no Tempo plans), status mix, and linked version → area → topic drill-down. Route: `/projects/training`.
 - **Training year:** Hours and activity counts by month and role, grouped by year (same-period). Bar selection slices the other charts. Route: `/projects/training-year`.
 - **Portfolio:** High-level portfolio overview. Includes: active projects, delivery status, staffing distribution, portfolio load.

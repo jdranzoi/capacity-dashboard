@@ -74,7 +74,12 @@ export const NAV_DOMAINS: NavigationDomainConfig[] = [
     icon: Gauge,
     defaultHref: '/capacity/overview',
     items: [
-      domainItem('Capacity', 'Overview', '/capacity/overview', 'High-level KPIs and summary.'),
+      domainItem(
+        'Capacity',
+        'Overview',
+        '/capacity/overview',
+        'High-level KPIs and same-period YoY cards. Projects dots open the monthly activity list.'
+      ),
       domainItem(
         'Capacity',
         'Utilization',
@@ -185,6 +190,12 @@ export const NAV_DOMAINS: NavigationDomainConfig[] = [
         'Overview',
         '/projects/overview',
         'High-level delivery overview. Active projects, planned vs logged progress, risk indicators, and project drill-down.'
+      ),
+      domainItem(
+        'Projects',
+        'Activity',
+        '/projects/activity',
+        'Projects with logged hours in a month, grouped by type. Capacity Overview Projects dots open this list.'
       ),
       domainItem(
         'Projects',

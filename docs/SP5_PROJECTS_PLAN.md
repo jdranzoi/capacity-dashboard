@@ -13,6 +13,7 @@ Progressive build-out for `/projects/*`. Targets **v2 tables only** (`CLAUDE.md`
 | --- | --- | --- |
 | **SP-5.1** Shell + L2 nav | `/projects/*` | Done (SP-0 scaffolding) |
 | **SP-5.2** Overview | `/projects/overview` | **Done** — KPIs, progress chart, global/monthly, detail sheet |
+| **SP-5.9** Activity | `/projects/activity` | **Done** — month list from `fact_month_projects`, grouped by type, reuses Overview detail panel |
 | **SP-5.3** Staffing | `/projects/staffing` | Placeholder |
 | **SP-5.4** Health | `/projects/health` | Placeholder |
 | **SP-5.5** Delivery / Financials / Dependencies | — | Coming soon / future |
@@ -65,6 +66,15 @@ When Overview shipped: add `/projects/overview` to [`lib/navigation/shipped-rout
 - `account_manager` row scoping
 
 ---
+
+## SP-5.9 Project activity
+
+- **Route:** `/projects/activity`
+- **Question:** Which projects logged hours this month?
+- **Data:** `fact_month_projects` joined to `dim_project` (same population as Capacity Overview Projects).
+- **URL:** `month` (`yyyy-MM`), optional `type` (`build` \| `support` \| `product` \| `internal` \| `other`), `project` (key for the existing detail panel).
+- **UI:** Type-grouped sortable tables + reused `ProjectsProjectDetailPanel` (monthly view). Capacity Overview Projects dots/bars open this route in a new tab.
+- **Code:** `lib/projects/activity/`, `components/projects/activity/`
 
 ## SP-5.7 Training
 

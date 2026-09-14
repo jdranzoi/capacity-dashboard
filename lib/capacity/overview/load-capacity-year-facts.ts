@@ -2,6 +2,7 @@ import { cacheLife, cacheTag } from 'next/cache'
 
 import { CACHE_TAG_MONTH_OPS } from '@/lib/data/cache-tags'
 import { pagedQuery } from '@/lib/data/paged-query'
+import { isCommercialProjectType } from '@/lib/domain/project-types'
 import { createServiceClientCached } from '@/lib/supabase/server'
 
 const PAGE = 1000
@@ -28,6 +29,7 @@ export type CapacityYearProjectRow = {
   project_id: string
   month_date: string
   project_type: string | null
+  is_commercial: boolean
 }
 
 export type CapacityYearFacts = {
@@ -65,12 +67,13 @@ export async function loadCapacityYearFacts(): Promise<{
         .order('project_id')
         .range(from, from + PAGE - 1)
     ),
-    pagedQuery<{ id: string; project_type: string | null }>(async (from) =>
-      supabase
-        .from('dim_project')
-        .select('id, project_type')
-        .order('id')
-        .range(from, from + PAGE - 1)
+    pagedQuery<{ id: string; project_type: string | null; is_commercial: boolean | null }>(
+      async (from) =>
+        supabase
+          .from('dim_project')
+          .select('id, project_type, is_commercial')
+          .order('id')
+          .range(from, from + PAGE - 1)
     ),
   ])
 
@@ -79,19 +82,24 @@ export async function loadCapacityYearFacts(): Promise<{
   if (projectRows.error) return { data: null, error: projectRows.error }
   if (projectDims.error) return { data: null, error: projectDims.error }
 
-  const typeByProject = new Map(
-    projectDims.rows.map((row) => [row.id, row.project_type])
+  const dimByProject = new Map(
+    projectDims.rows.map((row) => [row.id, row])
   )
 
   return {
     data: {
       ops: opsResult.rows,
       roles: rolesResult.data ?? [],
-      projects: projectRows.rows.map((row) => ({
-        project_id: row.project_id,
-        month_date: row.month_date,
-        project_type: typeByProject.get(row.project_id) ?? null,
-      })),
+      projects: projectRows.rows.map((row) => {
+        const dim = dimByProject.get(row.project_id)
+        return {
+          project_id: row.project_id,
+          month_date: row.month_date,
+          project_type: dim?.project_type ?? null,
+          is_commercial:
+            dim?.is_commercial ?? isCommercialProjectType(dim?.project_type ?? null),
+        }
+      }),
     },
     error: null,
   }
