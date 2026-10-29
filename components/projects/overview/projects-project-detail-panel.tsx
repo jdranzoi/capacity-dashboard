@@ -10,6 +10,7 @@ import {
   ProjectRoleGroupedChart,
 } from "@/components/projects/overview/project-role-grouped-chart";
 import { ProjectVelocityChart } from "@/components/projects/overview/project-velocity-chart";
+import { ProjectDetailTeamTab } from "@/components/projects/overview/project-detail-team-tab";
 import {
   DataSectionPanel,
   DataSectionPanelHeader,
@@ -276,7 +277,13 @@ function ProjectDetailOverviewTab({
         </DetailChartSection>
         <DetailChartSection
           title="Velocity trend"
-          description="Logged hours per week (last 6 weeks)"
+          description={
+            detail.executionScope === "lifetime"
+              ? "Logged hours per week (last 6 weeks)"
+              : detail.monthLabel
+                ? `Logged hours per week in ${detail.monthLabel}`
+                : "Logged hours per week in the selected month"
+          }
         >
           <ProjectVelocityChart
             weeks={detail.velocityWeeks}
@@ -434,6 +441,13 @@ export function ProjectsProjectDetailPanel({
             detail={detail}
             roleRows={roleRows}
             executionDescription={executionDescription}
+          />
+        ) : activeTab === "team" ? (
+          <ProjectDetailTeamTab
+            projectKey={detail.projectKey}
+            monthKey={detail.monthKey}
+            monthLabel={detail.monthLabel}
+            defaultScope={detail.executionScope}
           />
         ) : (
           <ProjectDetailComingSoon />

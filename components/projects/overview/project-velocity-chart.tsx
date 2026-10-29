@@ -23,7 +23,7 @@ export function ProjectVelocityChart({
   ariaLabel: string
 }) {
   if (weeks.length === 0) {
-    return <p className="text-xs text-muted-foreground">No logged hours in the last 6 weeks.</p>
+    return <p className="text-xs text-muted-foreground">No logged hours in this period.</p>
   }
 
   const w = 360

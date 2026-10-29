@@ -63,7 +63,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | `/teams/overview` | Teams → Overview | **Shipped** — org structure snapshot |
 | `/teams/composition` | Teams → Composition | **Shipped** — project team cards by type or project manager (`?view=`) |
 | `/teams/*` (other) | Teams sub-sections | Placeholders |
-| `/projects/overview` | Projects → Overview | **Shipped** — delivery KPIs, progress chart, detail sheet |
+| `/projects/overview` | Projects → Overview | **Shipped** — delivery KPIs, progress chart, detail sheet (Team tab on demand) |
 | `/projects/activity` | Projects → Activity | **Shipped** — monthly logged-hours list grouped by type + Overview detail aside |
 | `/projects/training` | Projects → Training | **Shipped** — MCT backlog KPIs, version/area/topic grids, activity table |
 | `/projects/training-year` | Projects → Training year | **Shipped** — month/role charts, version/area mix, same-period year comparison |
@@ -119,4 +119,4 @@ Ask         /ask
 
 ---
 
-*Last updated: Projects Activity (`/projects/activity`) — monthly logged-hours list from Capacity Overview Projects dots; reuses Overview detail.*
+*Last updated: Project detail Team tab (on-demand role/person hours) and period-aligned velocity on Overview.*

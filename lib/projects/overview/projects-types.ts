@@ -63,6 +63,27 @@ export type ProjectVelocityWeekPoint = {
 
 export type ProjectExecutionScope = 'lifetime' | 'month'
 
+export type ProjectDetailTeamPersonHours = {
+  personId: string
+  personName: string
+  plannedHours: number
+  loggedHours: number
+}
+
+export type ProjectDetailTeamRoleHours = {
+  roleKey: string
+  roleLabel: string
+  plannedHours: number
+  loggedHours: number
+  people: ProjectDetailTeamPersonHours[]
+}
+
+export type ProjectDetailTeamPayload = {
+  scope: ProjectExecutionScope
+  monthLabel: string | null
+  roles: ProjectDetailTeamRoleHours[]
+}
+
 export type ProjectDetailPanelPayload = {
   projectId: string
   projectKey: string

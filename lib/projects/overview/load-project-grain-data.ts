@@ -156,6 +156,45 @@ export async function loadProjectGrainPlans(
   }
 }
 
+/** Planned hours for one project in one snapshot month. */
+export async function loadProjectPersonPlans(
+  snapshotId: string,
+  monthStartStr: string,
+  projectId: string
+): Promise<{ rows: ProjectPlanGrainRow[]; error: string | null }> {
+  'use cache'
+  cacheLife({ stale: 120, revalidate: 300 })
+  cacheTag(CACHE_TAG_MONTH_FACTS, cacheTagSnapshot(snapshotId))
+
+  const supabase = createServiceClientCached()
+
+  const { rows, error } = await pagedQuery<ProjectPlanGrainRow>(async (from) =>
+    supabase
+      .from('fact_plans')
+      .select('person_id, project_id, role_id, planned_hours')
+      .eq('snapshot_id', snapshotId)
+      .eq('month_date', monthStartStr)
+      .eq('project_id', projectId)
+      .eq('is_pto', false)
+      .order('person_id')
+      .range(from, from + 999)
+  )
+
+  if (error) {
+    return { rows: [], error }
+  }
+
+  return {
+    rows: rows.map((r) => ({
+      person_id: r.person_id,
+      project_id: r.project_id,
+      role_id: r.role_id,
+      planned_hours: Number(r.planned_hours ?? 0),
+    })),
+    error: null,
+  }
+}
+
 /** `fact_plans` per month, each keyed to that month's sync anchor from month options. */
 export async function loadProjectGrainPlansForMonths(
   monthKeys: readonly string[],

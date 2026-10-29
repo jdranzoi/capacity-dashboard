@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # capacity-dashboard — Project Instructions
 
 **Product name:** Workforce Intelligence (Engineering Operations Intelligence Platform).
@@ -20,9 +24,37 @@ Not a replacement for the agent — the agent remains the power-user tool.
 
 ## Tech stack
 
-Next.js 16, TypeScript, Tailwind CSS, shadcn/ui, TanStack Table, Recharts.
+Next.js 16, React 19, TypeScript, Tailwind CSS v4, shadcn/ui (Base UI), TanStack Table, `nuqs` for URL state.
+**Charts are hand-written SVG** — there is no chart library (see `.cursor/rules/svg-charts.mdc` before touching any chart).
 Supabase Auth with Google OAuth for authentication (`@supabase/ssr`). Supabase (service role, server-side only) for all data reads.
 Deployed on Vercel.
+
+**Next.js 16 differs from training data** (see `AGENTS.md`): read the relevant guide in `node_modules/next/dist/docs/` before using an unfamiliar API. Notably, request interception lives in `proxy.ts` (exported `proxy` function), not `middleware.ts`.
+
+## Commands
+
+Package manager is **pnpm**.
+
+| Task | Command |
+|---|---|
+| Dev server (localhost:3000, Google sign-in required) | `pnpm dev` |
+| Production build — the pre-PR check | `pnpm build` |
+| Type-check only | `pnpm exec tsc --noEmit` |
+| Regenerate `lib/supabase/database.types.ts` from live schema | `pnpm db:types` (needs `supabase login` first) |
+
+There is **no test runner and no lint script** configured. Verification is `pnpm build` plus checking the page in the running app. Data-heavy pages need a Supabase project that ingestion has populated.
+
+Env: copy `.env.example` to `.env.local` (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DASHBOARD_SYNC_*`, optional `JIRA_BASE_URL`).
+
+## Caching and sync freshness
+
+Loaders use `'use cache'` + `cacheTag` with tags from `lib/data/cache-tags.ts` (per-snapshot tags via `cacheTagSnapshot(id)`). Invalidation is centralized in `lib/cache/invalidate-dashboard-cache.ts`. When adding a loader, tag it with an existing tag or add a new one and register it in the invalidator, otherwise it will not refresh after a sync.
+
+Refresh paths:
+1. **Post-sync push:** `capacity-mcp` ingestion `POST`s `/api/revalidate` with `Authorization: Bearer $DASHBOARD_SYNC_REVALIDATE_SECRET`.
+2. **Open tab poll:** the client polls `/api/sync-version`; on a new `sync_snapshot.id` it calls `/api/sync-notify`, then `router.refresh()`.
+
+Shared snapshot resolution and paged Supabase reads live in `lib/data/` (`latest-sync-snapshot.ts`, `paged-query.ts`) — reuse them rather than re-querying `sync_snapshot` or hand-rolling pagination.
 
 ## Data store
 
@@ -35,11 +67,10 @@ This is a firm architectural decision (D-009). Do not reintroduce SQLite or a lo
 
 ### Schema version
 
-The dashboard targets **v2 tables exclusively** (D-019). v1 snapshot tables (`worklogs_snapshot`,
+The dashboard targets **v2 tables exclusively** (D-019). The v1 snapshot tables (`worklogs_snapshot`,
 `plans_snapshot`, `project_actuals_snapshot`, `capacity_baseline`, `fragmentation_snapshot`) are
-consumed only by the MCP agent during the transition period and will be dropped when v2 is validated.
-
-Do not write new dashboard queries against v1 tables.
+dropped by capacity-mcp migration 027 (D-027); the MCP agent tools read v2 as well. After that
+migration is applied, run `pnpm db:types` so they leave `lib/supabase/database.types.ts`.
 
 ### v2 table inventory (read-only)
 
@@ -149,7 +180,7 @@ Use `app_metadata` (not `user_metadata`) — it is immutable by the authenticate
 | `leadership` | All aggregate views |
 | `account_manager` | Project-level only (filtered context) |
 
-All routes require authentication. No public pages. Session is validated via `@supabase/ssr` middleware.
+All routes require authentication. No public pages. Session is validated in `proxy.ts` → `updateSession` (`lib/supabase/middleware.ts`). Supabase clients live in `lib/supabase/server.ts` and `lib/supabase/client.ts`.
 
 ## Platform roadmap and resume point
 
@@ -164,7 +195,7 @@ All routes require authentication. No public pages. Session is validated via `@s
 
 **Implementation order:** SP-0 (navigation) is the hard dependency for all Phase 1 sections. Do not add new top-level routes outside the target structure without updating these docs.
 
-**Next milestone:** SP-2 Capacity — [SP2_CAPACITY_PLAN.md](docs/SP2_CAPACITY_PLAN.md) (start SP-2.0 Foundation). SP-1 Overview deferred.
+**Current milestone:** always take it from [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) ("Next work") — do not rely on a copy here. After completing a subplan milestone, update that file's checklist and its "Last updated" line.
 
 ## Navigation (target) vs routes (today)
 
@@ -179,7 +210,7 @@ Each Level 1 section answers one question (see `NAVIGATION_FUNCTIONAL.md`).
 | Insights | What requires intervention today? | — | 2 (deactivated; `/flags` is proto) |
 | Reports | What does the trend look like historically? | — | 2 (deactivated) |
 
-**Ask** (`/ask`) is a transversal utility — not a domain. It sits at the bottom of the sidebar, separated from Level 1 items. Calls `/api/chat` (C-004).
+**Ask** (`/ask`) is a transversal utility — not a domain. It sits at the bottom of the sidebar, separated from Level 1 items. Calls `/api/chat` (C-004) — **not yet implemented** (no `app/api/chat` route exists).
 
 **Pipeline (Zoho CRM):** pre-sales data is out of scope for Phase 1; when integrated it becomes part of Projects (see `NAVIGATION_FUNCTIONAL.md`).
 
@@ -276,7 +307,7 @@ Internal formulas may use floating-point until the display boundary; contracts s
 - `@container` queries for card-internal responsive layouts (already established in `components/ui/card.tsx`).
 - Skeleton states use `components/ui/skeleton.tsx` — do not add new loading primitives.
 - **Coming-soon placeholders:** full-page unbuilt routes use `*ComingSoonPage` (`data-slot="*-coming-soon-page"`); inline card placeholders use `*ComingSoonCard` (`data-slot="*-coming-soon-card"`).
-- **Entity data tables** must be sortable and filterable per column via TanStack Table + shared `components/ui/data-table/*` (see `.cursor/rules/data-tables.mdc`). Exempt fixed pivot matrices (e.g. Overview weekly detail metrics × weeks).
+- **Entity data tables** must be sortable and filterable per column via TanStack Table + shared `components/ui/data-table/*` (`interactive-data-table.tsx`, sortable headers, column filter inputs). Exempt fixed pivot matrices (e.g. Overview weekly detail metrics × weeks).
 - New page-level data components go in `components/<section>/` mirroring the app route (e.g. `components/overview/`, `components/teams/`, `components/projects/`).
 
 ## Code organisation
@@ -308,7 +339,7 @@ The `lib/` tree has four tiers. **Do not mix tiers** — a Supabase loader does 
 ## Security rules (non-negotiable)
 
 - `ANTHROPIC_API_KEY` in Vercel env vars only — never in client bundle
-- `SUPABASE_SERVICE_KEY` in Vercel env vars only — never in client bundle
+- `SUPABASE_SERVICE_ROLE_KEY` in Vercel env vars only — never in client bundle
 - No direct browser calls to Tempo, Zoho, Supabase, or Claude API
 - All external calls go through Next.js API routes or server components
 - Authentication required on all routes — no public pages
@@ -357,7 +388,6 @@ Contracts this repo consumes:
 
 ## What NOT to do
 
-- Do not write new queries against v1 tables (`worklogs_snapshot`, `plans_snapshot`, `project_actuals_snapshot`, `capacity_baseline`, `fragmentation_snapshot`)
 - Do not write to any Supabase table other than `audit_log`
 - Do not add a SQLite database, local cache, or sync orchestrator (D-009)
 - Do not add API keys or secrets to any file that could be committed
@@ -367,3 +397,5 @@ Contracts this repo consumes:
 - Do not use Clerk — authentication is Supabase Auth with Google OAuth (D-018)
 - Do not write context or documents in any language other than English
 - Avoid usage of emojis
+- Do not leave dead code: no `@deprecated` markers, unused fields, or "for later" stubs. When something becomes unused, delete it and its references in types, loaders, components and docs in the same change.
+- Comment business rules only (domain meaning, formula intent, data-source contracts, non-obvious edge cases) — not implementation history or what the code already says.

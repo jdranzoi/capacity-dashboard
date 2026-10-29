@@ -1,4 +1,4 @@
-import { eachDayOfInterval, format, parse, startOfDay, startOfWeek, subWeeks } from 'date-fns'
+import { eachDayOfInterval, format, parse, startOfWeek } from 'date-fns'
 
 import { pagedQuery } from '@/lib/data/paged-query'
 import { roundDisplayStat } from '@/lib/format/display-stats'
@@ -24,6 +24,7 @@ import type { ProjectDetailPanelPayload, ProjectRoleHoursRow } from '@/lib/proje
 import { createServiceClientCached } from '@/lib/supabase/server'
 import { isProjectSpaceType } from '@/lib/domain/project-types'
 import { PM_ROLE_KEY, roleSortIndex } from '@/lib/domain/role-keys'
+import { resolveProjectVelocityWindow } from '@/lib/projects/overview/project-velocity-window'
 import {
   resolvePmForMembers,
   resolveTlNamesForMembers,
@@ -87,12 +88,12 @@ export async function loadProjectDetailPanel(params: {
   const executionScope = isBuildProject ? 'lifetime' : 'month'
   const executionGranularity = isBuildProject ? 'month' : 'day'
 
-  const velocityAsOf = startOfDay(new Date())
-  const velocityEndStr = format(velocityAsOf, 'yyyy-MM-dd')
-  const velocityStartStr = format(
-    startOfWeek(subWeeks(velocityAsOf, 5), { weekStartsOn: 1 }),
-    'yyyy-MM-dd'
-  )
+  const velocityWindow = resolveProjectVelocityWindow({
+    isBuild: isBuildProject,
+    monthStartStr,
+    monthEndStr,
+    projectEndDate,
+  })
 
   const buildDeliveryPromise = isBuildProject
     ? loadBuildProjectDeliveryMetrics({
@@ -141,8 +142,8 @@ export async function loadProjectDetailPanel(params: {
         .select('log_date, logged_seconds')
         .eq('project_id', projectId)
         .eq('is_pto', false)
-        .gte('log_date', velocityStartStr)
-        .lte('log_date', velocityEndStr)
+        .gte('log_date', velocityWindow.queryStartStr)
+        .lte('log_date', velocityWindow.queryEndStr)
         .order('log_date')
         .range(from, from + 999)
     ),
@@ -329,12 +330,8 @@ export async function loadProjectDetailPanel(params: {
     )
   }
 
-  const velocityWeekStarts = Array.from({ length: 6 }, (_, index) =>
-    subWeeks(startOfWeek(velocityAsOf, { weekStartsOn: 1 }), 5 - index)
-  )
-
-  const velocityWeeks = velocityWeekStarts.map((weekStart) => {
-    const weekKey = format(weekStart, 'yyyy-MM-dd')
+  const velocityWeeks = velocityWindow.weekStartStrs.map((weekKey) => {
+    const weekStart = parse(weekKey, 'yyyy-MM-dd', new Date())
     return {
       weekLabel: format(weekStart, "'W'II"),
       loggedHours: roundDisplayStat(velocityByWeek.get(weekKey) ?? 0),

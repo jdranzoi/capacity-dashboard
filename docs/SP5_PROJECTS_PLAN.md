@@ -65,6 +65,12 @@ When Overview shipped: add `/projects/overview` to [`lib/navigation/shipped-rout
 - KPI month-over-month sublines (Phase 1b)
 - `account_manager` row scoping
 
+### Detail panel
+
+- **Overview:** burn rate, velocity (ISO weeks overlapping the selected month for support/product/internal; last 6 weeks through min(today, end) for builds), role-only planned vs logged bars.
+- **Team:** loaded on demand (`GET /api/projects/detail-team` + Suspense). Role bars with nested people. Toggle between selected month and lifetime (default: lifetime for builds, month for other types). Tab is client state — not a URL param.
+- **Delivery / Quality / Operations:** coming soon. Quality is reserved for Jira bugs/rework (issue sync beyond MCT).
+
 ---
 
 ## SP-5.9 Project activity

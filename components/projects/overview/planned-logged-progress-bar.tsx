@@ -8,16 +8,18 @@ export function PlannedLoggedProgressBar({
   plannedHours,
   loggedHours,
   overrunHours,
+  scaleMaxHours,
   className,
   trackClassName,
 }: {
   plannedHours: number
   loggedHours: number
   overrunHours?: number
+  scaleMaxHours?: number
   className?: string
   trackClassName?: string
 }) {
-  const layout = layoutPlannedLoggedBar(plannedHours, loggedHours)
+  const layout = layoutPlannedLoggedBar(plannedHours, loggedHours, scaleMaxHours)
   const displayOverrunHours =
     overrunHours != null && overrunHours > 0
       ? overrunHours
@@ -46,7 +48,8 @@ export function PlannedLoggedProgressBar({
     >
       {layout.showPlannedTrack ? (
         <div
-          className="absolute inset-y-0 left-0 w-full rounded-full bg-[var(--overview-metric-planned)] opacity-45"
+          className="absolute inset-y-0 left-0 rounded-full bg-[var(--overview-metric-planned)] opacity-45"
+          style={{ width: `${layout.plannedTrackWidthPct ?? 100}%` }}
           aria-hidden
         />
       ) : null}
