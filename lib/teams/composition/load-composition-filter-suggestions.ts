@@ -10,6 +10,7 @@ import { projectCardTitle } from '@/lib/teams/composition/teams-composition-util
 import { loadPmFilterSuggestions } from '@/lib/workforce/load-pm-filter-suggestions'
 import { createServiceClientCached } from '@/lib/supabase/server'
 import type { Database } from '@/lib/supabase/database.types'
+import { DELIVERY_PLAN_FILTER } from '@/lib/data/delivery-plan-filter'
 
 const PAGE = 1000
 const BATCH = 200
@@ -56,7 +57,7 @@ export async function loadCompositionFilterSuggestions(params: {
           .select('person_id, project_id')
           .eq('snapshot_id', snapshotId)
           .eq('month_date', monthStartStr)
-          .eq('is_pto', false)
+          .or(DELIVERY_PLAN_FILTER)
           .not('project_id', 'is', null)
           .gt('planned_hours', 0)
           .order('project_id')

@@ -6,6 +6,7 @@ import {
   personScopeFiltersActive,
   type PersonScopeFilters,
 } from '@/lib/workforce/person-scope-filters'
+import { DELIVERY_PLAN_FILTER } from '@/lib/data/delivery-plan-filter'
 
 const PAGE = 1000
 
@@ -147,7 +148,7 @@ export async function resolveFilteredPersonIds(
             .select('person_id')
             .eq('snapshot_id', snapshotId)
             .eq('month_date', monthStartStr)
-            .eq('is_pto', false)
+            .or(DELIVERY_PLAN_FILTER)
             .in('project_id', slice)
             .order('person_id')
             .range(from, from + PAGE - 1)

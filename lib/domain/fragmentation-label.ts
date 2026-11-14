@@ -19,10 +19,18 @@ export const FRAGMENTATION_SEVERITY_TO_LABEL: Record<
   high: 'High',
 }
 
+/**
+ * Rule stamped at sync (capacity-mcp `sync/capacity.ts`): commercial projects only;
+ * consulting and outsourcing count as build. Logged projects for past and current months,
+ * planned delivery projects for future months.
+ */
 export const FRAGMENTATION_LABEL_HINTS: Record<FragmentationLabel, string> = {
-  Healthy: 'Zero to two concurrent planned projects in this month.',
-  Moderate: 'Three to four concurrent planned projects in this month.',
-  High: 'Five or more concurrent planned projects in this month.',
+  Healthy:
+    'One commercial project, or support-only work on up to three projects.',
+  Moderate:
+    'Exactly two commercial projects including a build, or exactly four support-only projects.',
+  High:
+    'More than two commercial projects including a build, or more than four support-only projects.',
 }
 
 export type FragmentationLabelBadgeVariant = 'secondary' | 'warning' | 'destructive'

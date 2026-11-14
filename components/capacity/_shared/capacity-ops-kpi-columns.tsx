@@ -63,7 +63,7 @@ function buildColumns(values: CapacityOpsKpiValues): {
   const plannedSharePct = plannedPct(values.plannedHours, values.netCapacityHours)
 
   const plannedNote = scoped
-    ? `${monthSnapshotNote} Selected project only (non-PTO plans).`
+    ? `${monthSnapshotNote} Selected project only (delivery plans).`
     : monthSnapshotNote
   const logNote = scoped ? `${mtdNote} Selected project only.` : mtdNote
   const commercialNote = scoped
@@ -76,7 +76,7 @@ function buildColumns(values: CapacityOpsKpiValues): {
     ? 'Logged on selected project / monthly net capacity (filtered people).'
     : CAPACITY_FILL_KPI.formulaFootnote
   const utilizationNote = scoped
-    ? 'Mean of people: all non-PTO logs through as-of (not limited to selected project).'
+    ? 'All logged hours of the filtered people through as-of / their elapsed capacity (not limited to selected project).'
     : UTILIZATION_KPI.formulaFootnote
   const commercialUtilizationNote =
     values.commercialUtilizationPct === null

@@ -20,7 +20,7 @@ Charts and cards consume DTOs shaped in loaders using domain functions.
 | “Current operations” vs “future planning” | Not a first-class schema toggle | Phase 2+: UI-only mode or disabled until product definition. |
 | Filters: role, project, region | `dim_role`, `dim_zone`, `dim_project` + plans/worklogs joins | URL query params; filter in loader. `dim_project.project_type` comes from Jira category at sync (**D-011**). No `team` / `client` text columns — see **D-021** (`capacity/doc/DECISIONS.md`). |
 | KPI cards: net / elapsed capacity, planned, PTO, logged, commercial / non-commercial hours, capacity fill, utilization, commercial utilization | `fact_capacity`, `fact_plans` (`is_pto`), `fact_worklogs` (`is_commercial`) | Shared `CapacityOpsKpiColumns` on Overview + Utilization. PTO from worklogs with `is_pto = true`. Commercial utilization = commercial hours / elapsed capacity. |
-| Utilization (multiple surfaces) | Capacity + worklogs + working-day math (overview-aligned) | Reuse `personLoggedUtilizationPct` / C-005 per surface definition. |
+| Utilization (multiple surfaces) | Capacity + worklogs + working-day math (overview-aligned) | Reuse `loggedUtilizationPct` (ratio of sums, D-032) / C-005 per surface definition. |
 | Skills / demand | **`dim_person` has no skills column**; `dim_project.tech_stack` is project-level | (A) Derive from assigned projects via `fact_plans`, or (B) defer section until a skill dimension exists. |
 | Employment type | **Not in current `dim_person` types** | Placeholder column or hide until ingestion adds field. |
 | Sparklines / vs prior period | Same metrics for selected month and **previous month** | Dual load or `loadTeamSeries`; domain helper for delta / `%` change. |

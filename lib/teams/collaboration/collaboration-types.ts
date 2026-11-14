@@ -6,7 +6,7 @@ import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
  * Serializable contract for the Teams > Collaboration Network section.
  *
  * Collaboration is derived from planned co-staffing: two people share an edge when
- * both have non-PTO plan lines with `planned_hours > 0` on the same project in the
+ * both have delivery plan lines with `planned_hours > 0` on the same project in the
  * selected months (`fact_plans`, latest snapshot per month). This reflects intended
  * team composition, not logged time. Edge strength is shared-project count only.
  */

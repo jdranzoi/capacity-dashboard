@@ -1,8 +1,9 @@
-import { getISODay, parse } from 'date-fns'
+import { parse } from 'date-fns'
 
 import {
   elapsedNetWeekdaysForPerson,
   holidaysByZoneEligibleWeekdays,
+  NO_PTO_HOURS,
   NO_WEEKDAY_DATES,
   weekdayDateStringsMonthThrough,
 } from '@/lib/overview/elapsed-net-weekdays'
@@ -26,36 +27,12 @@ export function teamHolidaysByZoneForEligible(
   return holidaysByZoneEligibleWeekdays(holidayRows, eligibleWeekdays)
 }
 
-/**
- * Weekday PTO dates per person through `logThroughStr` only (not future PTO in the month).
- */
-export function teamPtoWeekdayDatesThrough(
-  ptoRows: readonly { person_id: string; log_date: string }[],
-  logThroughStr: string,
-  monthReference: Date
-): Map<string, Set<string>> {
-  const map = new Map<string, Set<string>>()
-  for (const row of ptoRows) {
-    if (row.log_date > logThroughStr) continue
-    const d = parse(row.log_date, 'yyyy-MM-dd', monthReference)
-    const iso = getISODay(d)
-    if (iso < 1 || iso > 5) continue
-    let set = map.get(row.person_id)
-    if (!set) {
-      set = new Set()
-      map.set(row.person_id, set)
-    }
-    set.add(row.log_date)
-  }
-  return map
-}
-
 export function teamPersonElapsedNetWeekdays(args: {
   personId: string
   zoneId: string | null
   eligibleWeekdays: ReadonlySet<string>
   holidaysByZone: Map<string, Set<string>>
-  ptoWeekdayByPerson: Map<string, Set<string>>
+  ptoHoursByPersonDate: Map<string, Map<string, number>>
 }): number {
   const zoneHolidayDates =
     args.zoneId != null
@@ -64,6 +41,6 @@ export function teamPersonElapsedNetWeekdays(args: {
   return elapsedNetWeekdaysForPerson({
     eligibleWeekdayDates: args.eligibleWeekdays,
     zoneHolidayDates,
-    personPtoWeekdayDates: args.ptoWeekdayByPerson.get(args.personId) ?? NO_WEEKDAY_DATES,
+    personPtoHoursByDate: args.ptoHoursByPersonDate.get(args.personId) ?? NO_PTO_HOURS,
   })
 }

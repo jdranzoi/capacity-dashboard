@@ -6,7 +6,7 @@
 // calendar (see `dim_holiday`, `dim_date`, and lib/overview/working-days.ts) when rolling up in Stage 2.
 //
 // Org weekly-detail **Capacity fill** row: logged vs prorated net capacity (`capacityFillPct`);
-// per-person **Utilization** pace: `personLoggedUtilizationPct` — see lib/domain/workload-metrics.ts and CLAUDE.md.
+// **Utilization** (logged / elapsed capacity, ratio of sums): `loggedUtilizationPct` — see lib/domain/workload-metrics.ts and CLAUDE.md.
 
 /**
  * Time-adjusted billable utilization.

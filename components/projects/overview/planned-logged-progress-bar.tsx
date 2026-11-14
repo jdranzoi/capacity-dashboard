@@ -4,21 +4,33 @@ import { fmtHoursKpi } from '@/lib/overview/overview-metrics'
 import { layoutPlannedLoggedBar } from '@/lib/ui/planned-logged-bar-layout'
 import { cn } from '@/lib/utils'
 
+/** What the bar measures logged hours against; drives tooltip and legend wording. */
+export type ProgressReferenceLabel = 'planned' | 'budget'
+
+const REFERENCE_TEXT: Record<ProgressReferenceLabel, { over: string; noun: string; legend: string }> = {
+  planned: { over: 'over plan', noun: 'planned', legend: 'Planned' },
+  budget: { over: 'over budget', noun: 'budget', legend: 'Budget' },
+}
+
 export function PlannedLoggedProgressBar({
   plannedHours,
   loggedHours,
   overrunHours,
   scaleMaxHours,
+  referenceLabel = 'planned',
   className,
   trackClassName,
 }: {
+  /** Reference hours the logged fill is compared against (plan or budget). */
   plannedHours: number
   loggedHours: number
   overrunHours?: number
   scaleMaxHours?: number
+  referenceLabel?: ProgressReferenceLabel
   className?: string
   trackClassName?: string
 }) {
+  const text = REFERENCE_TEXT[referenceLabel]
   const layout = layoutPlannedLoggedBar(plannedHours, loggedHours, scaleMaxHours)
   const displayOverrunHours =
     overrunHours != null && overrunHours > 0
@@ -29,7 +41,7 @@ export function PlannedLoggedProgressBar({
 
   const overrunTitle =
     displayOverrunHours > 0
-      ? `${fmtHoursKpi(displayOverrunHours)} over plan (${fmtHoursKpi(plannedHours)} planned · ${fmtHoursKpi(loggedHours)} logged)`
+      ? `${fmtHoursKpi(displayOverrunHours)} ${text.over} (${fmtHoursKpi(plannedHours)} ${text.noun} · ${fmtHoursKpi(loggedHours)} logged)`
       : undefined
 
   const markerLeft = layout.plannedMarkerPct ?? 0
@@ -107,7 +119,13 @@ export function PlannedLoggedProgressBar({
   )
 }
 
-export function PlannedLoggedBarLegend({ className }: { className?: string }) {
+export function PlannedLoggedBarLegend({
+  referenceLabel = 'planned',
+  className,
+}: {
+  referenceLabel?: ProgressReferenceLabel
+  className?: string
+}) {
   return (
     <div
       className={cn(
@@ -120,7 +138,7 @@ export function PlannedLoggedBarLegend({ className }: { className?: string }) {
           className="size-2 rounded-sm bg-[var(--overview-metric-planned)] opacity-50"
           aria-hidden
         />
-        Planned
+        {REFERENCE_TEXT[referenceLabel].legend}
       </span>
       <span className="inline-flex items-center gap-3">
         <span

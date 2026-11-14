@@ -37,6 +37,7 @@ import type {
   CollaborationNetworkPayload,
   CollaborationProjectRef,
 } from '@/lib/teams/collaboration/collaboration-types'
+import { DELIVERY_PLAN_FILTER } from '@/lib/data/delivery-plan-filter'
 
 const PAGE = 1000
 const BATCH = 200
@@ -70,7 +71,7 @@ async function pagedPlansForMonth(
       .select('person_id, project_id, month_date, role_id')
       .eq('snapshot_id', snapshotId)
       .eq('month_date', monthStartStr)
-      .eq('is_pto', false)
+      .or(DELIVERY_PLAN_FILTER)
       .not('project_id', 'is', null)
       .gt('planned_hours', 0)
       .order('person_id')

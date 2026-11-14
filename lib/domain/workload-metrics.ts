@@ -1,5 +1,5 @@
 /**
- * Central definitions for workload KPIs (capacity fill, utilization pace, planned share,
+ * Central definitions for workload KPIs (capacity fill, utilization, planned share,
  * productivity, efficiency, weekly table roll-ups).
  *
  * **Standard org percentage KPIs** (see `lib/domain/capacity-kpi-contract.ts` for labels):
@@ -7,9 +7,12 @@
  * | KPI | Formula | Primary function |
  * |-----|---------|------------------|
  * | Capacity fill | logged / net capacity | {@link capacityFillPct} |
- * | Utilization | mean per-person logged / (elapsed net weekdays × 8h) | {@link personLoggedUtilizationPct}, {@link meanPersonLoggedUtilizationPct} |
+ * | Utilization | logged / elapsed capacity | {@link loggedUtilizationPct} |
  * | Planned | planned / net capacity | {@link plannedPct} |
  * | Commercial utilization | commercial logged / elapsed capacity | {@link commercialUtilizationPct} |
+ *
+ * Every ratio aggregates as a **ratio of sums** over the people in scope (D-032): sum the
+ * numerator and the denominator first, then divide. Never average per-person percentages.
  *
  * UI layers must not embed these formulas — import from here so period / role / person rollups
  * stay consistent when definitions change.
@@ -21,53 +24,30 @@ import { roundDisplayStat } from '@/lib/format/display-stats'
 export const STANDARD_WORKDAY_HOURS = 8 as const
 
 /**
- * Arithmetic mean. Empty input → null.
+ * **Utilization** (D-032): logged hours vs elapsed capacity, as a ratio of sums.
+ *
+ * Elapsed capacity = elapsed net weekdays × 8h, where elapsed net weekdays are the weekdays of the
+ * month through the worklog as-of date minus zone holidays minus PTO hours / 8
+ * (`elapsedNetWeekdaysForPerson` in `lib/overview/elapsed-net-weekdays.ts`). Sum logged and elapsed
+ * capacity over the people (and months) in scope before calling this — the same function serves a
+ * person row, a role, the org and a multi-month range.
+ *
+ * Example: logged 120 + 30 over elapsed 160 + 40 → 150 / 200 = 75%.
+ *
+ * **Return value** is rounded to the nearest integer (`roundDisplayStat`).
+ * Null when elapsed capacity is non-positive or logged is negative.
  */
-export function meanArithmetic(values: readonly number[]): number | null {
-  if (values.length === 0) return null
-  return values.reduce((a, b) => a + b, 0) / values.length
-}
-
-/**
- * Per-person logged utilization (%).
- *
- * Formula: `(loggedHours / elapsedWorkingDays / standardDayHours) * 100`
- *
- * Reference implementation for counting **`elapsedWorkingDays`**: `elapsedNetWeekdaysForPerson` in
- * `lib/overview/elapsed-net-weekdays.ts` (overview loader subtracts `dim_holiday` by `dim_person.zone_id`
- * and weekday PTO through `asOf`).
- *
- * Examples (standardDayHours = 8):
- * - logged 9, elapsed 3 → ((9/3)/8)*100 = 37.5
- * - logged 25, elapsed 5 → 62.5
- * - logged 34, elapsed 6 → 70.833…
- *
- * @returns null if `elapsedWorkingDays <= 0`, `standardDayHours <= 0`, or `loggedHours < 0`
- */
-export function personLoggedUtilizationPct(
+export function loggedUtilizationPct(
   loggedHours: number,
-  elapsedWorkingDays: number,
-  standardDayHours: number = STANDARD_WORKDAY_HOURS
+  elapsedCapacityHours: number
 ): number | null {
   if (
-    elapsedWorkingDays <= 0 ||
-    standardDayHours <= 0 ||
-    loggedHours < 0 ||
-    Number.isNaN(loggedHours) ||
-    Number.isNaN(elapsedWorkingDays)
+    !(elapsedCapacityHours > 0) ||
+    !(loggedHours >= 0)
   ) {
     return null
   }
-  return (loggedHours / elapsedWorkingDays / standardDayHours) * 100
-}
-
-/**
- * Global average logged utilization: arithmetic mean of per-person percentages (e.g. roll-up
- * across people or roles). Each sample should already be a percentage from
- * {@link personLoggedUtilizationPct}.
- */
-export function meanPersonLoggedUtilizationPct(samples: readonly number[]): number | null {
-  return meanArithmetic(samples)
+  return roundDisplayStat((loggedHours / elapsedCapacityHours) * 100)
 }
 
 /**
@@ -128,7 +108,7 @@ export function capacityFillPct(
  * **Commercial utilization** (org roll-up): commercial logged hours vs elapsed capacity.
  *
  * Uses `fact_worklogs.is_commercial` (stamped at sync), not Tempo billable.
- * Denominator is elapsed net weekdays × 8h (same MTD window as Utilization pace).
+ * Denominator is elapsed capacity (same MTD window as {@link loggedUtilizationPct}).
  * Null when commercial hours or elapsed capacity are non-positive.
  *
  * **Return value** is rounded to the nearest integer (`roundDisplayStat`).

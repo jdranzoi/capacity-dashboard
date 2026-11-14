@@ -2,6 +2,7 @@ import { endOfMonth, format, parse } from 'date-fns'
 
 import { createServiceClientCached } from '@/lib/supabase/server'
 import { fetchMonthRolesForPeople } from '@/lib/workforce/month-role'
+import { DELIVERY_PLAN_FILTER } from '@/lib/data/delivery-plan-filter'
 
 const PAGE = 1000
 
@@ -107,7 +108,7 @@ export async function loadWorkforceFilterOptions(
           .select('project_id')
           .eq('snapshot_id', snapshotId)
           .eq('month_date', monthStartStr)
-          .eq('is_pto', false)
+          .or(DELIVERY_PLAN_FILTER)
           .not('project_id', 'is', null)
           .order('project_id')
           .range(from, from + PAGE - 1)

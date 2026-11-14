@@ -5,28 +5,24 @@ import {
   getMonthFactBundle,
 } from '@/lib/data/load-month-fact-bundle'
 import { resolveSnapshotForMonth } from '@/lib/overview/overview-month-options'
-import { createServiceClientCached } from '@/lib/supabase/server'
 import { overviewLogThroughDate } from '@/lib/overview/worklog-through-date'
 import { buildWeekdayWeightMap } from '@/lib/overview/prorate-to-weeks'
 import {
   addDays,
   endOfMonth,
   format,
-  getISODay,
   parse,
   startOfMonth,
   startOfWeek,
 } from 'date-fns'
-import {
-  meanPersonLoggedUtilizationPct,
-  personLoggedUtilizationPct,
-  STANDARD_WORKDAY_HOURS,
-} from '@/lib/domain/workload-metrics'
+import { loggedUtilizationPct, STANDARD_WORKDAY_HOURS } from '@/lib/domain/workload-metrics'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import {
   elapsedNetWeekdaysForPerson,
   holidaysByZoneEligibleWeekdays,
+  NO_PTO_HOURS,
   NO_WEEKDAY_DATES,
+  ptoHoursByPersonDateThrough,
   weekdayDateStringsMonthThrough,
 } from '@/lib/overview/elapsed-net-weekdays'
 import { formatMonthLabel } from './working-days'
@@ -36,9 +32,9 @@ export type WeeklyHeadline = {
   weekStart: string
   /** Prorated from `fact_capacity.net_capacity_hours` (latest sync), Mon–Fri by week. */
   netCapacityHours: number
-  /** Prorated from `fact_plans` (is_pto = false), latest sync. */
+  /** Prorated from delivery `fact_plans` (no PTO, no PRE reservations), latest sync. */
   plannedHours: number
-  /** From `fact_worklogs` where is_pto = true; sums through calendar month end (not the MTD worklog cap). */
+  /** PTO hours whose date falls in the week: logged before the sync day, planned from it on. */
   ptoHours: number
   billableHours: number
   loggedHours: number
@@ -52,13 +48,13 @@ export type OrgMonthRollupHours = {
    * At month end this converges on `netCapacityHours` when people work standard 8h days.
    */
   elapsedCapacityHours: number
-  /** Non-PTO `fact_plans` hours for org. */
+  /** Delivery `fact_plans` hours for org (no PTO, no PRE reservations). */
   plannedHours: number
   /** Non-PTO worklogs summed through overview MTD cap (`asOf`). */
   loggedHoursMtd: number
   /** Billable slice of non-PTO worklogs through same cap. */
   billableHoursMtd: number
-  /** PTO hours through calendar month end (no MTD/sync clamp per overview contract). */
+  /** Full-month PTO hours; equals the sum of `fact_capacity.pto_hours`. */
   ptoHoursMonth: number
 }
 
@@ -72,15 +68,13 @@ export type WeeklyOverviewData = {
   /**
    * Org-level sums for headline KPIs — same ingestion rules as overview weekly cards
    * (capacity/planned = full month snapshot facts; logged/billable = MTD `asOfDate`;
-   * PTO through calendar month end).
+   * PTO for the full month).
    */
   orgMonthRollupHours: OrgMonthRollupHours | null
   /**
-   * **Utilization** — mean of per-person pace (`meanPersonLoggedUtilizationPct` over samples from
-   * `personLoggedUtilizationPct` in `lib/domain/workload-metrics.ts`).
-   * Elapsed net weekdays = Mon–Fri from month start through `asOf`, minus `dim_holiday` dates for the
-   * person's `dim_person.zone_id` in that window (weekdays only), minus distinct weekday PTO dates from
-   * `fact_worklogs` (`is_pto`, capped by the same `asOf` as non-PTO logs).
+   * **Utilization** — `loggedUtilizationPct(loggedHoursMtd, elapsedCapacityHours)`, a ratio of
+   * sums over the KPI population. Elapsed net weekdays per person = Mon–Fri from month start through
+   * `asOf`, minus `dim_holiday` dates for the person's zone, minus PTO hours / 8 in that window.
    */
   utilizationPct: number | null
   /**
@@ -204,10 +198,8 @@ export async function loadWeeklyOverview(
       filterRowsByPerson(bundle.worklogs, personIdFilter),
       logThroughStr
     )
-    const ptoRows = filterRowsByPerson(bundle.ptoWorklogs, personIdFilter)
+    const ptoRows = filterRowsByPerson(bundle.ptoDays, personIdFilter)
     const holidayRows = filterHolidaysThrough(bundle.holidays, logThroughStr)
-
-    const supabase = createServiceClientCached()
 
     const byPerson = new Map<string, number>()
     for (const r of capRows) {
@@ -234,41 +226,12 @@ export async function loadWeeklyOverview(
       loggedHoursByPerson.set(pid, (loggedHoursByPerson.get(pid) ?? 0) + h)
     }
 
-    const ptoWeekdayDatesByPerson = new Map<string, Set<string>>()
-    for (const row of ptoRows) {
-      if (row.log_date > logThroughStr) continue
-      const d = parse(row.log_date, 'yyyy-MM-dd', _referenceDate)
-      const iso = getISODay(d)
-      if (iso < 1 || iso > 5) continue
-      const pid = row.person_id
-      let set = ptoWeekdayDatesByPerson.get(pid)
-      if (!set) {
-        set = new Set()
-        ptoWeekdayDatesByPerson.set(pid, set)
-      }
-      set.add(row.log_date)
-    }
+    const ptoHoursByPersonDate = ptoHoursByPersonDateThrough(ptoRows, logThroughStr)
 
     const capacityPersonIds = new Set(capRows.map((r) => r.person_id))
 
-    const personZoneById = new Map<string, string | null>()
-    const personIdList = Array.from(capacityPersonIds)
-    const ZONE_BATCH = 200
-    for (let i = 0; i < personIdList.length; i += ZONE_BATCH) {
-      const slice = personIdList.slice(i, i + ZONE_BATCH)
-      const { data: peopleRows, error: zoneErr } = await supabase
-        .from('dim_person')
-        .select('id, zone_id')
-        .in('id', slice)
-      if (zoneErr) {
-        return { ...empty, error: `Could not load dim_person (zones): ${zoneErr.message}` }
-      }
-      for (const row of peopleRows ?? []) {
-        personZoneById.set(row.id, row.zone_id)
-      }
-    }
+    const personZoneById = new Map(capRows.map((r) => [r.person_id, r.zone_id]))
 
-    const utilizationSamples: number[] = []
     let elapsedCapacityHoursRaw = 0
     for (const pid of capacityPersonIds) {
       const zoneId = personZoneById.get(pid) ?? null
@@ -277,27 +240,18 @@ export async function loadWeeklyOverview(
       const elapsed = elapsedNetWeekdaysForPerson({
         eligibleWeekdayDates: eligibleWeekdaysThroughAsOf,
         zoneHolidayDates,
-        personPtoWeekdayDates: ptoWeekdayDatesByPerson.get(pid) ?? NO_WEEKDAY_DATES,
+        personPtoHoursByDate: ptoHoursByPersonDate.get(pid) ?? NO_PTO_HOURS,
       })
       elapsedCapacityHoursRaw += elapsed * STANDARD_WORKDAY_HOURS
-      const logged = loggedHoursByPerson.get(pid) ?? 0
-      const pct = personLoggedUtilizationPct(logged, elapsed, STANDARD_WORKDAY_HOURS)
-      if (pct !== null) utilizationSamples.push(pct)
     }
-    const utilizationPct =
-      utilizationSamples.length > 0
-        ? roundDisplayStat(meanPersonLoggedUtilizationPct(utilizationSamples)!)
-        : null
 
     const loggedHoursOrgTotal = Array.from(loggedHoursByPerson.values()).reduce((a, b) => a + b, 0)
+    const utilizationPct = loggedUtilizationPct(loggedHoursOrgTotal, elapsedCapacityHoursRaw)
     const billableHoursOrgTotal = wlRows.reduce(
       (s, row) => s + Number(row.billable_seconds) / 3600,
       0
     )
-    const ptoHoursOrgTotal = ptoRows.reduce(
-      (s, row) => s + Number(row.logged_seconds) / 3600,
-      0
-    )
+    const ptoHoursOrgTotal = ptoRows.reduce((s, row) => s + row.hours, 0)
 
     const orgMonthRollupHours: OrgMonthRollupHours = {
       netCapacityHours: roundDisplayStat(totalNetCapacity),
@@ -321,9 +275,9 @@ export async function loadWeeklyOverview(
     }
 
     for (const row of ptoRows) {
-      const logDate = parse(row.log_date, 'yyyy-MM-dd', _referenceDate)
-      const wk = format(startOfWeek(logDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')
-      byWeekPto.set(wk, (byWeekPto.get(wk) ?? 0) + Number(row.logged_seconds) / 3600)
+      const ptoDate = parse(row.date, 'yyyy-MM-dd', _referenceDate)
+      const wk = format(startOfWeek(ptoDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+      byWeekPto.set(wk, (byWeekPto.get(wk) ?? 0) + row.hours)
     }
 
     const weeks: WeeklyHeadline[] = weekKeys.map((wk) => {

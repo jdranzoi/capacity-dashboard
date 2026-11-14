@@ -4,7 +4,6 @@ import {
   isProjectAtBudgetRisk,
   orgBurnRateHoursPerMonth,
   projectBurnRateHoursPerMonth,
-  projectOverrunHours,
   projectBudgetUsedPct,
 } from '@/lib/domain/project-delivery-metrics'
 import { loadActiveProjects } from '@/lib/projects/overview/load-active-projects'
@@ -76,7 +75,6 @@ function buildOverviewRows(params: {
       loggedHours,
       billableHours,
       budgetUsedPct,
-      overrunHours: projectOverrunHours(loggedHours, plannedHours),
       atRisk: isProjectAtBudgetRisk(budgetUsedPct),
       burnRateHoursPerMonth: projectBurnRateHoursPerMonth(monthlyLogged),
     })

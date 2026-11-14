@@ -24,6 +24,7 @@ import { loadPlanningMonthOptions } from '@/lib/capacity/planning/load-planning-
 import { fetchPlanningMonthRolesForPeople } from '@/lib/capacity/planning/resolve-planning-month-roles'
 import { createServiceClientCached } from '@/lib/supabase/server'
 import { isProjectSpaceType } from '@/lib/domain/project-types'
+import { DELIVERY_PLAN_FILTER } from '@/lib/data/delivery-plan-filter'
 
 const PAGE = 1000
 
@@ -52,7 +53,7 @@ async function loadProjectGrainPlans(
       .select('person_id, project_id, planned_hours')
       .eq('snapshot_id', snapshotId)
       .eq('month_date', monthStartStr)
-      .eq('is_pto', false)
+      .or(DELIVERY_PLAN_FILTER)
       .order('person_id')
       .range(from, from + PAGE - 1)
   )

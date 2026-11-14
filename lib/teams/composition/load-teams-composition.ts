@@ -14,6 +14,7 @@ import {
   type TeamsCompositionPayload,
   type TeamsCompositionProject,
 } from '@/lib/teams/composition/teams-composition-utils'
+import { DELIVERY_PLAN_FILTER } from '@/lib/data/delivery-plan-filter'
 
 const PAGE = 1000
 const BATCH = 200
@@ -61,7 +62,7 @@ async function loadPlanAssignments(
       .select('person_id, project_id, role_id, planned_hours')
       .eq('snapshot_id', snapshotId)
       .eq('month_date', monthStartStr)
-      .eq('is_pto', false)
+      .or(DELIVERY_PLAN_FILTER)
       .not('project_id', 'is', null)
       .gt('planned_hours', 0)
       .order('project_id')
@@ -175,7 +176,7 @@ async function loadRoleMeta(
 /**
  * Project teams for `/teams/composition`.
  *
- * Active project: non-PTO plan lines or non-PTO worklogs in the reference month.
+ * Active project: delivery plan lines or non-PTO worklogs in the reference month.
  * Card roster: plan assignments only (`planned_hours > 0`, stamped `role_id`).
  * PM sort: member with role key `pm` on that project's plan rows.
  */

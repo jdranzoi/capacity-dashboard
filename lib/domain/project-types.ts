@@ -55,9 +55,3 @@ export function activityProjectTypeLabel(value: string): string {
 export function isActivityProjectType(value: string): value is ActivityProjectType {
   return isProjectSpaceType(value) || value === OTHER_PROJECT_TYPE
 }
-
-/** Delivery types that stamp `is_commercial` at sync (build + support; see D-011). */
-export function isCommercialProjectType(value: string | null): boolean {
-  const type = activityProjectTypeKey(value)
-  return type === 'build' || type === 'support'
-}

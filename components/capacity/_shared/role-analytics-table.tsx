@@ -163,7 +163,7 @@ const COLUMNS = [
           title={
             [
               r.utilizationPct != null
-                ? `${r.utilizationPct}% pace (mean per person)`
+                ? `${r.utilizationPct}% ${UTILIZATION_KPI.label.toLowerCase()}`
                 : null,
               r.capacityFillPct != null
                 ? `${r.capacityFillPct}% ${CAPACITY_FILL_KPI.label.toLowerCase()}`

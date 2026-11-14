@@ -9,6 +9,7 @@ import {
   collectPmPersonIdsFromPlanRows,
   type ProjectPmPlanRow,
 } from '@/lib/workforce/project-manager'
+import { DELIVERY_PLAN_FILTER } from '@/lib/data/delivery-plan-filter'
 
 const BATCH = 200
 
@@ -36,7 +37,7 @@ async function loadPlanRowsForMonth(
       .select('person_id, project_id, role_id, planned_hours')
       .eq('snapshot_id', snapshotId)
       .eq('month_date', monthStartStr)
-      .eq('is_pto', false)
+      .or(DELIVERY_PLAN_FILTER)
       .not('project_id', 'is', null)
       .gt('planned_hours', 0)
       .order('project_id')

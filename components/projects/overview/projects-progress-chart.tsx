@@ -82,7 +82,7 @@ export function ProjectsProgressChart({
           <h2 className="text-sm font-semibold text-foreground">
             {chartTitle}
           </h2>
-          <PlannedLoggedBarLegend className="mt-0.5" />
+          <PlannedLoggedBarLegend referenceLabel="budget" className="mt-0.5" />
         </div>
         {headerAction ? <div className="shrink-0">{headerAction}</div> : null}
       </div>
@@ -172,6 +172,8 @@ export function ProjectsProgressChart({
                 projectName: row.projectName,
               });
               const isSelected = selectedProjectKey === row.projectKey;
+              const budgetHours =
+                row.budgetHours != null && row.budgetHours > 0 ? row.budgetHours : null;
 
               return (
                 <tr
@@ -193,12 +195,17 @@ export function ProjectsProgressChart({
                   </td>
                   <td
                     className="py-2.5 pr-2"
-                    title={`${fmtHoursKpi(row.loggedHours)} logged · ${fmtHoursKpi(row.plannedHours)} planned`}
+                    title={
+                      budgetHours != null
+                        ? `${fmtHoursKpi(row.loggedHours)} logged · ${fmtHoursKpi(budgetHours)} budget`
+                        : 'No budget hours on file'
+                    }
                   >
+                    {/* Without a budget there is no rate to draw: empty track, matching "—" in Used. */}
                     <PlannedLoggedProgressBar
-                      plannedHours={row.plannedHours}
-                      loggedHours={row.loggedHours}
-                      overrunHours={row.overrunHours}
+                      plannedHours={budgetHours ?? 0}
+                      loggedHours={budgetHours != null ? row.loggedHours : 0}
+                      referenceLabel="budget"
                       trackClassName="h-2.5"
                     />
                   </td>

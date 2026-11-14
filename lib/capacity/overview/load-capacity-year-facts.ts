@@ -2,7 +2,6 @@ import { cacheLife, cacheTag } from 'next/cache'
 
 import { CACHE_TAG_MONTH_OPS } from '@/lib/data/cache-tags'
 import { pagedQuery } from '@/lib/data/paged-query'
-import { isCommercialProjectType } from '@/lib/domain/project-types'
 import { createServiceClientCached } from '@/lib/supabase/server'
 
 const PAGE = 1000
@@ -96,8 +95,7 @@ export async function loadCapacityYearFacts(): Promise<{
           project_id: row.project_id,
           month_date: row.month_date,
           project_type: dim?.project_type ?? null,
-          is_commercial:
-            dim?.is_commercial ?? isCommercialProjectType(dim?.project_type ?? null),
+          is_commercial: dim?.is_commercial ?? false,
         }
       }),
     },

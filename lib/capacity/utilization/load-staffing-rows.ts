@@ -3,7 +3,7 @@ import { endOfMonth, format, parse } from 'date-fns'
 
 import {
   billableVersusLoggedEfficiencyPct,
-  personLoggedUtilizationPct,
+  loggedUtilizationPct,
   STANDARD_WORKDAY_HOURS,
 } from '@/lib/domain/workload-metrics'
 import {
@@ -17,8 +17,8 @@ import {
   teamEligibleWeekdayDates,
   teamHolidaysByZoneForEligible,
   teamPersonElapsedNetWeekdays,
-  teamPtoWeekdayDatesThrough,
 } from '@/lib/capacity/shared/elapsed-pace-context'
+import { ptoHoursByPersonDateThrough } from '@/lib/overview/elapsed-net-weekdays'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import type { Database } from '@/lib/supabase/database.types'
 import { fetchMonthRolesForPeople } from '@/lib/workforce/month-role'
@@ -39,9 +39,10 @@ export type UtilizationStaffingRow = {
   netCapacityHours: number
   plannedHours: number
   loggedHoursMtd: number
-  /** Logged (MTD) vs elapsed net weekdays × 8h; zone holidays and weekday PTO through worklog as-of. */
+  /** Logged (MTD) / elapsed capacity (`loggedUtilizationPct`); zone holidays and PTO hours through worklog as-of. */
   utilizationPct: number | null
   billableEfficiencyPct: number | null
+  /** Full-month PTO hours (logged before the sync day, planned from it on). */
   ptoHoursMonth: number
   /** Projects with non-PTO logged time in the MTD window (same bound as Logged). */
   projects: UtilizationStaffingProjectRef[]
@@ -50,7 +51,7 @@ export type UtilizationStaffingRow = {
 /**
  * Person-level staffing rows for capacity utilization (SLOT-E). Same snapshot month, worklog MTD cap,
  * and optional person filter as `loadRoleAnalytics` / `loadWeeklyOverview`.
- * Row utilization is **pace**: `personLoggedUtilizationPct` with zone holidays and weekday PTO through as-of.
+ * Row utilization: `loggedUtilizationPct` over the person's elapsed capacity (zone holidays and PTO hours through as-of).
  * Role label from stamped `role_id` on bench → plans → worklogs (D-022).
  */
 export async function loadUtilizationStaffingRows(
@@ -93,7 +94,7 @@ export async function loadUtilizationStaffingRows(
       filterRowsByPerson(bundle.worklogs, personIdFilter),
       logThroughStr
     )
-    const ptoRows = filterRowsByPerson(bundle.ptoWorklogs, personIdFilter)
+    const ptoRows = filterRowsByPerson(bundle.ptoDays, personIdFilter)
     const holidayRows = filterHolidaysThrough(bundle.holidays, logThroughStr)
 
     const capByPerson = new Map<string, number>()
@@ -131,18 +132,12 @@ export async function loadUtilizationStaffingRows(
 
     const ptoByPerson = new Map<string, number>()
     for (const r of ptoRows) {
-      const pid = r.person_id
-      const h = Number(r.logged_seconds) / 3600
-      ptoByPerson.set(pid, (ptoByPerson.get(pid) ?? 0) + h)
+      ptoByPerson.set(r.person_id, (ptoByPerson.get(r.person_id) ?? 0) + r.hours)
     }
 
     const eligibleWeekdays = teamEligibleWeekdayDates(referenceDate, logThroughStr)
     const holidaysByZone = teamHolidaysByZoneForEligible(holidayRows, eligibleWeekdays)
-    const ptoWeekdayByPerson = teamPtoWeekdayDatesThrough(
-      ptoRows,
-      logThroughStr,
-      referenceDate
-    )
+    const ptoHoursByPersonDate = ptoHoursByPersonDateThrough(ptoRows, logThroughStr)
 
     const capacityPersonIds = Array.from(capByPerson.keys())
     if (capacityPersonIds.length === 0) {
@@ -228,14 +223,12 @@ export async function loadUtilizationStaffingRows(
         zoneId,
         eligibleWeekdays,
         holidaysByZone,
-        ptoWeekdayByPerson,
+        ptoHoursByPersonDate,
       })
-      const pacePctRaw = personLoggedUtilizationPct(
+      const utilizationPct = loggedUtilizationPct(
         loggedRaw,
-        elapsedNet,
-        STANDARD_WORKDAY_HOURS
+        elapsedNet * STANDARD_WORKDAY_HOURS
       )
-      const pacePct = pacePctRaw != null ? roundDisplayStat(pacePctRaw) : null
 
       const pmap = projectHoursByPerson.get(pid)
       const projects: UtilizationStaffingProjectRef[] = []
@@ -259,7 +252,7 @@ export async function loadUtilizationStaffingRows(
         netCapacityHours: netRounded,
         plannedHours: plannedRounded,
         loggedHoursMtd: loggedRounded,
-        utilizationPct: pacePct,
+        utilizationPct,
         billableEfficiencyPct: billableVersusLoggedEfficiencyPct(billRounded, loggedRounded),
         ptoHoursMonth: ptoRounded,
         projects,

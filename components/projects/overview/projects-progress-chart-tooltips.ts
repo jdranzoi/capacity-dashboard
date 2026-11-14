@@ -4,7 +4,7 @@ export const PROJECTS_PROGRESS_COLUMN_TOOLTIPS = {
   project:
     'Project key and name. Select a row to open delivery metrics in the detail panel.',
   progress:
-    'Logged versus planned hours for the filtered period. Purple is logged; the light track is remaining plan; a red segment and marker appear when logged exceeds planned.',
+    'Logged versus budget hours (same rate as Used). Purple is logged; the light track is remaining budget; a red segment and marker appear when logged exceeds budget. Empty when the project has no budget hours.',
   budget: 'Budget hours on file for the project (from Jira / project registry).',
   planned:
     'Planned hours from the latest sync snapshot for the selected month (monthly view) or total monthly plans from project start through end date (build view).',

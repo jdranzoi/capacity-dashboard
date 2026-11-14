@@ -38,7 +38,7 @@ export type UtilizationMonthKpisPayload = {
    */
   capacityFillPct: number | null
   /**
-   * **Utilization** — mean per-person pace (logged MTD / (elapsed net weekdays × 8h)),
+   * **Utilization** — logged MTD / elapsed capacity (ratio of sums),
    * same filters as `loadWeeklyOverview`. Uses **all** non-PTO logs per person when a project filter
    * is active (not project-scoped hours).
    */
@@ -86,6 +86,24 @@ export async function loadUtilizationMonthKpis(
   }
 
   const logThroughStr = overview.asOfDate ?? monthEndStr
+
+  const bundleResult = await getMonthFactBundle(snapshot.id, monthStartStr, monthEndStr)
+  if (bundleResult.error || !bundleResult.data) {
+    return {
+      data: null,
+      error: bundleResult.error
+        ? `Could not load month facts: ${bundleResult.error}`
+        : 'Could not load month facts (unexpected).',
+    }
+  }
+
+  // Capacity KPIs cover the fact_capacity population only (no contractors, D-028).
+  const population = new Set(bundleResult.data.capacity.map((r) => r.person_id))
+  const kpiPeople =
+    personIdFilter == null
+      ? population
+      : new Set([...personIdFilter].filter((pid) => population.has(pid)))
+
   let projectScopedHours: ProjectScopedHours | null = null
   let filteredProjectId: string | null = null
 
@@ -105,7 +123,7 @@ export async function loadUtilizationMonthKpis(
         monthStartStr,
         logThroughStr,
         projectId: projRow.id,
-        personIdFilter,
+        personIdFilter: kpiPeople,
       })
       if (scoped.error) {
         return { data: null, error: scoped.error }
@@ -116,16 +134,6 @@ export async function loadUtilizationMonthKpis(
         plannedHours: 0,
         loggedHoursMtd: 0,
       }
-    }
-  }
-
-  const bundleResult = await getMonthFactBundle(snapshot.id, monthStartStr, monthEndStr)
-  if (bundleResult.error || !bundleResult.data) {
-    return {
-      data: null,
-      error: bundleResult.error
-        ? `Could not load month facts: ${bundleResult.error}`
-        : 'Could not load month facts (unexpected).',
     }
   }
 

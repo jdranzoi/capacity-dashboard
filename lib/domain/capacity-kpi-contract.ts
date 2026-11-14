@@ -4,9 +4,11 @@
  * Org-level percentage KPIs (do not conflate with C-005 billable utilization):
  *
  * - **Capacity fill** — logged / net capacity (org hour roll-up)
- * - **Utilization** — mean per-person pace: logged / (net elapsed working days × 8h)
+ * - **Utilization** — logged / elapsed capacity (org hour roll-up)
  * - **Planned** — planned / net capacity (org hour roll-up)
  * - **Commercial utilization** — commercial logged / elapsed capacity (org hour roll-up)
+ *
+ * All ratios are ratios of sums over the people in scope (D-032).
  *
  * Implement formulas in `lib/domain/workload-metrics.ts`. UI must import labels from here.
  */
@@ -18,8 +20,7 @@ export const CAPACITY_FILL_KPI = {
 
 export const UTILIZATION_KPI = {
   label: 'Utilization',
-  formulaFootnote:
-    'Logged / net elapsed working days (× 8h per person, org average)',
+  formulaFootnote: 'Logged / elapsed capacity',
 } as const
 
 export const PLANNED_KPI = {

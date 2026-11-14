@@ -8,7 +8,6 @@ import {
   isProjectAtBudgetRisk,
   orgBurnRateHoursPerMonth,
   projectBurnRateHoursPerMonth,
-  projectOverrunHours,
   projectBudgetUsedPct,
 } from '@/lib/domain/project-delivery-metrics'
 import { loadOverviewMonthOptions } from '@/lib/overview/overview-month-options'
@@ -160,7 +159,6 @@ export async function loadProjectsOverviewGlobal(params: {
       loggedHours,
       billableHours,
       budgetUsedPct,
-      overrunHours: projectOverrunHours(loggedHours, plannedHours),
       atRisk: isProjectAtBudgetRisk(budgetUsedPct),
       burnRateHoursPerMonth: projectBurnRateHoursPerMonth(burnByProject.get(project.id) ?? []),
     })

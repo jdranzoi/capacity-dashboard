@@ -2,17 +2,25 @@ import { cache } from 'react'
 import { cacheLife, cacheTag } from 'next/cache'
 
 import { pagedQuery } from '@/lib/data/paged-query'
-
-const PAGE = 1000
+import { DELIVERY_PLAN_FILTER } from '@/lib/data/delivery-plan-filter'
 import {
   CACHE_TAG_MONTH_FACTS,
   cacheTagSnapshot,
 } from '@/lib/data/cache-tags'
+import {
+  ptoHoursByPersonDay,
+  type PtoDayRow,
+  type PtoPlanItem,
+} from '@/lib/domain/pto-by-day'
 import { createServiceClientCached } from '@/lib/supabase/server'
+
+const PAGE = 1000
 
 export type MonthFactCapacityRow = {
   person_id: string
+  zone_id: string | null
   net_capacity_hours: number
+  pto_hours: number
 }
 
 export type MonthFactPlanRow = {
@@ -29,7 +37,7 @@ export type MonthFactWorklogRow = {
   is_commercial: boolean
 }
 
-export type MonthFactPtoWorklogRow = {
+type PtoWorklogRow = {
   person_id: string
   log_date: string
   logged_seconds: number
@@ -40,11 +48,23 @@ export type MonthFactHolidayRow = {
   date: string
 }
 
+/**
+ * Facts for capacity KPIs of one snapshot month. Every person-level list is limited
+ * to the KPI population: people with a `fact_capacity` row (in-scope roles, no
+ * contractors — D-028, D-032). Project views read `fact_worklogs` directly and keep
+ * contractor hours.
+ */
 export type MonthFactBundle = {
   capacity: MonthFactCapacityRow[]
+  /** Delivery plans only (`DELIVERY_PLAN_FILTER`). */
   plans: MonthFactPlanRow[]
+  /** Non-PTO worklogs for the whole calendar month. */
   worklogs: MonthFactWorklogRow[]
-  ptoWorklogs: MonthFactPtoWorklogRow[]
+  /**
+   * PTO hours per working day (`ptoHoursByPersonDay`): logged before the snapshot
+   * day, planned from it on. Sums to `fact_capacity.pto_hours` per person.
+   */
+  ptoDays: PtoDayRow[]
   holidays: MonthFactHolidayRow[]
 }
 
@@ -68,11 +88,12 @@ async function loadMonthFactBundleCached(
 
   const supabase = createServiceClientCached()
 
-  const [capRes, planRes, wlRes, ptoWlRes, holidayRes] = await Promise.all([
+  const [snapRes, capRes, planRes, wlRes, ptoWlRes, ptoPlanRes, holidayRes] = await Promise.all([
+    supabase.from('sync_snapshot').select('created_at').eq('id', snapshotId).maybeSingle(),
     pagedQuery<MonthFactCapacityRow>(async (from) =>
       supabase
         .from('fact_capacity')
-        .select('person_id, net_capacity_hours')
+        .select('person_id, zone_id, net_capacity_hours, pto_hours')
         .eq('snapshot_id', snapshotId)
         .eq('month_date', monthStartStr)
         .order('person_id')
@@ -84,8 +105,8 @@ async function loadMonthFactBundleCached(
         .select('person_id, planned_hours')
         .eq('snapshot_id', snapshotId)
         .eq('month_date', monthStartStr)
-        .eq('is_pto', false)
-        .order('person_id')
+        .or(DELIVERY_PLAN_FILTER)
+        .order('id')
         .range(from, from + PAGE - 1)
     ),
     pagedQuery<MonthFactWorklogRow>(async (from) =>
@@ -95,17 +116,26 @@ async function loadMonthFactBundleCached(
         .eq('is_pto', false)
         .gte('log_date', monthStartStr)
         .lte('log_date', monthEndStr)
-        .order('log_date', { ascending: true })
+        .order('id')
         .range(from, from + PAGE - 1)
     ),
-    pagedQuery<MonthFactPtoWorklogRow>(async (from) =>
+    pagedQuery<PtoWorklogRow>(async (from) =>
       supabase
         .from('fact_worklogs')
         .select('person_id, log_date, logged_seconds')
         .eq('is_pto', true)
         .gte('log_date', monthStartStr)
         .lte('log_date', monthEndStr)
-        .order('log_date', { ascending: true })
+        .order('id')
+        .range(from, from + PAGE - 1)
+    ),
+    pagedQuery<PtoPlanItem>(async (from) =>
+      supabase
+        .from('fact_pto_plan')
+        .select('person_id, start_date, end_date, hours_per_day, rule, recurrence_end_date')
+        .eq('snapshot_id', snapshotId)
+        .lte('start_date', monthEndStr)
+        .order('id')
         .range(from, from + PAGE - 1)
     ),
     pagedQuery<MonthFactHolidayRow>(async (from) =>
@@ -119,6 +149,9 @@ async function loadMonthFactBundleCached(
     ),
   ])
 
+  if (snapRes.error || !snapRes.data?.created_at) {
+    return { data: null, error: `sync_snapshot: ${snapRes.error?.message ?? 'snapshot not found'}` }
+  }
   if (capRes.error) {
     return { data: null, error: `fact_capacity: ${capRes.error}` }
   }
@@ -131,16 +164,44 @@ async function loadMonthFactBundleCached(
   if (ptoWlRes.error) {
     return { data: null, error: `fact_worklogs (PTO): ${ptoWlRes.error}` }
   }
+  if (ptoPlanRes.error) {
+    return { data: null, error: `fact_pto_plan: ${ptoPlanRes.error}` }
+  }
   if (holidayRes.error) {
     return { data: null, error: `dim_holiday: ${holidayRes.error}` }
   }
 
+  const population = new Set(capRes.rows.map((r) => r.person_id))
+  const zoneIdByPerson = new Map(capRes.rows.map((r) => [r.person_id, r.zone_id]))
+  const holidaysByZone = new Map<string, Set<string>>()
+  for (const { zone_id, date } of holidayRes.rows) {
+    let set = holidaysByZone.get(zone_id)
+    if (!set) {
+      set = new Set()
+      holidaysByZone.set(zone_id, set)
+    }
+    set.add(date)
+  }
+
+  // The sync splits logged vs planned PTO at its own run date (UTC).
+  const cutoffDate = snapRes.data.created_at.slice(0, 10)
+  const ptoDays = ptoHoursByPersonDay({
+    monthStart: monthStartStr,
+    monthEnd: monthEndStr,
+    cutoffDate,
+    personIds: population,
+    zoneIdByPerson,
+    holidaysByZone,
+    loggedPto: ptoWlRes.rows,
+    plannedPto: ptoPlanRes.rows,
+  })
+
   return {
     data: {
       capacity: capRes.rows,
-      plans: planRes.rows,
-      worklogs: wlRes.rows,
-      ptoWorklogs: ptoWlRes.rows,
+      plans: planRes.rows.filter((r) => population.has(r.person_id)),
+      worklogs: wlRes.rows.filter((r) => population.has(r.person_id)),
+      ptoDays,
       holidays: holidayRes.rows,
     },
     error: null,

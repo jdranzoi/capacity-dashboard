@@ -9,7 +9,9 @@ import {
   startOfMonth,
 } from 'date-fns'
 
-/** Shared empty set for optional PTO / holiday lookups (never mutated). */
+import { STANDARD_WORKDAY_HOURS } from '@/lib/domain/workload-metrics'
+
+/** Shared empty set for optional holiday lookups (never mutated). */
 export const NO_WEEKDAY_DATES: ReadonlySet<string> = new Set<string>()
 
 /**
@@ -48,21 +50,45 @@ export function holidaysByZoneEligibleWeekdays(
   return map
 }
 
+/** Shared empty PTO lookup (never mutated). */
+export const NO_PTO_HOURS: ReadonlyMap<string, number> = new Map<string, number>()
+
 /**
- * Net elapsed weekdays for utilization: eligible Mon–Fri days in the window minus zone holidays
- * and minus this person's PTO weekdays (union without double-counting — a single pass).
+ * PTO hours per person and date from `MonthFactBundle.ptoDays`, through `logThroughStr`
+ * (inclusive). Later days in the month do not reduce elapsed capacity.
+ */
+export function ptoHoursByPersonDateThrough(
+  ptoDays: readonly { person_id: string; date: string; hours: number }[],
+  logThroughStr: string
+): Map<string, Map<string, number>> {
+  const map = new Map<string, Map<string, number>>()
+  for (const row of ptoDays) {
+    if (row.date > logThroughStr) continue
+    let byDate = map.get(row.person_id)
+    if (!byDate) {
+      byDate = new Map()
+      map.set(row.person_id, byDate)
+    }
+    byDate.set(row.date, (byDate.get(row.date) ?? 0) + row.hours)
+  }
+  return map
+}
+
+/**
+ * Net elapsed weekdays for utilization (D-032): eligible Mon–Fri days in the window minus
+ * zone holidays minus this person's PTO hours / 8 (a half-day of PTO removes half a day).
  */
 export function elapsedNetWeekdaysForPerson(args: {
   eligibleWeekdayDates: ReadonlySet<string>
   zoneHolidayDates: ReadonlySet<string>
-  personPtoWeekdayDates: ReadonlySet<string>
+  personPtoHoursByDate: ReadonlyMap<string, number>
 }): number {
-  const { eligibleWeekdayDates, zoneHolidayDates, personPtoWeekdayDates } = args
+  const { eligibleWeekdayDates, zoneHolidayDates, personPtoHoursByDate } = args
   let n = 0
   for (const d of eligibleWeekdayDates) {
     if (zoneHolidayDates.has(d)) continue
-    if (personPtoWeekdayDates.has(d)) continue
-    n++
+    const pto = Math.min(STANDARD_WORKDAY_HOURS, personPtoHoursByDate.get(d) ?? 0)
+    n += 1 - pto / STANDARD_WORKDAY_HOURS
   }
   return n
 }

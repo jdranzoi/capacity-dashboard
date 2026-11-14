@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import type { Database } from '@/lib/supabase/database.types'
+import { DELIVERY_PLAN_FILTER } from '@/lib/data/delivery-plan-filter'
 
 const PAGE = 1000
 const PERSON_IN_BATCH = 100
@@ -32,7 +33,7 @@ async function pagedQuery<T>(
 
 /**
  * Sums planned and logged hours for a single `dim_project` row, aligned with overview:
- * - Plans: `fact_plans` for snapshot + month, `is_pto = false`
+ * - Plans: delivery `fact_plans` (`DELIVERY_PLAN_FILTER`) for snapshot + month
  * - Worklogs: non-PTO, `log_date` in [monthStart, logThroughStr] (MTD / sync cap)
  *
  * When `personIdFilter` is set, restricts to those people (same scope as team KPI person filter).
@@ -65,7 +66,7 @@ export async function loadProjectScopedHours(
           .eq('snapshot_id', snapshotId)
           .eq('month_date', monthStartStr)
           .eq('project_id', projectId)
-          .eq('is_pto', false)
+          .or(DELIVERY_PLAN_FILTER)
           .order('id')
           .range(from, from + PAGE - 1)
         if (personIds && personIds.length > 0) {

@@ -101,7 +101,8 @@ migration is applied, run `pnpm db:types` so they leave `lib/supabase/database.t
 | Table | Model | Unique key | Notes |
 |---|---|---|---|
 | `fact_worklogs` | Upsert (no `snapshot_id`) | `(person_id, project_id, log_date)` | Individual worklog entries; `is_commercial` stamped at sync; `is_billable` from Tempo. Use for logged/billable totals and commercial split. |
-| `fact_plans` | Snapshot per sync | `(snapshot_id, person_id, project_id, month_date)` | Planned hours per person per project per month |
+| `fact_plans` | Snapshot per sync | `(snapshot_id, person_id, project_id, issue_id, month_date)` | Planned hours per person per project per month. `plan_kind`: `delivery` \| `pto` (HR) \| `reserved` (PRE). **Planned** = delivery only: filter with `DELIVERY_PLAN_FILTER` (`lib/data/delivery-plan-filter.ts`), never `is_pto = false` (D-029) |
+| `fact_pto_plan` | Snapshot per sync | `(snapshot_id, tempo_plan_id)` | HR plan items; source of planned PTO from the sync day on (D-030) |
 | `fact_capacity` | Snapshot per sync | `(snapshot_id, person_id, month_date, source)` | Zone-adjusted net capacity |
 | `fact_project_actuals` | Snapshot per sync | `(snapshot_id, project_id, month_date)` | Aggregate logged + billable hours per project |
 | `fact_fragmentation` | Snapshot per sync | `(snapshot_id, person_id, month_date, source)` | Pre-computed fragmentation flags |
@@ -136,15 +137,17 @@ Never hard-code a snapshot ID.
 
 ### Overview page (`/`) — weekly metrics (implementation contract)
 
-**Code:** `lib/domain/workload-metrics.ts` (formulas), `lib/overview/elapsed-net-weekdays.ts` (elapsed weekdays − holidays − PTO), `lib/overview/load-weekly-overview.ts`, `lib/overview/prorate-to-weeks.ts`, `components/overview/weekly-headline-section.tsx`.
+**Population:** every capacity KPI covers the people with a `fact_capacity` row for the snapshot month (in-scope roles, no contractors — D-028, D-032). `getMonthFactBundle` applies it to plans, worklogs and PTO. Project views read `fact_worklogs` directly and keep contractor hours.
+
+**Code:** `lib/domain/workload-metrics.ts` (formulas), `lib/domain/pto-by-day.ts` (PTO per day), `lib/overview/elapsed-net-weekdays.ts` (elapsed weekdays − holidays − PTO), `lib/overview/load-weekly-overview.ts`, `lib/overview/prorate-to-weeks.ts`, `components/overview/weekly-headline-section.tsx`.
 
 The overview shows one card per **ISO week** (Monday start) that overlaps the **reference month**. Each card lists, in order:
 
 | Row | Data source | Rules |
 |-----|-------------|--------|
 | Net capacity | `fact_capacity` | Latest `sync_snapshot` row; filter `month_date` to the month; sum `net_capacity_hours` by `person_id` (add across `source` if multiple rows per person). **Prorate** the org total to the week: Mon–Fri count in (week `∩` month) / Mon–Fri count in full month. |
-| Planned | `fact_plans` | Same `snapshot_id` and `month_date`. **Exclude** PTO plan lines: `is_pto = false`. Sum `planned_hours` org-wide, same proration as net capacity. |
-| PTO | `fact_worklogs` | Rows with `is_pto = true`: sum `logged_seconds` to hours, bucket by `log_date` to the same ISO week. **Upper bound:** calendar **end** of reference month — not the MTD worklog cap (so future-dated PTO rows in `fact_worklogs` count toward their week). Rows still require ingestion. |
+| Planned | `fact_plans` | Same `snapshot_id` and `month_date`. Delivery plans only (`DELIVERY_PLAN_FILTER`: no PTO, no PRE reservations). Sum `planned_hours` org-wide, same proration as net capacity. |
+| PTO | `fact_worklogs` + `fact_pto_plan` | `ptoHoursByPersonDay` (D-030): HR worklogs before the snapshot day, HR plan items from that day on; working days of the person's zone only; capped at 8h per day. Bucketed by date to the ISO week. The month total equals `sum(fact_capacity.pto_hours)`. |
 | Billable / Logged | `fact_worklogs` | Non-`is_pto` rows: `billable_seconds` / `logged_seconds` to hours. Uses the MTD/sync worklog date cap below. |
 
 **Weekly detail table — Utilization (derived row):** Org-level **logged utilization vs prorated net capacity** for each ISO week and for the MTD totals column. **Billable** is not used here — billable vs logged is **efficiency** (`billableVersusLoggedEfficiencyPct`), not utilization.
@@ -156,9 +159,9 @@ The overview shows one card per **ISO week** (Monday start) that overlaps the **
 
 **Capacity fill** (weekly detail table row and org KPI): logged vs prorated net capacity at org roll-up. Implementation: `capacityFillPct` in `lib/domain/workload-metrics.ts`.
 
-The **Utilization** donut uses per-person pace: **`personLoggedUtilizationPct`** (`(logged_hours / elapsed_net_weekdays / 8) * 100`) where **`elapsed_net_weekdays`** subtracts zone **`dim_holiday`** weekdays through `asOf` and weekday **PTO**, then **`meanPersonLoggedUtilizationPct`** (`loadWeeklyOverview` → `utilizationPct`). Capacity fill **aggregates hours first**; Utilization **averages people** — they can differ when capacity weights differ from elapsed×8 per person.
+**Utilization** is a ratio of sums (D-032): **`loggedUtilizationPct(sum logged, sum elapsed capacity)`**. Elapsed capacity per person = `elapsed_net_weekdays × 8`, where **`elapsed_net_weekdays`** = weekdays through `asOf` − zone **`dim_holiday`** weekdays − PTO hours / 8 (`elapsedNetWeekdaysForPerson`). The same function serves person rows, roles, the org and multi-month ranges. Never average per-person percentages.
 
-**Worklog `log_date` cap (billable + logged only):** `min(calendar end of month, start-of-day of last sync `sync_snapshot.created_at`, start of today)` so MTD and sync freshness stay consistent. Snapshot facts are **full-month** v2 values; they are not clipped to that day cap. **PTO** worklogs use the calendar-month end bound only (no today/sync clamp).
+**Worklog `log_date` cap (billable + logged only):** `min(calendar end of month, start-of-day of last sync `sync_snapshot.created_at`, start of today)` so MTD and sync freshness stay consistent. Snapshot facts are **full-month** v2 values; they are not clipped to that day cap. **PTO** hours are full-month (see the PTO row above); only the elapsed-capacity calculation clips them to `asOf`.
 
 **Proration note:** The split uses **calendar** Mon–Fri only (see `prorate-to-weeks.ts`). It does not yet use per-zone `dim_holiday` or `net_working_days` from `fact_capacity` to split within the month. If that alignment is required, change the weight function and update this section.
 
@@ -368,7 +371,7 @@ and `capacity/doc/DECISIONS.md` before changing any code here.
 
 **Overview workload KPIs** (logged utilization, productivity, efficiency, weekly billable vs capacity, capacity-share ratios) live in `lib/domain/workload-metrics.ts`; keep UI and loaders free of duplicated formulas. **Display** of those KPIs uses integer rounding via `roundDisplayStat` and the shared formatters in `lib/overview/overview-metrics.ts` (see *Display statistics (KPIs)*).
 
-**Capacity Overview and Utilization ops KPIs** share `components/capacity/_shared/capacity-ops-kpi-columns.tsx`: net vs elapsed capacity, commercial vs non-commercial logged hours, capacity fill (`logged / net capacity`), utilization (per-person pace), commercial utilization (`commercial hours / elapsed capacity`). Tempo billable hours are not a headline KPI on those pages.
+**Capacity Overview and Utilization ops KPIs** share `components/capacity/_shared/capacity-ops-kpi-columns.tsx`: net vs elapsed capacity, commercial vs non-commercial logged hours, capacity fill (`logged / net capacity`), utilization (`logged / elapsed capacity`, ratio of sums), commercial utilization (`commercial hours / elapsed capacity`). Tempo billable hours are not a headline KPI on those pages.
 
 ## Cross-repo coordination — READ FIRST
 

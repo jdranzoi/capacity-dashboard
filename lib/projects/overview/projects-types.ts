@@ -13,7 +13,6 @@ export type ProjectOverviewRow = {
   loggedHours: number
   billableHours: number
   budgetUsedPct: number | null
-  overrunHours: number
   atRisk: boolean
   burnRateHoursPerMonth: number | null
 }

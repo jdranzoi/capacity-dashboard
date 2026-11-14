@@ -9,6 +9,7 @@ import {
   type OverviewMonthOption,
 } from '@/lib/overview/overview-month-options'
 import { createServiceClientCached } from '@/lib/supabase/server'
+import { DELIVERY_PLAN_FILTER } from '@/lib/data/delivery-plan-filter'
 
 const PAGE = 1000
 
@@ -34,7 +35,7 @@ async function loadPlanMonthSnapshotPairs(): Promise<{
     supabase
       .from('fact_plans')
       .select('month_date, snapshot_id')
-      .eq('is_pto', false)
+      .or(DELIVERY_PLAN_FILTER)
       .gt('planned_hours', 0)
       .order('month_date')
       .order('snapshot_id')

@@ -21,8 +21,7 @@ import {
 } from '@/lib/domain/capacity-kpi-contract'
 import {
   commercialUtilizationPct,
-  meanPersonLoggedUtilizationPct,
-  personLoggedUtilizationPct,
+  loggedUtilizationPct,
   STANDARD_WORKDAY_HOURS,
 } from '@/lib/domain/workload-metrics'
 
@@ -37,7 +36,6 @@ type MonthBucket = {
   hasRows: boolean
   hours: Record<HourKey, number>
   elapsedDays: number
-  personUtil: Map<string, { logged: number; elapsed: number }>
 }
 
 const HOUR_KEYS: HourKey[] = [
@@ -99,7 +97,6 @@ function emptyBucket(): MonthBucket {
     hasRows: false,
     hours: emptyHours(),
     elapsedDays: 0,
-    personUtil: new Map(),
   }
 }
 
@@ -121,17 +118,6 @@ function deltaPct(current: number | null, prior: number | null): number | null {
   return ((current - prior) / Math.abs(prior)) * 100
 }
 
-function utilizationFromPeople(
-  people: Iterable<{ logged: number; elapsed: number }>
-): number | null {
-  const samples: number[] = []
-  for (const person of people) {
-    const pct = personLoggedUtilizationPct(person.logged, person.elapsed)
-    if (pct != null) samples.push(pct)
-  }
-  return meanPersonLoggedUtilizationPct(samples)
-}
-
 function monthMetric(bucket: MonthBucket, key: LineKpiKey): number | null {
   if (!bucket.hasRows) return null
   switch (key) {
@@ -146,7 +132,10 @@ function monthMetric(bucket: MonthBucket, key: LineKpiKey): number | null {
     case 'ptoHours':
       return bucket.hours.pto_hours
     case 'utilizationPct':
-      return utilizationFromPeople(bucket.personUtil.values())
+      return loggedUtilizationPct(
+        bucket.hours.logged_hours,
+        bucket.elapsedDays * STANDARD_WORKDAY_HOURS
+      )
     case 'commercialUtilizationPct':
       return commercialUtilizationPct(
         bucket.hours.commercial_logged_hours,
@@ -165,16 +154,13 @@ function rangeMetric(
   if (slice.length === 0) return null
 
   if (key === 'utilizationPct') {
-    const people = new Map<string, { logged: number; elapsed: number }>()
+    let logged = 0
+    let elapsedHours = 0
     for (const bucket of slice) {
-      for (const [personId, hours] of bucket.personUtil) {
-        const prev = people.get(personId) ?? { logged: 0, elapsed: 0 }
-        prev.logged += hours.logged
-        prev.elapsed += hours.elapsed
-        people.set(personId, prev)
-      }
+      logged += bucket.hours.logged_hours
+      elapsedHours += bucket.elapsedDays * STANDARD_WORKDAY_HOURS
     }
-    return utilizationFromPeople(people.values())
+    return loggedUtilizationPct(logged, elapsedHours)
   }
 
   if (key === 'commercialUtilizationPct') {
@@ -225,10 +211,6 @@ export function buildCapacityYear(
       bucket.hours[key] += num(row[key])
     }
     bucket.elapsedDays += num(row.elapsed_net_weekdays)
-    const person = bucket.personUtil.get(row.person_id) ?? { logged: 0, elapsed: 0 }
-    person.logged += num(row.logged_hours)
-    person.elapsed += num(row.elapsed_net_weekdays)
-    bucket.personUtil.set(row.person_id, person)
   }
 
   const years = [...byYear.keys()].sort((a, b) => a - b)

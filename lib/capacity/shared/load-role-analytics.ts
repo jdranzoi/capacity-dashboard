@@ -3,8 +3,7 @@ import { endOfMonth, format, parse } from 'date-fns'
 
 import {
   capacityFillPct,
-  meanPersonLoggedUtilizationPct,
-  personLoggedUtilizationPct,
+  loggedUtilizationPct,
   STANDARD_WORKDAY_HOURS,
 } from '@/lib/domain/workload-metrics'
 import {
@@ -18,8 +17,8 @@ import {
   teamEligibleWeekdayDates,
   teamHolidaysByZoneForEligible,
   teamPersonElapsedNetWeekdays,
-  teamPtoWeekdayDatesThrough,
 } from '@/lib/capacity/shared/elapsed-pace-context'
+import { ptoHoursByPersonDateThrough } from '@/lib/overview/elapsed-net-weekdays'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import type { Database } from '@/lib/supabase/database.types'
 import { fetchMonthRolesForPeople } from '@/lib/workforce/month-role'
@@ -34,7 +33,7 @@ export type RoleAnalyticsRow = {
   netCapacityHours: number
   plannedHours: number
   loggedHoursMtd: number
-  /** Mean of per-person pace: logged MTD ÷ (elapsed net weekdays × 8h); same eligibility as overview donut. */
+  /** Ratio of sums: role logged MTD / role elapsed capacity (`loggedUtilizationPct`). */
   utilizationPct: number | null
   /** Rolled-up hours ratio: sum logged MTD / sum monthly net capacity (**Capacity fill**). */
   capacityFillPct: number | null
@@ -88,7 +87,7 @@ export async function loadRoleAnalytics(
       filterRowsByPerson(bundle.worklogs, personIdFilter),
       logThroughStr
     )
-    const ptoRows = filterRowsByPerson(bundle.ptoWorklogs, personIdFilter)
+    const ptoRows = filterRowsByPerson(bundle.ptoDays, personIdFilter)
     const holidayRows = filterHolidaysThrough(bundle.holidays, logThroughStr)
 
     const capByPerson = new Map<string, number>()
@@ -115,11 +114,7 @@ export async function loadRoleAnalytics(
 
     const eligibleWeekdays = teamEligibleWeekdayDates(referenceDate, logThroughStr)
     const holidaysByZone = teamHolidaysByZoneForEligible(holidayRows, eligibleWeekdays)
-    const ptoWeekdayByPerson = teamPtoWeekdayDatesThrough(
-      ptoRows,
-      logThroughStr,
-      referenceDate
-    )
+    const ptoHoursByPersonDate = ptoHoursByPersonDateThrough(ptoRows, logThroughStr)
 
     const capacityPersonIds = Array.from(capByPerson.keys())
     if (capacityPersonIds.length === 0) {
@@ -161,46 +156,41 @@ export async function loadRoleAnalytics(
       netCapacityHours: number
       plannedHours: number
       loggedHoursMtd: number
+      elapsedCapacityHours: number
     }
 
     const groupKey = (roleId: string | null) => (roleId == null ? '__none__' : roleId)
     const byRole = new Map<string, Agg>()
-    const paceSamplesByRole = new Map<string, number[]>()
 
-    const bump = (roleId: string | null, pid: string) => {
+    const bump = (roleId: string | null, pid: string, elapsedDays: number) => {
       const k = groupKey(roleId)
       let a = byRole.get(k)
       if (!a) {
-        a = { headcount: 0, netCapacityHours: 0, plannedHours: 0, loggedHoursMtd: 0 }
+        a = {
+          headcount: 0,
+          netCapacityHours: 0,
+          plannedHours: 0,
+          loggedHoursMtd: 0,
+          elapsedCapacityHours: 0,
+        }
         byRole.set(k, a)
       }
       a.headcount += 1
       a.netCapacityHours += capByPerson.get(pid) ?? 0
       a.plannedHours += plannedByPerson.get(pid) ?? 0
       a.loggedHoursMtd += loggedByPerson.get(pid) ?? 0
+      a.elapsedCapacityHours += elapsedDays * STANDARD_WORKDAY_HOURS
     }
 
     for (const pid of capacityPersonIds) {
-      const rid = roleByPerson.get(pid) ?? null
-      bump(rid, pid)
       const elapsed = teamPersonElapsedNetWeekdays({
         personId: pid,
         zoneId: personZoneId.get(pid) ?? null,
         eligibleWeekdays,
         holidaysByZone,
-        ptoWeekdayByPerson,
+        ptoHoursByPersonDate,
       })
-      const logged = loggedByPerson.get(pid) ?? 0
-      const pace = personLoggedUtilizationPct(logged, elapsed, STANDARD_WORKDAY_HOURS)
-      if (pace !== null) {
-        const k = groupKey(rid)
-        let samples = paceSamplesByRole.get(k)
-        if (!samples) {
-          samples = []
-          paceSamplesByRole.set(k, samples)
-        }
-        samples.push(pace)
-      }
+      bump(roleByPerson.get(pid) ?? null, pid, elapsed)
     }
 
     const tmp: { sort: string; row: RoleAnalyticsRow }[] = []
@@ -212,11 +202,10 @@ export async function loadRoleAnalytics(
       const sort = meta ? meta.label.toLowerCase() : 'zzz_unassigned'
       const netRounded = roundDisplayStat(agg.netCapacityHours)
       const loggedRounded = roundDisplayStat(agg.loggedHoursMtd)
-      const paceSamples = paceSamplesByRole.get(k) ?? []
-      const utilizationPacePct =
-        paceSamples.length > 0
-          ? roundDisplayStat(meanPersonLoggedUtilizationPct(paceSamples)!)
-          : null
+      const utilizationPctValue = loggedUtilizationPct(
+        agg.loggedHoursMtd,
+        agg.elapsedCapacityHours
+      )
       const capacityFillPctValue = capacityFillPct(
         loggedRounded,
         netRounded
@@ -231,7 +220,7 @@ export async function loadRoleAnalytics(
           netCapacityHours: netRounded,
           plannedHours: roundDisplayStat(agg.plannedHours),
           loggedHoursMtd: loggedRounded,
-          utilizationPct: utilizationPacePct,
+          utilizationPct: utilizationPctValue,
           capacityFillPct: capacityFillPctValue,
         },
       })
