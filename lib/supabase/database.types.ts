@@ -135,7 +135,13 @@ isOneToOne: false
                     "budget_hours"?: number | null,"created_at"?: string | null,"end_date"?: string | null,"id"?: string,"is_commercial"?: boolean,"project_key"?: string,"project_name"?: string | null,"project_type"?: string,"projected_hours_at_completion"?: number | null,"size_bucket"?: string | null,"start_date"?: string | null,"status"?: string,"target_release_date"?: string | null,"tech_stack"?: (string)[] | null,"updated_at"?: string | null
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "dim_project_project_type_fkey"
+      columns: ["project_type"]
+isOneToOne: false
+      referencedRelation: "dim_project_type"
+      referencedColumns: ["key"]
+    }
                   ]
                 },"dim_project_type": {
                   Row: {
@@ -405,14 +411,14 @@ isOneToOne: false
                   ]
                 },"fact_plans": {
                   Row: {
-                    "created_at": string | null,"id": string,"is_pto": boolean,"issue_id": string | null,"month_date": string,"person_id": string,"plan_kind": string | null,"planned_hours": number,"project_id": string | null,"role_id": string | null,"snapshot_id": string
+                    "created_at": string | null,"id": string,"is_pto": boolean,"issue_id": string | null,"month_date": string,"person_id": string,"plan_kind": string,"planned_hours": number,"project_id": string | null,"role_id": string | null,"snapshot_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string | null,"id"?: string,"is_pto"?: boolean,"issue_id"?: string | null,"month_date": string,"person_id": string,"plan_kind"?: string | null,"planned_hours"?: number,"project_id"?: string | null,"role_id"?: string | null,"snapshot_id": string
+                    "created_at"?: string | null,"id"?: string,"is_pto"?: boolean,"issue_id"?: string | null,"month_date": string,"person_id": string,"plan_kind": string,"planned_hours"?: number,"project_id"?: string | null,"role_id"?: string | null,"snapshot_id": string
                   }
                   Update: {
-                    "created_at"?: string | null,"id"?: string,"is_pto"?: boolean,"issue_id"?: string | null,"month_date"?: string,"person_id"?: string,"plan_kind"?: string | null,"planned_hours"?: number,"project_id"?: string | null,"role_id"?: string | null,"snapshot_id"?: string
+                    "created_at"?: string | null,"id"?: string,"is_pto"?: boolean,"issue_id"?: string | null,"month_date"?: string,"person_id"?: string,"plan_kind"?: string,"planned_hours"?: number,"project_id"?: string | null,"role_id"?: string | null,"snapshot_id"?: string
                   }
                   Relationships: [
                     {
@@ -531,20 +537,6 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"holiday_calendar": {
-                  Row: {
-                    "date": string,"id": string,"name": string,"zone": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "date": string,"id"?: string,"name": string,"zone": string
-                  }
-                  Update: {
-                    "date"?: string,"id"?: string,"name"?: string,"zone"?: string
-                  }
-                  Relationships: [
-                    
-                  ]
                 },"sync_config": {
                   Row: {
                     "description": string | null,"key": string,"updated_at": string,"value": string
@@ -592,20 +584,6 @@ isOneToOne: false
       referencedRelation: "sync_log"
       referencedColumns: ["id"]
     }
-                  ]
-                },"team_zones": {
-                  Row: {
-                    "id": string,"person": string,"zone": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "id"?: string,"person": string,"zone": string
-                  }
-                  Update: {
-                    "id"?: string,"person"?: string,"zone"?: string
-                  }
-                  Relationships: [
-                    
                   ]
                 }
           }

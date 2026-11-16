@@ -22,6 +22,22 @@ Lightweight checkpoint for agents and contributors. Update this file when a subp
 
 ---
 
+## Data model (stage 1 rebuild)
+
+The dashboard reads the stage 1 data model (D-028..D-034 in `capacity/doc/DECISIONS.md`), produced by the rebuilt Tempo/Jira sync in `capacity-mcp`.
+
+| Item | Status |
+|---|---|
+| Migrations 028–031 (additive model, unused tables dropped, employment window, lifetime project hours view) | **Applied** in staging and production |
+| Production data | **Replaced** by the validated staging data; the first production sync on the new model completed |
+| Dashboard alignment | **Done** — Planned = delivery plans (`DELIVERY_PLAN_FILTER`), utilization as ratio of sums, PTO rule, employment window, project types from `dim_project_type`, every project status with an Active filter, `em` role removed |
+| Migration 032 (destructive: drop `holiday_calendar` / `team_zones`, `plan_kind` NOT NULL, placeholders out of `dim_person`, name not unique, `project_type` FK) | Applied in staging; **production pending** |
+| Manual data follow-ups | Commercial projects ended in Jira need `completed` / `cancelled` (sync warning `project_outcome_pending`) |
+
+**Next platform stage:** stage 2 — the agent MCP reads Supabase only (no live Tempo calls), with KPI definitions shared with the dashboard.
+
+---
+
 ## Next work (start here)
 
 **SP-2 — Capacity** ([SP2_CAPACITY_PLAN.md](./SP2_CAPACITY_PLAN.md))
@@ -119,4 +135,4 @@ Ask         /ask
 
 ---
 
-*Last updated: Project detail Team tab (on-demand role/person hours) and period-aligned velocity on Overview.*
+*Last updated: 2026-11-16 — stage 1 data model live in production (028–031, data copy, first sync); 032 applied in staging.*
