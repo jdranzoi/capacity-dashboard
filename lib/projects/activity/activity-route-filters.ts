@@ -1,7 +1,4 @@
-import {
-  isActivityProjectType,
-  type ActivityProjectTypeFilter,
-} from '@/lib/domain/project-types'
+import type { ActivityProjectTypeFilter } from '@/lib/projects/activity/activity-types'
 
 export type ProjectsActivityRouteFilters = {
   monthKey: string | null
@@ -23,13 +20,10 @@ export function parseProjectsActivityRouteFilters(
   raw: Record<string, string | string[] | undefined>
 ): ProjectsActivityRouteFilters {
   const monthRaw = firstParam(raw.month)?.trim()
-  const typeRaw = firstParam(raw.type)?.toLowerCase()
+  const typeRaw = firstParam(raw.type)?.trim().toLowerCase()
   const projectRaw = firstParam(raw.project)?.trim()
 
-  let type: ActivityProjectTypeFilter = 'all'
-  if (typeRaw && typeRaw !== 'all' && isActivityProjectType(typeRaw)) {
-    type = typeRaw
-  }
+  const type: ActivityProjectTypeFilter = typeRaw || 'all'
 
   return {
     monthKey: monthRaw && monthRaw.length > 0 ? monthRaw : null,

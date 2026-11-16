@@ -5,6 +5,8 @@ import { CapacityPlanningPeopleGrid } from '@/components/capacity/planning/capac
 import { CapacityPlanningProjectGrid } from '@/components/capacity/planning/capacity-planning-project-grid'
 import { DataSectionPanel, DataSectionPanelHeader } from '@/components/ui/data-section-panel'
 import { loadPlanningWorkspaceCached } from '@/lib/capacity/planning/load-planning-workspace'
+import { loadProjectTypes } from '@/lib/data/load-project-types'
+import { presentProjectTypes } from '@/lib/domain/project-types'
 import { parsePlanningView } from '@/lib/capacity/planning/planning-route-period'
 import type { PlanningView } from '@/lib/capacity/planning/planning-types'
 
@@ -30,13 +32,24 @@ export async function CapacityPlanningGridBlock({
   await connection()
 
   const view: PlanningView = parsePlanningView(viewParam)
-  const workspaceResult = await loadPlanningWorkspaceCached(fromParam, toParam)
+  const [workspaceResult, typesRes] = await Promise.all([
+    loadPlanningWorkspaceCached(fromParam, toParam),
+    loadProjectTypes(),
+  ])
 
   if (workspaceResult.error) return <SectionDataError message={workspaceResult.error} />
+  if (typesRes.error) return <SectionDataError message={typesRes.error} />
   if (!workspaceResult.data) return <SectionEmptyState />
 
   const data = workspaceResult.data
   const roleOptions = collectRoleOptions(data.peopleTreeRows)
+  const projectTypeOptions = [
+    { value: 'all', label: 'All' },
+    ...presentProjectTypes(
+      typesRes.types,
+      data.projectTreeRows.flatMap((row) => (row.projectType ? [row.projectType] : []))
+    ),
+  ]
 
   return (
     <DataSectionPanel dataSlot="capacity-planning-grid" className="gap-0 overflow-hidden p-0">
@@ -64,6 +77,7 @@ export async function CapacityPlanningGridBlock({
             monthKeys={data.period.monthKeys}
             monthLabels={data.period.monthLabels}
             roleOptions={roleOptions}
+            projectTypeOptions={projectTypeOptions}
           />
         )}
       </div>

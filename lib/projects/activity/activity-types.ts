@@ -1,20 +1,21 @@
-import type { ActivityProjectType, ActivityProjectTypeFilter } from '@/lib/domain/project-types'
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
+
+/** A `dim_project_type` key, or `all`. */
+export type ActivityProjectTypeFilter = string
 
 export type ProjectsActivityRow = {
   projectId: string
   projectKey: string
   projectName: string | null
-  projectType: ActivityProjectType
+  projectType: string
   status: string
   startDate: string | null
   endDate: string | null
   loggedHours: number
-  hasDeliveryDetail: boolean
 }
 
 export type ProjectsActivityGroup = {
-  type: ActivityProjectType
+  type: string
   label: string
   rows: ProjectsActivityRow[]
 }
@@ -26,7 +27,7 @@ export type ProjectsActivityPayload = {
   totalCount: number
   totalLoggedHours: number
   groups: ProjectsActivityGroup[]
-  typeOptions: ActivityProjectTypeFilter[]
+  typeOptions: { value: ActivityProjectTypeFilter; label: string }[]
 }
 
 export type ProjectsActivityPageData = {

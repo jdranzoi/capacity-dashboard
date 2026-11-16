@@ -2,7 +2,7 @@
  * Controlled role vocabulary from `dim_role.key` (capacity-mcp `006_v2_schema.sql`).
  * Person ↔ role joins use `dim_role.id`; keys are stable identifiers for filters and UI.
  */
-export type DimRoleKey = 'fsd' | 'fed' | 'qa' | 'pm' | 'tl' | 'ux' | 'em' | 'ua'
+export type DimRoleKey = 'fsd' | 'fed' | 'qa' | 'pm' | 'tl' | 'ux' | 'ua'
 
 export const DIM_ROLE_KEYS: readonly DimRoleKey[] = [
   'fsd',
@@ -11,7 +11,6 @@ export const DIM_ROLE_KEYS: readonly DimRoleKey[] = [
   'pm',
   'tl',
   'ux',
-  'em',
   'ua',
 ]
 
@@ -27,7 +26,6 @@ export const ROLE_DISPLAY_ORDER: readonly string[] = [
   'qa',
   'ua',
   'ux',
-  'em',
 ]
 
 /**
@@ -41,7 +39,6 @@ export const ROLE_COLOR_TOKEN_BY_KEY: Record<DimRoleKey, string> = {
   fed: 'fed',
   qa: 'qa',
   ux: 'ux',
-  em: 'em',
   ua: 'analytics',
 }
 

@@ -1,15 +1,13 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import { endOfMonth, format, parse } from 'date-fns'
 
-import {
-  ACTIVITY_PROJECT_TYPE_ORDER,
-  activityProjectTypeKey,
-  activityProjectTypeLabel,
-  isProjectSpaceType,
-  type ActivityProjectType,
-  type ActivityProjectTypeFilter,
-} from '@/lib/domain/project-types'
 import { CACHE_TAG_MONTH_OPS } from '@/lib/data/cache-tags'
+import { loadProjectTypes } from '@/lib/data/load-project-types'
+import {
+  presentProjectTypes,
+  projectTypeLabel,
+  type ProjectTypeOption,
+} from '@/lib/domain/project-types'
 import { pagedQuery } from '@/lib/data/paged-query'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import {
@@ -19,6 +17,7 @@ import {
 import { createServiceClientCached } from '@/lib/supabase/server'
 import type { ProjectsMonthContext } from '@/lib/projects/overview/projects-page-cache'
 import type {
+  ActivityProjectTypeFilter,
   ProjectsActivityGroup,
   ProjectsActivityPageData,
   ProjectsActivityPayload,
@@ -92,17 +91,15 @@ async function loadActivityRows(
     const embedded = fact.dim_project
     const project = Array.isArray(embedded) ? (embedded[0] ?? null) : embedded
     if (!project || project.id !== fact.project_id) continue
-    const type = activityProjectTypeKey(project.project_type)
     rows.push({
       projectId: project.id,
       projectKey: project.project_key,
       projectName: project.project_name,
-      projectType: type,
+      projectType: project.project_type,
       status: project.status,
       startDate: project.start_date,
       endDate: project.end_date,
       loggedHours: roundDisplayStat(Number(fact.logged_hours) || 0),
-      hasDeliveryDetail: isProjectSpaceType(type),
     })
   }
 
@@ -116,29 +113,30 @@ async function loadActivityRows(
 
 function buildGroups(
   rows: ProjectsActivityRow[],
+  types: readonly ProjectTypeOption[],
   typeFilter: ActivityProjectTypeFilter
-): { groups: ProjectsActivityGroup[]; typeOptions: ActivityProjectTypeFilter[] } {
-  const byType = new Map<ActivityProjectType, ProjectsActivityRow[]>()
+): Pick<ProjectsActivityPayload, 'groups' | 'typeOptions'> {
+  const byType = new Map<string, ProjectsActivityRow[]>()
   for (const row of rows) {
     const list = byType.get(row.projectType)
     if (list) list.push(row)
     else byType.set(row.projectType, [row])
   }
 
-  const present = ACTIVITY_PROJECT_TYPE_ORDER.filter((type) => (byType.get(type)?.length ?? 0) > 0)
-  const typeOptions: ActivityProjectTypeFilter[] = ['all', ...present]
-  const visibleTypes =
-    typeFilter === 'all'
-      ? present
-      : present.includes(typeFilter)
-        ? [typeFilter]
-        : [typeFilter]
+  const present = presentProjectTypes(types, byType.keys()).map((type) => type.value)
+  const visibleTypes = typeFilter === 'all' ? present : [typeFilter]
 
   const groups = visibleTypes.map((type) => ({
     type,
-    label: activityProjectTypeLabel(type),
+    label: projectTypeLabel(types, type),
     rows: byType.get(type) ?? [],
   }))
+
+  const optionValues = present.includes(typeFilter) || typeFilter === 'all' ? present : [...present, typeFilter]
+  const typeOptions = [
+    { value: 'all', label: 'All' },
+    ...optionValues.map((value) => ({ value, label: projectTypeLabel(types, value) })),
+  ]
 
   return { groups, typeOptions }
 }
@@ -150,10 +148,14 @@ export async function loadProjectsActivityPage(
   if (monthCtx.error) return { data: null, error: monthCtx.error }
   if (!monthCtx.data) return { data: null, error: null }
 
-  const rowsRes = await loadActivityRows(monthCtx.data.monthStartStr)
+  const [rowsRes, typesRes] = await Promise.all([
+    loadActivityRows(monthCtx.data.monthStartStr),
+    loadProjectTypes(),
+  ])
   if (rowsRes.error) return { data: null, error: rowsRes.error }
+  if (typesRes.error) return { data: null, error: typesRes.error }
 
-  const { groups, typeOptions } = buildGroups(rowsRes.rows, filters.type)
+  const { groups, typeOptions } = buildGroups(rowsRes.rows, typesRes.types, filters.type)
   const visibleRows = groups.flatMap((group) => group.rows)
 
   const payload: ProjectsActivityPayload = {
@@ -163,7 +165,7 @@ export async function loadProjectsActivityPage(
     totalCount: visibleRows.length,
     totalLoggedHours: visibleRows.reduce((sum, row) => sum + row.loggedHours, 0),
     groups,
-    typeOptions: typeOptions.includes(filters.type) ? typeOptions : [...typeOptions, filters.type],
+    typeOptions,
   }
 
   return {

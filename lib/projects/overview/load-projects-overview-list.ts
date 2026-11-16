@@ -6,7 +6,7 @@ import {
   projectBurnRateHoursPerMonth,
   projectBudgetUsedPct,
 } from '@/lib/domain/project-delivery-metrics'
-import { loadActiveProjects } from '@/lib/projects/overview/load-active-projects'
+import { loadProjects, type ProjectMeta } from '@/lib/projects/overview/load-projects'
 import {
   lastNMonthStarts,
   loadProjectActualsForMonths,
@@ -17,7 +17,9 @@ import {
 import {
   matchesProjectsCategory,
   matchesProjectsSearch,
+  matchesProjectsStatus,
   type ProjectsCategoryFilter,
+  type ProjectsStatusFilter,
 } from '@/lib/projects/overview/projects-route-filters'
 import type {
   ProjectOverviewRow,
@@ -30,7 +32,7 @@ import { matchesProjectManagerQuery } from '@/lib/workforce/project-manager'
 import { resolvePmNamesByProjectFromPlanRows } from '@/lib/workforce/resolve-project-pm-names'
 
 function buildOverviewRows(params: {
-  projects: Awaited<ReturnType<typeof loadActiveProjects>>['rows']
+  projects: ProjectMeta[]
   plannedByProject: Map<string, number>
   loggedByProject: Map<string, number>
   billableByProject: Map<string, number>
@@ -38,6 +40,7 @@ function buildOverviewRows(params: {
   pmNamesByProjectId: Map<string, string | null>
   requireActivityInMonth: boolean
   category: ProjectsCategoryFilter
+  status: ProjectsStatusFilter
   searchQuery: string | null
   pmQuery: string | null
 }): ProjectOverviewRow[] {
@@ -45,6 +48,7 @@ function buildOverviewRows(params: {
 
   for (const project of params.projects) {
     if (!matchesProjectsCategory(project.project_type, params.category)) continue
+    if (!matchesProjectsStatus(project.status, params.status)) continue
     if (!matchesProjectsSearch(project.project_key, project.project_name, params.searchQuery)) {
       continue
     }
@@ -95,7 +99,7 @@ function rollupKpis(rows: readonly ProjectOverviewRow[], burnMonthsLogged: numbe
   const totalPlannedHours = roundDisplayStat(rows.reduce((s, r) => s + r.plannedHours, 0))
 
   return {
-    activeProjectCount: rows.length,
+    projectCount: rows.length,
     totalLoggedHours,
     totalPlannedHours,
     overallUtilizationPct: loggedVersusPlannedProductivityPct(totalLoggedHours, totalPlannedHours),
@@ -107,16 +111,17 @@ function rollupKpis(rows: readonly ProjectOverviewRow[], burnMonthsLogged: numbe
 export async function loadProjectsOverviewMonthly(params: {
   monthContext: ProjectsMonthContext
   category: ProjectsCategoryFilter
+  status: ProjectsStatusFilter
   searchQuery: string | null
   pmQuery: string | null
 }): Promise<{ data: ProjectsOverviewPayload | null; error: string | null }> {
-  const { monthContext, category, searchQuery, pmQuery } = params
+  const { monthContext, category, status, searchQuery, pmQuery } = params
   const { snapshot, monthStartStr, monthLabel, options } = monthContext
 
   const burnMonthKeys = lastNMonthStarts(monthStartStr, 3)
 
   const [projectsRes, actualsRes, plansRes, burnActualsRes] = await Promise.all([
-    loadActiveProjects(),
+    loadProjects(),
     loadProjectActualsForMonths(snapshot.id, [monthStartStr]),
     loadProjectGrainPlans(snapshot.id, monthStartStr),
     loadProjectActualsForMonthsFromOptions(burnMonthKeys, options),
@@ -173,6 +178,7 @@ export async function loadProjectsOverviewMonthly(params: {
     pmNamesByProjectId: pmNamesRes.pmNamesByProjectId,
     requireActivityInMonth: true,
     category,
+    status,
     searchQuery,
     pmQuery,
   })

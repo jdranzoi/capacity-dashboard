@@ -3,16 +3,7 @@ import { connection } from 'next/server'
 import { ProjectsProjectDetailPanelWithNav } from '@/components/projects/overview/projects-project-detail-panel-client'
 import { ProjectsProjectDetailEmpty } from '@/components/projects/overview/projects-project-detail-empty'
 import { SectionDataError } from '@/components/ui/section-data-states'
-import {
-  DataSectionPanel,
-  DataSectionPanelHeader,
-} from '@/components/ui/data-section-panel'
-import { activityProjectTypeLabel } from '@/lib/domain/project-types'
-import { fmtHoursKpi } from '@/lib/overview/overview-metrics'
-import {
-  getActivityMonthContext,
-  loadProjectsActivityPage,
-} from '@/lib/projects/activity/load-projects-activity'
+import { getActivityMonthContext } from '@/lib/projects/activity/load-projects-activity'
 import { parseProjectsActivityRouteFilters } from '@/lib/projects/activity/activity-route-filters'
 import { loadProjectDetailPanel } from '@/lib/projects/overview/load-project-detail-panel'
 
@@ -35,26 +26,6 @@ export async function ProjectsActivityDetailBlock({
   }
   if (!monthCtx.data) {
     return <ProjectsProjectDetailEmpty />
-  }
-
-  const listRes = await loadProjectsActivityPage({ ...filters, type: 'all' })
-  const listRow = listRes.data?.payload.groups
-    .flatMap((group) => group.rows)
-    .find((row) => row.projectKey === filters.projectKey)
-
-  if (listRow && !listRow.hasDeliveryDetail) {
-    return (
-      <DataSectionPanel dataSlot="projects-activity-detail" className="gap-3">
-        <DataSectionPanelHeader
-          title={listRow.projectName ? `${listRow.projectKey} · ${listRow.projectName}` : listRow.projectKey}
-          description={`${activityProjectTypeLabel(listRow.projectType)} · ${listRow.status}`}
-        />
-        <p className="text-xs text-muted-foreground">
-          Delivery detail is available for build, support, product, and internal projects.
-          This row logged {fmtHoursKpi(listRow.loggedHours)} in {monthCtx.data.monthLabel}.
-        </p>
-      </DataSectionPanel>
-    )
   }
 
   const detailRes = await loadProjectDetailPanel({

@@ -49,12 +49,6 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "dim_project"
       referencedColumns: ["id"]
-    },{
-      foreignKeyName: "dim_issue_project_id_fkey"
-      columns: ["project_id"]
-isOneToOne: false
-      referencedRelation: "v_project_delivery_totals"
-      referencedColumns: ["project_id"]
     }
                   ]
                 },"dim_person": {
@@ -280,12 +274,6 @@ isOneToOne: false
       referencedRelation: "dim_project"
       referencedColumns: ["id"]
     },{
-      foreignKeyName: "fact_demand_project_id_fkey"
-      columns: ["project_id"]
-isOneToOne: false
-      referencedRelation: "v_project_delivery_totals"
-      referencedColumns: ["project_id"]
-    },{
       foreignKeyName: "fact_demand_role_id_fkey"
       columns: ["role_id"]
 isOneToOne: false
@@ -413,12 +401,6 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "dim_project"
       referencedColumns: ["id"]
-    },{
-      foreignKeyName: "fact_month_projects_project_id_fkey"
-      columns: ["project_id"]
-isOneToOne: false
-      referencedRelation: "v_project_delivery_totals"
-      referencedColumns: ["project_id"]
     }
                   ]
                 },"fact_plans": {
@@ -452,12 +434,6 @@ isOneToOne: false
       referencedRelation: "dim_project"
       referencedColumns: ["id"]
     },{
-      foreignKeyName: "fact_plans_project_id_fkey"
-      columns: ["project_id"]
-isOneToOne: false
-      referencedRelation: "v_project_delivery_totals"
-      referencedColumns: ["project_id"]
-    },{
       foreignKeyName: "fact_plans_role_id_fkey"
       columns: ["role_id"]
 isOneToOne: false
@@ -489,12 +465,6 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "dim_project"
       referencedColumns: ["id"]
-    },{
-      foreignKeyName: "fact_project_actuals_project_id_fkey"
-      columns: ["project_id"]
-isOneToOne: false
-      referencedRelation: "v_project_delivery_totals"
-      referencedColumns: ["project_id"]
     },{
       foreignKeyName: "fact_project_actuals_snapshot_id_fkey"
       columns: ["snapshot_id"]
@@ -553,12 +523,6 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "dim_project"
       referencedColumns: ["id"]
-    },{
-      foreignKeyName: "fact_worklogs_project_id_fkey"
-      columns: ["project_id"]
-isOneToOne: false
-      referencedRelation: "v_project_delivery_totals"
-      referencedColumns: ["project_id"]
     },{
       foreignKeyName: "fact_worklogs_role_id_fkey"
       columns: ["role_id"]
@@ -656,11 +620,17 @@ isOneToOne: false
                   ]
                 },"v_project_delivery_totals": {
                   Row: {
-                    "budget_hours": number | null,"lifetime_billable_hours": number | null,"lifetime_logged_hours": number | null,"lifetime_planned_hours": number | null,"project_id": string,"project_key": string,"project_name": string | null,"project_type": string,"start_date": string | null
+                    "lifetime_billable_hours": number | null,"lifetime_logged_hours": number | null,"project_id": string
                   }
                   ComputedFields: never
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "fact_worklogs_project_id_fkey"
+      columns: ["project_id"]
+isOneToOne: false
+      referencedRelation: "dim_project"
+      referencedColumns: ["id"]
+    }
                   ]
                 }
           }

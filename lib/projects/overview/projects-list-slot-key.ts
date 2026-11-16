@@ -6,6 +6,7 @@ export function projectsListSlotKey(listParams: ProjectsListSearchParams): strin
     listParams.month ?? '',
     listParams.view ?? '',
     listParams.category ?? '',
+    listParams.status ?? '',
     listParams.q ?? '',
     listParams.pm ?? '',
   ].join('|')

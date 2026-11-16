@@ -1,6 +1,5 @@
 import type { FragmentationLabel } from '@/lib/domain/fragmentation-label'
 import type { PlannedUtilizationBand } from '@/lib/domain/planned-utilization-band'
-import type { ProjectSpaceType } from '@/lib/domain/project-types'
 
 export type PlanningView = 'people' | 'project'
 
@@ -40,7 +39,7 @@ export type PlanningProjectNode = {
   label: string
   depth: 0 | 1 | 2
   projectId?: string
-  projectType?: ProjectSpaceType
+  projectType?: string
   pmName?: string | null
   roleKey?: string
   personId?: string
@@ -100,8 +99,8 @@ export type PlanningMonthProjectMeta = {
   projectId: string
   projectKey: string
   projectName: string
-  /** Normalized `dim_project.project_type` when it matches a known space type. */
-  projectType: ProjectSpaceType | null
+  /** `dim_project.project_type` (a `dim_project_type` key). */
+  projectType: string
 }
 
 export type PlanningMonthFacts = {

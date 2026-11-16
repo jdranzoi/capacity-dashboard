@@ -79,8 +79,9 @@ migration is applied, run `pnpm db:types` so they leave `lib/supabase/database.t
 | Table | Purpose |
 |---|---|
 | `dim_person` | Team members; carries `role_id FK → dim_role`, `zone_id FK → dim_zone` |
-| `dim_project` | Project registry; `project_type` is raw Jira category (lowercase); `is_commercial` derived at sync (**D-011**). Dashboard reads these columns — never infer from `project_key`. |
-| `dim_role` | Controlled role vocabulary: `(id, key, label)` — keys: `fsd`, `fed`, `qa`, `pm`, `tl`, `ux`, `em` |
+| `dim_project` | Project registry; `project_type` is raw Jira category (lowercase); `is_commercial` derived at sync (**D-011**). Dashboard reads these columns — never infer from `project_key`. `status`: `active`; `closed` ends a non-commercial project; `completed` / `cancelled` end a commercial one (D-033). Project views list every status with an Active filter. |
+| `dim_project_type` | Project type vocabulary `(key, label, is_commercial)` (D-033). The dashboard takes type filters, groups and labels from it (`lib/data/load-project-types.ts`) — never hardcode a type list. |
+| `dim_role` | Controlled role vocabulary: `(id, key, label)` — keys: `fsd`, `fed`, `qa`, `pm`, `tl`, `ux`, `ua` |
 | `dim_zone` | Holiday zones: `(id, key, label)` |
 | `dim_holiday` | Company-observed holidays with `zone_id FK → dim_zone` |
 | `dim_date` | Date spine for calendar joins |

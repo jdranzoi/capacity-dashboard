@@ -37,9 +37,9 @@ When Overview shipped: add `/projects/overview` to [`lib/navigation/shipped-rout
 | Mode | Logged / billable | Planned | Burn rate |
 | --- | --- | --- | --- |
 | **Monthly** | `fact_project_actuals` for `snapshot_id` + `month_date` | `fact_plans` project grain | Last 3 months from `fact_project_actuals` |
-| **Global** | `v_project_delivery_totals` (preferred) or paginated `fact_worklogs` fallback | Sum `fact_plans` in view / fallback | Same 3-month actuals |
+| **Global** | `v_project_delivery_totals` (lifetime logged and billable, PTO excluded, every status) | Delivery plans summed per month from each month's snapshot | Same 3-month actuals |
 
-**Migration (capacity-mcp):** `supabase/migrations/018_project_delivery_totals_view.sql` — apply before relying on global view in production.
+**Migration (capacity-mcp):** `supabase/migrations/031_project_delivery_totals_lifetime_hours.sql` defines the current view.
 
 ### Code map
 

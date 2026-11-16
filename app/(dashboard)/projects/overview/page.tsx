@@ -33,7 +33,7 @@ async function ProjectsOverviewMainSlot({
 
   return (
     <>
-      <Suspense key={`chrome-${listSlotKey}`} fallback={<DashboardSectionHeaderSkeleton filterCount={2} />}>
+      <Suspense key={`chrome-${listSlotKey}`} fallback={<DashboardSectionHeaderSkeleton filterCount={3} />}>
         <ProjectsOverviewChromeBlock listParams={listParams} />
       </Suspense>
 

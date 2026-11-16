@@ -22,7 +22,6 @@ import {
   type ProjectDetailKpiContextLine,
 } from "@/lib/projects/overview/project-detail-kpi-context";
 import type { ProjectDetailPanelPayload } from "@/lib/projects/overview/projects-types";
-import { projectSpaceTypeLabel } from "@/lib/domain/project-types";
 import { projectCardTitle } from "@/lib/teams/composition/teams-composition-utils";
 import { cn } from "@/lib/utils";
 import { dashboardSurfaceClass } from "@/lib/ui/dashboard-surface";
@@ -74,7 +73,7 @@ function ProjectDetailMetaRow({ detail }: { detail: ProjectDetailPanelPayload })
   return (
     <div className="flex flex-wrap items-center gap-3">
       <DetailMetaTag tone="type">
-        {projectSpaceTypeLabel(detail.projectType)}
+        {detail.projectTypeLabel}
       </DetailMetaTag>
       <DetailMetaTag tone="pm">PM: {detail.pmName ?? "—"}</DetailMetaTag>
       <DetailMetaTag tone="tl">TL: {detail.tlNames ?? "—"}</DetailMetaTag>

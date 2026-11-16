@@ -1,7 +1,6 @@
 import { endOfMonth, format, parse } from 'date-fns'
 
 import { pagedQuery } from '@/lib/data/paged-query'
-import { isProjectSpaceType } from '@/lib/domain/project-types'
 import {
   loadOverviewMonthOptions,
   resolveSelectedOverviewMonth,
@@ -46,15 +45,12 @@ export async function loadProjectDetailTeam(params: {
 
   const { data: projectRow, error: projectErr } = await supabase
     .from('dim_project')
-    .select('id, project_key, project_type, start_date, end_date')
+    .select('id, project_key, start_date, end_date')
     .eq('project_key', params.projectKey)
     .maybeSingle()
 
   if (projectErr) return { data: null, error: projectErr.message }
   if (!projectRow) return { data: null, error: null }
-  if (!isProjectSpaceType(projectRow.project_type)) {
-    return { data: null, error: 'Unsupported project type' }
-  }
 
   const monthOptionsRes = await loadOverviewMonthOptions()
   if (monthOptionsRes.error) return { data: null, error: monthOptionsRes.error }

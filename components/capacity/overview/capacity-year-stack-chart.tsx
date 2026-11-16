@@ -6,7 +6,6 @@ import { format } from 'date-fns'
 import { CapacityYearHoverTip } from '@/components/capacity/overview/capacity-year-hover-tip'
 import { fmtHeadcountKpi } from '@/lib/overview/overview-metrics'
 import type { CapacityYearStackLayer } from '@/lib/capacity/overview/capacity-year-types'
-import { isActivityProjectType } from '@/lib/domain/project-types'
 import { openProjectsActivityTab } from '@/lib/projects/activity/projects-activity-href'
 import { cn } from '@/lib/utils'
 
@@ -208,7 +207,6 @@ export function CapacityYearStackChart({
                           openProjectsActivityTab({
                             year: currentYear,
                             monthIndex,
-                            type: isActivityProjectType(part.key) ? part.key : undefined,
                           })
                       : undefined
                   }

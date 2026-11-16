@@ -3,7 +3,8 @@ import { endOfMonth, format, parse } from 'date-fns'
 
 import { createServiceClientCached } from '@/lib/supabase/server'
 import type { Database } from '@/lib/supabase/database.types'
-import { isProjectSpaceType, PROJECT_SPACE_TYPES } from '@/lib/domain/project-types'
+import { loadProjectTypes } from '@/lib/data/load-project-types'
+import { presentProjectTypes } from '@/lib/domain/project-types'
 import { PM_ROLE_KEY } from '@/lib/domain/role-keys'
 import {
   buildMemberRoleGroups,
@@ -267,9 +268,7 @@ export async function loadTeamsComposition(params: {
       return { data: null, error: `dim_project: ${projectsResult.error}` }
     }
 
-    const eligibleProjects = projectsResult.rows.filter((p) =>
-      isProjectSpaceType(p.project_type)
-    )
+    const eligibleProjects = projectsResult.rows
 
     if (eligibleProjects.length === 0) {
       return {
@@ -303,9 +302,10 @@ export async function loadTeamsComposition(params: {
       }
     }
 
-    const [peopleResult, rolesResult] = await Promise.all([
+    const [peopleResult, rolesResult, typesResult] = await Promise.all([
       loadPersonNames(supabase, Array.from(personIds)),
       loadRoleMeta(supabase, Array.from(roleIds)),
+      loadProjectTypes(),
     ])
 
     if (peopleResult.error) {
@@ -314,10 +314,11 @@ export async function loadTeamsComposition(params: {
     if (rolesResult.error) {
       return { data: null, error: `dim_role: ${rolesResult.error}` }
     }
+    if (typesResult.error) {
+      return { data: null, error: typesResult.error }
+    }
 
-    const projectsByType = new Map<TeamsCompositionProject['projectType'], TeamsCompositionProject[]>(
-      PROJECT_SPACE_TYPES.map((section) => [section.value, []])
-    )
+    const projectsByType = new Map<string, TeamsCompositionProject[]>()
 
     for (const project of eligibleProjects) {
       const byPerson = membersByProject.get(project.id)
@@ -341,7 +342,7 @@ export async function loadTeamsComposition(params: {
       const memberGroups = buildMemberRoleGroups(members)
       const { pmName, pmSortKey } = resolvePmForMembers(members)
       const pmMembers = resolvePmMembersForMembers(members)
-      const projectType = project.project_type as TeamsCompositionProject['projectType']
+      const projectType = project.project_type
       const card: TeamsCompositionProject = {
         projectId: project.id,
         projectKey: project.project_key,
@@ -353,10 +354,12 @@ export async function loadTeamsComposition(params: {
         memberGroups,
       }
 
-      projectsByType.get(projectType)?.push(card)
+      const sameType = projectsByType.get(projectType)
+      if (sameType) sameType.push(card)
+      else projectsByType.set(projectType, [card])
     }
 
-    const groups = PROJECT_SPACE_TYPES.map((section) =>
+    const groups = presentProjectTypes(typesResult.types, projectsByType.keys()).map((section) =>
       buildCompositionTypeGroup(
         section.value,
         section.label,
@@ -365,10 +368,7 @@ export async function loadTeamsComposition(params: {
       )
     )
 
-    const totalProjectCount = PROJECT_SPACE_TYPES.reduce(
-      (sum, section) => sum + (projectsByType.get(section.value)?.length ?? 0),
-      0
-    )
+    const totalProjectCount = eligibleProjects.length
     const visibleProjectCount = groups.reduce((sum, group) => sum + group.projects.length, 0)
 
     return {
@@ -406,11 +406,7 @@ function emptyPayload(params: {
     personQuery: params.personQuery,
     projectQuery: params.projectQuery,
     pmQuery: params.pmQuery,
-    groups: PROJECT_SPACE_TYPES.map((section) => ({
-      projectType: section.value,
-      label: section.label,
-      projects: [],
-    })),
+    groups: [],
     totalProjectCount: 0,
     visibleProjectCount: 0,
   }

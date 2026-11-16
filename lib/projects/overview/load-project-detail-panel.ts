@@ -18,11 +18,12 @@ import {
   loadLifetimePlannedHoursByProject,
   sumPlannedHoursByProject,
 } from '@/lib/projects/overview/load-project-grain-data'
-import { loadProjectsGlobalTotalsCached } from '@/lib/projects/overview/load-projects-global-list'
+import { loadProjectLifetimeHours } from '@/lib/projects/overview/load-projects-global-list'
 import type { ProjectsMonthContext } from '@/lib/projects/overview/projects-page-cache'
 import type { ProjectDetailPanelPayload, ProjectRoleHoursRow } from '@/lib/projects/overview/projects-types'
 import { createServiceClientCached } from '@/lib/supabase/server'
-import { isProjectSpaceType } from '@/lib/domain/project-types'
+import { loadProjectTypes } from '@/lib/data/load-project-types'
+import { BUILD_PROJECT_TYPE, projectTypeLabel } from '@/lib/domain/project-types'
 import { PM_ROLE_KEY, roleSortIndex } from '@/lib/domain/role-keys'
 import { resolveProjectVelocityWindow } from '@/lib/projects/overview/project-velocity-window'
 import {
@@ -77,14 +78,13 @@ export async function loadProjectDetailPanel(params: {
 
   if (projectErr) return { data: null, error: projectErr.message }
   if (!projectRow) return { data: null, error: null }
-  if (!isProjectSpaceType(projectRow.project_type)) {
-    return { data: null, error: 'Unsupported project type' }
-  }
+  const typesRes = await loadProjectTypes()
+  if (typesRes.error) return { data: null, error: typesRes.error }
 
   const projectId = projectRow.id as string
   const projectEndDate = projectRow.end_date as string | null
 
-  const isBuildProject = projectRow.project_type === 'build'
+  const isBuildProject = projectRow.project_type === BUILD_PROJECT_TYPE
   const executionScope = isBuildProject ? 'lifetime' : 'month'
   const executionGranularity = isBuildProject ? 'month' : 'day'
 
@@ -222,12 +222,11 @@ export async function loadProjectDetailPanel(params: {
     loggedHoursTotal = buildTotals.loggedHours
     billableHoursTotal = buildTotals.billableHours
   } else if (params.viewMode === 'global') {
-    const globalRes = await loadProjectsGlobalTotalsCached()
-    if (globalRes.error) return { data: null, error: globalRes.error }
-    const globalRow = globalRes.rows.find((r) => r.project_id === projectId)
-    if (globalRow) {
-      loggedHoursTotal = roundDisplayStat(Number(globalRow.lifetime_logged_hours))
-      billableHoursTotal = roundDisplayStat(Number(globalRow.lifetime_billable_hours))
+    const lifetimeRes = await loadProjectLifetimeHours(projectId)
+    if (lifetimeRes.error) return { data: null, error: lifetimeRes.error }
+    if (lifetimeRes.data) {
+      loggedHoursTotal = roundDisplayStat(lifetimeRes.data.loggedHours)
+      billableHoursTotal = roundDisplayStat(lifetimeRes.data.billableHours)
     }
     const lifetimePlannedRes = await loadLifetimePlannedHoursByProject({
       anchorMonthStartStr: monthStartStr,
@@ -351,6 +350,7 @@ export async function loadProjectDetailPanel(params: {
       projectKey: projectRow.project_key,
       projectName: projectRow.project_name,
       projectType: projectRow.project_type,
+      projectTypeLabel: projectTypeLabel(typesRes.types, projectRow.project_type),
       startDate: projectRow.start_date,
       targetReleaseDate: projectRow.target_release_date,
       budgetHours: projectRow.budget_hours,

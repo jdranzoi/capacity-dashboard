@@ -25,6 +25,7 @@ import {
   PlanningTreeNameCell,
 } from '@/components/capacity/planning/planning-tree-grid-utils'
 import { SortableHeader } from '@/components/ui/data-table/sortable-header'
+import type { SegmentedControlOption } from '@/components/ui/segmented-control'
 import {
   filterProjectTreeByPm,
   filterProjectTreeByRoleOrName,
@@ -54,8 +55,10 @@ export function CapacityPlanningProjectGrid({
   monthKeys,
   monthLabels,
   roleOptions,
+  projectTypeOptions,
 }: {
   rows: PlanningProjectNode[]
+  projectTypeOptions: readonly SegmentedControlOption<PlanningProjectTypeFilter>[]
   monthKeys: string[]
   monthLabels: Record<string, string>
   roleOptions: string[]
@@ -180,6 +183,7 @@ export function CapacityPlanningProjectGrid({
         onPmChange={setPmFilter}
         pmOptions={pmOptions}
         projectType={projectType}
+        projectTypeOptions={projectTypeOptions}
         onProjectTypeChange={setProjectType}
         monthKeys={monthKeys}
         monthLabels={monthLabels}

@@ -184,14 +184,24 @@ export function ProjectsProgressChart({
                   )}
                 >
                   <td className="py-2.5 pr-2">
-                    <button
-                      type="button"
-                      onClick={() => onSelectProject(row.projectKey)}
-                      className="block w-full cursor-pointer truncate text-left font-medium text-foreground hover:underline"
-                      title={title}
-                    >
-                      {title}
-                    </button>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onSelectProject(row.projectKey)}
+                        className="block min-w-0 cursor-pointer truncate text-left font-medium text-foreground hover:underline"
+                        title={title}
+                      >
+                        {title}
+                      </button>
+                      {row.status !== "active" ? (
+                        <span
+                          data-slot="project-status-tag"
+                          className="shrink-0 rounded-sm border border-border px-1.5 py-px text-[0.65rem] capitalize leading-4 text-muted-foreground"
+                        >
+                          {row.status}
+                        </span>
+                      ) : null}
+                    </div>
                   </td>
                   <td
                     className="py-2.5 pr-2"

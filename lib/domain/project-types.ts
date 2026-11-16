@@ -1,57 +1,39 @@
-export type ProjectSpaceType = 'build' | 'support' | 'internal' | 'product'
+/**
+ * Project type vocabulary (D-033). Keys and labels come from `dim_project_type`
+ * (loaded by `lib/data/load-project-types.ts`); `dim_project.project_type`
+ * references its key, so every project has a type in the vocabulary.
+ */
 
-export const OTHER_PROJECT_TYPE = 'other'
-
-export type ActivityProjectType = ProjectSpaceType | typeof OTHER_PROJECT_TYPE
-
-export type ProjectSpaceTypeFilter = 'all' | ProjectSpaceType
-
-export type ActivityProjectTypeFilter = 'all' | ActivityProjectType
-
-export const PROJECT_SPACE_TYPES: readonly {
-  value: ProjectSpaceType
+export type ProjectTypeOption = {
+  value: string
   label: string
-}[] = [
-  { value: 'build', label: 'Build' },
-  { value: 'support', label: 'Support' },
-  { value: 'internal', label: 'Internal' },
-  { value: 'product', label: 'Product' },
-]
-
-export const ACTIVITY_PROJECT_TYPE_ORDER: readonly ActivityProjectType[] = [
-  'build',
-  'support',
-  'product',
-  'internal',
-  OTHER_PROJECT_TYPE,
-]
-
-export const PROJECT_SPACE_TYPE_FILTER_OPTIONS: readonly {
-  value: ProjectSpaceTypeFilter
-  label: string
-}[] = [{ value: 'all', label: 'All' }, ...PROJECT_SPACE_TYPES]
-
-export const DEFAULT_PROJECT_SPACE_TYPE: ProjectSpaceType = 'build'
-
-export function isProjectSpaceType(value: string): value is ProjectSpaceType {
-  return PROJECT_SPACE_TYPES.some((entry) => entry.value === value)
+  isCommercial: boolean
 }
 
-export function projectSpaceTypeLabel(value: string): string {
-  if (!isProjectSpaceType(value)) return value
-  return PROJECT_SPACE_TYPES.find((entry) => entry.value === value)?.label ?? value
+/** Build projects use the lifetime delivery window (budget, burn, plan variance). */
+export const BUILD_PROJECT_TYPE = 'build'
+
+/** Projects without a Jira category; always listed last. */
+export const UNCLASSIFIED_PROJECT_TYPE = 'unclassified'
+
+/** Commercial types first, `unclassified` last, then by label. */
+export function compareProjectTypes(a: ProjectTypeOption, b: ProjectTypeOption): number {
+  const aLast = a.value === UNCLASSIFIED_PROJECT_TYPE
+  const bLast = b.value === UNCLASSIFIED_PROJECT_TYPE
+  if (aLast !== bLast) return aLast ? 1 : -1
+  if (a.isCommercial !== b.isCommercial) return a.isCommercial ? -1 : 1
+  return a.label.localeCompare(b.label, 'en', { sensitivity: 'base' })
 }
 
-export function activityProjectTypeKey(value: string | null): ActivityProjectType {
-  if (value && isProjectSpaceType(value)) return value
-  return OTHER_PROJECT_TYPE
+export function projectTypeLabel(types: readonly ProjectTypeOption[], value: string): string {
+  return types.find((type) => type.value === value)?.label ?? value
 }
 
-export function activityProjectTypeLabel(value: string): string {
-  if (value === OTHER_PROJECT_TYPE) return 'Other'
-  return projectSpaceTypeLabel(value)
-}
-
-export function isActivityProjectType(value: string): value is ActivityProjectType {
-  return isProjectSpaceType(value) || value === OTHER_PROJECT_TYPE
+/** Vocabulary entries that have at least one project, in vocabulary order. */
+export function presentProjectTypes(
+  types: readonly ProjectTypeOption[],
+  projectTypes: Iterable<string>
+): ProjectTypeOption[] {
+  const present = new Set(projectTypes)
+  return types.filter((type) => present.has(type.value))
 }

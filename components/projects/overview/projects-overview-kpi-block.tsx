@@ -25,6 +25,7 @@ export async function ProjectsOverviewKpiBlock({
       month: listParams.month,
       view: listParams.view,
       category: listParams.category,
+      status: listParams.status,
       q: listParams.q,
       pm: listParams.pm,
     })
@@ -45,12 +46,14 @@ export async function ProjectsOverviewKpiBlock({
         ? await loadProjectsOverviewGlobal({
             anchorMonthStartStr: monthCtxRes.data.monthStartStr,
             category: routeFilters.category,
+            status: routeFilters.status,
             searchQuery: routeFilters.searchQuery,
             fallbackSnapshotId: monthCtxRes.data.snapshot.id,
           })
         : await loadProjectsOverviewMonthly({
             monthContext: monthCtxRes.data,
             category: routeFilters.category,
+            status: routeFilters.status,
             searchQuery: routeFilters.searchQuery,
             pmQuery: routeFilters.pmQuery,
           })

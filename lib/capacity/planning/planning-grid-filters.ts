@@ -3,13 +3,13 @@ import {
   type PlannedUtilizationBand,
 } from '@/lib/domain/planned-utilization-band'
 import { plannedPct } from '@/lib/domain/workload-metrics'
-import type { ProjectSpaceTypeFilter } from '@/lib/domain/project-types'
 import type { PlanningPeopleNode, PlanningProjectNode } from '@/lib/capacity/planning/planning-types'
 import type { StaffFilterMode } from '@/lib/ui/staff-filter-mode'
 import { matchesProjectManagerQuery } from '@/lib/workforce/project-manager'
 
 export type PlanningUtilizationBand = PlannedUtilizationBand
-export type PlanningProjectTypeFilter = ProjectSpaceTypeFilter
+/** A `dim_project_type` key, or `all`. */
+export type PlanningProjectTypeFilter = string
 export type PlanningTreeExpansion = 'expand' | 'collapse'
 
 export function personPeriodUtilizationPct(

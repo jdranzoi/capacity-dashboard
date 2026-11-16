@@ -23,8 +23,8 @@ export function ProjectsOverviewKpiSection({
       </h2>
       <div className={cn(KPI_METRICS_GRID_CLASS, 'xl:grid-cols-6')}>
         <KpiMetricCard
-          label="Total active projects"
-          value={String(kpis.activeProjectCount)}
+          label="Projects"
+          value={String(kpis.projectCount)}
         />
         <KpiMetricCard
           label={`Total hours logged (${hoursScope})`}

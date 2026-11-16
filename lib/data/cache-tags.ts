@@ -4,8 +4,11 @@ export const CACHE_TAG_OVERVIEW_MONTHS = 'overview-months'
 
 export const CACHE_TAG_MONTH_FACTS = 'month-facts'
 
-/** Projects Overview global lifetime totals (`v_project_delivery_totals` or fallback). */
+/** Lifetime logged and billable hours per project (`v_project_delivery_totals`). */
 export const CACHE_TAG_PROJECTS_GLOBAL = 'projects-global'
+
+/** Project type vocabulary (`dim_project_type`); refreshed with each sync. */
+export const CACHE_TAG_PROJECT_CATALOG = 'project-catalog'
 
 /** Latest `sync_snapshot` anchor (badge, loaders, sync-version baseline). */
 export const CACHE_TAG_SYNC_LATEST = 'sync-latest'

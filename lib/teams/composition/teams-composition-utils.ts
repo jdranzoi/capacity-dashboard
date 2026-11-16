@@ -1,4 +1,3 @@
-import type { ProjectSpaceType } from '@/lib/domain/project-types'
 import { isTlRoleKey, roleSortIndex } from '@/lib/domain/role-keys'
 import { matchesProjectManagerQuery } from '@/lib/workforce/project-manager'
 
@@ -27,7 +26,7 @@ export type TeamsCompositionProject = {
   projectId: string
   projectKey: string
   projectName: string | null
-  projectType: ProjectSpaceType
+  projectType: string
   pmName: string | null
   pmSortKey: string
   pmMembers: TeamsCompositionPmMember[]
@@ -35,7 +34,7 @@ export type TeamsCompositionProject = {
 }
 
 export type TeamsCompositionTypeGroup = {
-  projectType: ProjectSpaceType
+  projectType: string
   label: string
   projects: TeamsCompositionProject[]
 }
@@ -246,7 +245,7 @@ export function filterProjectsByPersonQuery(
 }
 
 export function buildTypeGroup(
-  projectType: ProjectSpaceType,
+  projectType: string,
   label: string,
   projects: TeamsCompositionProject[],
   filters: {
@@ -333,7 +332,7 @@ export function buildPmGroups(
   return groups
 }
 
-export function compositionSectionId(projectType: ProjectSpaceType): string {
+export function compositionSectionId(projectType: string): string {
   return `teams-composition-${projectType}`
 }
 

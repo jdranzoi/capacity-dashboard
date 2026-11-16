@@ -124,7 +124,6 @@
   --collab-role-qa: oklch(0.62 0.18 72);
   --collab-role-ux: oklch(0.6 0.18 350);
   --collab-role-analytics: oklch(0.54 0.12 190);
-  --collab-role-em: oklch(0.5 0.04 280);
   --collab-role-unassigned: oklch(0.6 0 0);
   /* Fallback palette for dim_role keys without a dedicated --collab-role-* token */
   --collab-palette-0: oklch(0.58 0.17 35);
@@ -209,7 +208,6 @@
   --collab-role-qa: oklch(0.8 0.14 72);
   --collab-role-ux: oklch(0.76 0.15 350);
   --collab-role-analytics: oklch(0.74 0.1 190);
-  --collab-role-em: oklch(0.72 0.04 280);
   --collab-role-unassigned: oklch(0.6 0 0);
   --collab-palette-0: oklch(0.78 0.14 35);
   --collab-palette-1: oklch(0.72 0.12 165);

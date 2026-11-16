@@ -1,16 +1,26 @@
-import {
-  DEFAULT_PROJECT_SPACE_TYPE,
-  isProjectSpaceType,
-  type ProjectSpaceType,
-} from '@/lib/domain/project-types'
+import { BUILD_PROJECT_TYPE } from '@/lib/domain/project-types'
 
 export type ProjectsViewMode = 'monthly' | 'global'
 
-export type ProjectsCategoryFilter = ProjectSpaceType
+/** A `dim_project_type` key. */
+export type ProjectsCategoryFilter = string
+
+export const DEFAULT_PROJECTS_CATEGORY: ProjectsCategoryFilter = BUILD_PROJECT_TYPE
+
+/** `active` lists live projects only; `all` adds closed, completed and cancelled ones. */
+export type ProjectsStatusFilter = 'active' | 'all'
+
+export const DEFAULT_PROJECTS_STATUS: ProjectsStatusFilter = 'active'
+
+export const PROJECTS_STATUS_OPTIONS: readonly { value: ProjectsStatusFilter; label: string }[] = [
+  { value: 'active', label: 'Active' },
+  { value: 'all', label: 'All' },
+]
 
 export type ProjectsRouteFilters = {
   view: ProjectsViewMode
   category: ProjectsCategoryFilter
+  status: ProjectsStatusFilter
   searchQuery: string | null
   projectKey: string | null
   pmQuery: string | null
@@ -26,7 +36,7 @@ export function coerceViewForCategory(
   category: ProjectsCategoryFilter,
   view: ProjectsViewMode
 ): ProjectsViewMode {
-  if (category === 'build') return 'global'
+  if (category === BUILD_PROJECT_TYPE) return 'global'
   return 'monthly'
 }
 
@@ -37,11 +47,10 @@ export function parseProjectsRouteFilters(
   const requestedView: ProjectsViewMode =
     viewRaw === 'monthly' ? 'monthly' : 'global'
 
-  const categoryRaw = firstParam(raw.category)?.toLowerCase()
-  let category: ProjectsCategoryFilter = DEFAULT_PROJECT_SPACE_TYPE
-  if (categoryRaw && isProjectSpaceType(categoryRaw)) {
-    category = categoryRaw
-  }
+  const categoryRaw = firstParam(raw.category)?.trim().toLowerCase()
+  const category: ProjectsCategoryFilter = categoryRaw || DEFAULT_PROJECTS_CATEGORY
+  const status: ProjectsStatusFilter =
+    firstParam(raw.status)?.toLowerCase() === 'all' ? 'all' : DEFAULT_PROJECTS_STATUS
 
   const view = coerceViewForCategory(category, requestedView)
 
@@ -52,6 +61,7 @@ export function parseProjectsRouteFilters(
   return {
     view,
     category,
+    status,
     searchQuery: q && q.length > 0 ? q : null,
     projectKey: project && project.length > 0 ? project : null,
     pmQuery: pm && pm.length > 0 ? pm : null,
@@ -63,6 +73,13 @@ export function matchesProjectsCategory(
   category: ProjectsCategoryFilter
 ): boolean {
   return projectType === category
+}
+
+export function matchesProjectsStatus(
+  projectStatus: string,
+  filter: ProjectsStatusFilter
+): boolean {
+  return filter === 'all' || projectStatus === 'active'
 }
 
 export function matchesProjectsSearch(

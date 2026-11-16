@@ -1,7 +1,6 @@
 import { cacheLife, cacheTag } from 'next/cache'
 
 import { CACHE_TAG_PROJECTS_GLOBAL } from '@/lib/data/cache-tags'
-import { pagedQuery } from '@/lib/data/paged-query'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import { loggedVersusPlannedProductivityPct } from '@/lib/domain/workload-metrics'
 import {
@@ -11,7 +10,7 @@ import {
   projectBudgetUsedPct,
 } from '@/lib/domain/project-delivery-metrics'
 import { loadOverviewMonthOptions } from '@/lib/overview/overview-month-options'
-import { loadActiveProjects } from '@/lib/projects/overview/load-active-projects'
+import { loadProjects } from '@/lib/projects/overview/load-projects'
 import { loadBuildProjectDeliveryMetrics } from '@/lib/projects/overview/build-project-delivery-window'
 import {
   lastNMonthStarts,
@@ -20,7 +19,9 @@ import {
 import {
   matchesProjectsCategory,
   matchesProjectsSearch,
+  matchesProjectsStatus,
   type ProjectsCategoryFilter,
+  type ProjectsStatusFilter,
 } from '@/lib/projects/overview/projects-route-filters'
 import type {
   ProjectOverviewRow,
@@ -29,53 +30,37 @@ import type {
 } from '@/lib/projects/overview/projects-types'
 import { createServiceClientCached } from '@/lib/supabase/server'
 
-type DeliveryTotalsRow = {
-  project_id: string
-  project_key: string
-  project_name: string | null
-  project_type: string
-  start_date: string | null
-  budget_hours: number | null
-  lifetime_logged_hours: number
-  lifetime_billable_hours: number
-  lifetime_planned_hours: number
-}
-
-async function loadDeliveryTotalsFromView(): Promise<{
-  rows: DeliveryTotalsRow[]
-  error: string | null
-}> {
-  const supabase = createServiceClientCached()
-  const { rows, error } = await pagedQuery<DeliveryTotalsRow>(async (from) =>
-    supabase
-      .from('v_project_delivery_totals')
-      .select(
-        'project_id, project_key, project_name, project_type, start_date, budget_hours, lifetime_logged_hours, lifetime_billable_hours, lifetime_planned_hours'
-      )
-      .order('project_key')
-      .range(from, from + 999)
-  )
-
-  if (error) {
-    return { rows: [], error }
-  }
-  return { rows, error: null }
-}
-
-export async function loadProjectsGlobalTotalsCached(): Promise<{
-  rows: DeliveryTotalsRow[]
+/** Lifetime logged and billable hours of one project, PTO excluded (`v_project_delivery_totals`). */
+export async function loadProjectLifetimeHours(projectId: string): Promise<{
+  data: { loggedHours: number; billableHours: number } | null
   error: string | null
 }> {
   'use cache'
   cacheLife({ stale: 120, revalidate: 300 })
   cacheTag(CACHE_TAG_PROJECTS_GLOBAL)
 
-  return loadDeliveryTotalsFromView()
+  const supabase = createServiceClientCached()
+  const { data, error } = await supabase
+    .from('v_project_delivery_totals')
+    .select('lifetime_logged_hours, lifetime_billable_hours')
+    .eq('project_id', projectId)
+    .maybeSingle()
+
+  if (error) return { data: null, error: error.message }
+  if (!data) return { data: null, error: null }
+  return {
+    data: {
+      loggedHours: Number(data.lifetime_logged_hours) || 0,
+      billableHours: Number(data.lifetime_billable_hours) || 0,
+    },
+    error: null,
+  }
 }
 
 export async function loadProjectsOverviewGlobal(params: {
   anchorMonthStartStr: string
   category: ProjectsCategoryFilter
+  status: ProjectsStatusFilter
   searchQuery: string | null
   fallbackSnapshotId: string
 }): Promise<{ data: ProjectsOverviewPayload | null; error: string | null }> {
@@ -83,7 +68,7 @@ export async function loadProjectsOverviewGlobal(params: {
 
   const [monthOptionsRes, projectsRes] = await Promise.all([
     loadOverviewMonthOptions(),
-    loadActiveProjects(),
+    loadProjects(),
   ])
 
   if (monthOptionsRes.error) {
@@ -95,6 +80,7 @@ export async function loadProjectsOverviewGlobal(params: {
 
   const filteredProjects = projectsRes.rows.filter((project) => {
     if (!matchesProjectsCategory(project.project_type, params.category)) return false
+    if (!matchesProjectsStatus(project.status, params.status)) return false
     return matchesProjectsSearch(project.project_key, project.project_name, params.searchQuery)
   })
 
@@ -183,7 +169,7 @@ export async function loadProjectsOverviewGlobal(params: {
   const totalPlannedHours = roundDisplayStat(rows.reduce((s, r) => s + r.plannedHours, 0))
 
   const kpis: ProjectsOverviewKpis = {
-    activeProjectCount: rows.length,
+    projectCount: rows.length,
     totalLoggedHours,
     totalPlannedHours,
     overallUtilizationPct: loggedVersusPlannedProductivityPct(totalLoggedHours, totalPlannedHours),

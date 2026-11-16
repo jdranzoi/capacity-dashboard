@@ -1,10 +1,8 @@
-import type { ProjectSpaceType } from '@/lib/domain/project-types'
-
 export type ProjectOverviewRow = {
   projectId: string
   projectKey: string
   projectName: string | null
-  projectType: ProjectSpaceType
+  projectType: string
   pmName: string | null
   status: string
   startDate: string | null
@@ -18,7 +16,7 @@ export type ProjectOverviewRow = {
 }
 
 export type ProjectsOverviewKpis = {
-  activeProjectCount: number
+  projectCount: number
   totalLoggedHours: number
   totalPlannedHours: number
   overallUtilizationPct: number | null
@@ -87,7 +85,8 @@ export type ProjectDetailPanelPayload = {
   projectId: string
   projectKey: string
   projectName: string | null
-  projectType: ProjectSpaceType
+  projectType: string
+  projectTypeLabel: string
   startDate: string | null
   targetReleaseDate: string | null
   budgetHours: number | null

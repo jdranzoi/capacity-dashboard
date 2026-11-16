@@ -2,10 +2,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { endOfMonth, format, parse } from 'date-fns'
 
 import type { CompositionSuggestOption } from '@/lib/teams/composition/composition-suggest-utils'
-import {
-  isProjectSpaceType,
-  projectSpaceTypeLabel,
-} from '@/lib/domain/project-types'
+import { loadProjectTypes } from '@/lib/data/load-project-types'
+import { projectTypeLabel } from '@/lib/domain/project-types'
 import { projectCardTitle } from '@/lib/teams/composition/teams-composition-utils'
 import { loadPmFilterSuggestions } from '@/lib/workforce/load-pm-filter-suggestions'
 import { createServiceClientCached } from '@/lib/supabase/server'
@@ -149,6 +147,9 @@ async function loadProjectSuggestions(
     project_type: string
   }[] = []
 
+  const typesRes = await loadProjectTypes()
+  if (typesRes.error) return { options: [], error: typesRes.error }
+
   for (let i = 0; i < projectIds.length; i += BATCH) {
     const slice = projectIds.slice(i, i + BATCH)
     const { data, error } = await supabase
@@ -158,11 +159,7 @@ async function loadProjectSuggestions(
 
     if (error) return { options: [], error: error.message }
 
-    for (const row of data ?? []) {
-      if (isProjectSpaceType(row.project_type)) {
-        rows.push(row)
-      }
-    }
+    rows.push(...(data ?? []))
   }
 
   const options = rows
@@ -175,7 +172,7 @@ async function loadProjectSuggestions(
       return {
         value: label,
         label,
-        hint: projectSpaceTypeLabel(row.project_type),
+        hint: projectTypeLabel(typesRes.types, row.project_type),
       }
     })
 

@@ -4,18 +4,26 @@ import { useCallback } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { SegmentedControl } from '@/components/ui/segmented-control'
-import { PROJECT_SPACE_TYPES } from '@/lib/domain/project-types'
+import type { ProjectTypeOption } from '@/lib/domain/project-types'
 import { useProjectsRoutePending } from '@/components/projects/_shared/projects-route-pending-shell'
 import { DashboardFilterField } from '@/components/layout/dashboard-filter-field'
 import { projectsOverviewHref } from '@/lib/projects/overview/projects-overview-nav'
-import type { ProjectsCategoryFilter } from '@/lib/projects/overview/projects-route-filters'
+import {
+  PROJECTS_STATUS_OPTIONS,
+  type ProjectsCategoryFilter,
+  type ProjectsStatusFilter,
+} from '@/lib/projects/overview/projects-route-filters'
 import { cn } from '@/lib/utils'
 
 export function ProjectsOverviewToolbar({
   category,
+  typeOptions,
+  status,
   searchQuery,
 }: {
   category: ProjectsCategoryFilter
+  typeOptions: readonly ProjectTypeOption[]
+  status: ProjectsStatusFilter
   searchQuery: string | null
 }) {
   const pathname = usePathname()
@@ -38,7 +46,14 @@ export function ProjectsOverviewToolbar({
         label="Project type"
         value={category}
         onChange={(v) => navigate({ category: v })}
-        options={PROJECT_SPACE_TYPES}
+        options={typeOptions}
+      />
+
+      <SegmentedControl
+        label="Status"
+        value={status}
+        onChange={(v) => navigate({ status: v === 'active' ? null : v })}
+        options={PROJECTS_STATUS_OPTIONS}
       />
 
       <DashboardFilterField label="Search">

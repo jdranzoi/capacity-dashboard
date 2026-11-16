@@ -6,11 +6,8 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { DashboardFilterField } from '@/components/layout/dashboard-filter-field'
 import { OverviewMonthPicker } from '@/components/overview/overview-month-picker'
 import { useProjectsRoutePending } from '@/components/projects/_shared/projects-route-pending-shell'
-import { SegmentedControl } from '@/components/ui/segmented-control'
-import {
-  activityProjectTypeLabel,
-  type ActivityProjectTypeFilter,
-} from '@/lib/domain/project-types'
+import { SegmentedControl, type SegmentedControlOption } from '@/components/ui/segmented-control'
+import type { ActivityProjectTypeFilter } from '@/lib/projects/activity/activity-types'
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
 
 export function ProjectsActivityToolbar({
@@ -22,7 +19,7 @@ export function ProjectsActivityToolbar({
   monthOptions: OverviewMonthOption[]
   monthKey: string
   typeFilter: ActivityProjectTypeFilter
-  typeOptions: ActivityProjectTypeFilter[]
+  typeOptions: SegmentedControlOption<ActivityProjectTypeFilter>[]
 }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -51,10 +48,7 @@ export function ProjectsActivityToolbar({
           label="Type"
           value={typeFilter}
           onChange={navigate}
-          options={typeOptions.map((value) => ({
-            value,
-            label: value === 'all' ? 'All' : activityProjectTypeLabel(value),
-          }))}
+          options={typeOptions}
         />
       ) : null}
     </div>
