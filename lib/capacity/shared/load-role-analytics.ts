@@ -18,7 +18,10 @@ import {
   teamHolidaysByZoneForEligible,
   teamPersonElapsedNetWeekdays,
 } from '@/lib/capacity/shared/elapsed-pace-context'
-import { ptoHoursByPersonDateThrough } from '@/lib/overview/elapsed-net-weekdays'
+import {
+  employedSpanByPerson,
+  ptoHoursByPersonDateThrough,
+} from '@/lib/overview/elapsed-net-weekdays'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import type { Database } from '@/lib/supabase/database.types'
 import { fetchMonthRolesForPeople } from '@/lib/workforce/month-role'
@@ -115,6 +118,7 @@ export async function loadRoleAnalytics(
     const eligibleWeekdays = teamEligibleWeekdayDates(referenceDate, logThroughStr)
     const holidaysByZone = teamHolidaysByZoneForEligible(holidayRows, eligibleWeekdays)
     const ptoHoursByPersonDate = ptoHoursByPersonDateThrough(ptoRows, logThroughStr)
+    const employedSpans = employedSpanByPerson(capRows)
 
     const capacityPersonIds = Array.from(capByPerson.keys())
     if (capacityPersonIds.length === 0) {
@@ -189,6 +193,7 @@ export async function loadRoleAnalytics(
         eligibleWeekdays,
         holidaysByZone,
         ptoHoursByPersonDate,
+        employedSpanByPerson: employedSpans,
       })
       bump(roleByPerson.get(pid) ?? null, pid, elapsed)
     }

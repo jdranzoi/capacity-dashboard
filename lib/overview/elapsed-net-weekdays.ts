@@ -75,17 +75,37 @@ export function ptoHoursByPersonDateThrough(
 }
 
 /**
- * Net elapsed weekdays for utilization (D-032): eligible Mon–Fri days in the window minus
- * zone holidays minus this person's PTO hours / 8 (a half-day of PTO removes half a day).
+ * Days of the month a person was employed (D-034), from `fact_capacity.employed_from` /
+ * `employed_through`. Null bounds mean month start / month end.
+ */
+export type EmployedSpan = { from: string | null; through: string | null }
+
+export const WHOLE_MONTH: EmployedSpan = { from: null, through: null }
+
+export function employedSpanByPerson(
+  capRows: readonly { person_id: string; employed_from: string | null; employed_through: string | null }[]
+): Map<string, EmployedSpan> {
+  return new Map(
+    capRows.map((r) => [r.person_id, { from: r.employed_from, through: r.employed_through }])
+  )
+}
+
+/**
+ * Net elapsed weekdays for utilization (D-032, D-034): eligible Mon–Fri days in the window
+ * inside the person's employed span, minus zone holidays, minus PTO hours / 8 (a half-day
+ * of PTO removes half a day).
  */
 export function elapsedNetWeekdaysForPerson(args: {
   eligibleWeekdayDates: ReadonlySet<string>
   zoneHolidayDates: ReadonlySet<string>
   personPtoHoursByDate: ReadonlyMap<string, number>
+  employedSpan: EmployedSpan
 }): number {
-  const { eligibleWeekdayDates, zoneHolidayDates, personPtoHoursByDate } = args
+  const { eligibleWeekdayDates, zoneHolidayDates, personPtoHoursByDate, employedSpan } = args
   let n = 0
   for (const d of eligibleWeekdayDates) {
+    if (employedSpan.from != null && d < employedSpan.from) continue
+    if (employedSpan.through != null && d > employedSpan.through) continue
     if (zoneHolidayDates.has(d)) continue
     const pto = Math.min(STANDARD_WORKDAY_HOURS, personPtoHoursByDate.get(d) ?? 0)
     n += 1 - pto / STANDARD_WORKDAY_HOURS

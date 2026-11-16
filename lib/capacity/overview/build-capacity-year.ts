@@ -337,8 +337,9 @@ function buildHeadcountCard(
   const peopleByYearMonth = new Map<number, Set<string>[]>()
   const roleMonth = new Map<string, number[]>()
 
+  // Headcount = the month's capacity population (D-034): everyone employed that month,
+  // including people with zero net capacity (e.g. a full month of PTO).
   for (const row of facts.ops) {
-    if (num(row.net_capacity_hours) <= 0) continue
     const year = yearOf(row.month_date)
     const monthIndex = monthIndexOf(row.month_date)
     if (monthIndex < 0 || monthIndex > 11) continue

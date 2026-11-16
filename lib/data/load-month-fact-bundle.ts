@@ -21,6 +21,9 @@ export type MonthFactCapacityRow = {
   zone_id: string | null
   net_capacity_hours: number
   pto_hours: number
+  /** Employed span inside the month (D-034); null = month start / month end. */
+  employed_from: string | null
+  employed_through: string | null
 }
 
 export type MonthFactPlanRow = {
@@ -93,7 +96,7 @@ async function loadMonthFactBundleCached(
     pagedQuery<MonthFactCapacityRow>(async (from) =>
       supabase
         .from('fact_capacity')
-        .select('person_id, zone_id, net_capacity_hours, pto_hours')
+        .select('person_id, zone_id, net_capacity_hours, pto_hours, employed_from, employed_through')
         .eq('snapshot_id', snapshotId)
         .eq('month_date', monthStartStr)
         .order('person_id')

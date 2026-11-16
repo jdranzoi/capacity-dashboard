@@ -83,6 +83,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"dim_person_employment_history": {
+                  Row: {
+                    "created_at": string,"end_date": string,"id": string,"note": string | null,"person_id": string,"start_date": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"end_date": string,"id"?: string,"note"?: string | null,"person_id": string,"start_date": string
+                  }
+                  Update: {
+                    "created_at"?: string,"end_date"?: string,"id"?: string,"note"?: string | null,"person_id"?: string,"start_date"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "dim_person_employment_history_person_id_fkey"
+      columns: ["person_id"]
+isOneToOne: false
+      referencedRelation: "dim_person"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"dim_person_month_role": {
                   Row: {
                     "created_at": string,"month_date": string,"person_id": string,"role_id": string,"updated_at": string
@@ -199,14 +219,14 @@ isOneToOne: false
                   ]
                 },"fact_capacity": {
                   Row: {
-                    "created_at": string | null,"holidays": number,"id": string,"month_date": string,"net_capacity_hours": number,"net_working_days": number,"person_id": string,"pto_days": number,"pto_hours": number,"role_id": string | null,"snapshot_id": string,"total_working_days": number,"zone_id": string | null
+                    "created_at": string | null,"employed_from": string | null,"employed_through": string | null,"holidays": number,"id": string,"month_date": string,"net_capacity_hours": number,"net_working_days": number,"person_id": string,"pto_days": number,"pto_hours": number,"role_id": string | null,"snapshot_id": string,"total_working_days": number,"zone_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string | null,"holidays"?: number,"id"?: string,"month_date": string,"net_capacity_hours": number,"net_working_days": number,"person_id": string,"pto_days"?: number,"pto_hours"?: number,"role_id"?: string | null,"snapshot_id": string,"total_working_days": number,"zone_id"?: string | null
+                    "created_at"?: string | null,"employed_from"?: string | null,"employed_through"?: string | null,"holidays"?: number,"id"?: string,"month_date": string,"net_capacity_hours": number,"net_working_days": number,"person_id": string,"pto_days"?: number,"pto_hours"?: number,"role_id"?: string | null,"snapshot_id": string,"total_working_days": number,"zone_id"?: string | null
                   }
                   Update: {
-                    "created_at"?: string | null,"holidays"?: number,"id"?: string,"month_date"?: string,"net_capacity_hours"?: number,"net_working_days"?: number,"person_id"?: string,"pto_days"?: number,"pto_hours"?: number,"role_id"?: string | null,"snapshot_id"?: string,"total_working_days"?: number,"zone_id"?: string | null
+                    "created_at"?: string | null,"employed_from"?: string | null,"employed_through"?: string | null,"holidays"?: number,"id"?: string,"month_date"?: string,"net_capacity_hours"?: number,"net_working_days"?: number,"person_id"?: string,"pto_days"?: number,"pto_hours"?: number,"role_id"?: string | null,"snapshot_id"?: string,"total_working_days"?: number,"zone_id"?: string | null
                   }
                   Relationships: [
                     {

@@ -103,11 +103,11 @@ migration is applied, run `pnpm db:types` so they leave `lib/supabase/database.t
 | `fact_worklogs` | Upsert (no `snapshot_id`) | `(person_id, project_id, log_date)` | Individual worklog entries; `is_commercial` stamped at sync; `is_billable` from Tempo. Use for logged/billable totals and commercial split. |
 | `fact_plans` | Snapshot per sync | `(snapshot_id, person_id, project_id, issue_id, month_date)` | Planned hours per person per project per month. `plan_kind`: `delivery` \| `pto` (HR) \| `reserved` (PRE). **Planned** = delivery only: filter with `DELIVERY_PLAN_FILTER` (`lib/data/delivery-plan-filter.ts`), never `is_pto = false` (D-029) |
 | `fact_pto_plan` | Snapshot per sync | `(snapshot_id, tempo_plan_id)` | HR plan items; source of planned PTO from the sync day on (D-030) |
-| `fact_capacity` | Snapshot per sync | `(snapshot_id, person_id, month_date, source)` | Zone-adjusted net capacity |
+| `fact_capacity` | Snapshot per sync | `(snapshot_id, person_id, month_date, source)` | Zone-adjusted net capacity over employed days; `employed_from` / `employed_through` = employed span of the month (D-034, null = whole month). Elapsed capacity is clipped to that span (`employedSpanByPerson`). |
 | `fact_project_actuals` | Snapshot per sync | `(snapshot_id, project_id, month_date)` | Aggregate logged + billable hours per project |
 | `fact_fragmentation` | Snapshot per sync | `(snapshot_id, person_id, month_date, source)` | Pre-computed fragmentation flags |
 | `fact_bench` | Pre-computed per sync | `(snapshot_id, person_id, month_date)` | `availability_hours` is a generated column (`net_capacity_hours - planned_hours`) |
-| `fact_month_ops` | Upsert | `(person_id, month_date)` | Derived month rollup (D-026): net/logged/commercial/PTO hours + `elapsed_net_weekdays`. Headcount proxy = rows with `net_capacity_hours > 0`. |
+| `fact_month_ops` | Upsert | `(person_id, month_date)` | Derived month rollup (D-026): net/logged/commercial/PTO hours + `elapsed_net_weekdays`. Headcount = rows of the month (the capacity population, net capacity 0 included — D-034). |
 | `fact_month_projects` | Upsert | `(project_id, month_date)` | Distinct projects with non-PTO logged hours. Join `dim_project` for `project_type`. |
 | `dim_issue` | Upsert | `(project_id, issue_key)` | Jira issues; first consumer MCT Training. Arrays: fix_versions, components, labels. Estimate on the ticket. |
 | `fact_issue_worklogs` | Upsert | `(issue_id, person_id, log_date)` | Tempo hours at issue grain. Do not merge with `fact_worklogs`. |

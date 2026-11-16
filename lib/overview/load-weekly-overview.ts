@@ -23,6 +23,8 @@ import {
   NO_PTO_HOURS,
   NO_WEEKDAY_DATES,
   ptoHoursByPersonDateThrough,
+  employedSpanByPerson,
+  WHOLE_MONTH,
   weekdayDateStringsMonthThrough,
 } from '@/lib/overview/elapsed-net-weekdays'
 import { formatMonthLabel } from './working-days'
@@ -231,6 +233,7 @@ export async function loadWeeklyOverview(
     const capacityPersonIds = new Set(capRows.map((r) => r.person_id))
 
     const personZoneById = new Map(capRows.map((r) => [r.person_id, r.zone_id]))
+    const employedSpans = employedSpanByPerson(capRows)
 
     let elapsedCapacityHoursRaw = 0
     for (const pid of capacityPersonIds) {
@@ -241,6 +244,7 @@ export async function loadWeeklyOverview(
         eligibleWeekdayDates: eligibleWeekdaysThroughAsOf,
         zoneHolidayDates,
         personPtoHoursByDate: ptoHoursByPersonDate.get(pid) ?? NO_PTO_HOURS,
+        employedSpan: employedSpans.get(pid) ?? WHOLE_MONTH,
       })
       elapsedCapacityHoursRaw += elapsed * STANDARD_WORKDAY_HOURS
     }

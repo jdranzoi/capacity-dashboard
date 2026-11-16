@@ -5,7 +5,9 @@ import {
   holidaysByZoneEligibleWeekdays,
   NO_PTO_HOURS,
   NO_WEEKDAY_DATES,
+  WHOLE_MONTH,
   weekdayDateStringsMonthThrough,
+  type EmployedSpan,
 } from '@/lib/overview/elapsed-net-weekdays'
 
 /**
@@ -33,6 +35,7 @@ export function teamPersonElapsedNetWeekdays(args: {
   eligibleWeekdays: ReadonlySet<string>
   holidaysByZone: Map<string, Set<string>>
   ptoHoursByPersonDate: Map<string, Map<string, number>>
+  employedSpanByPerson: ReadonlyMap<string, EmployedSpan>
 }): number {
   const zoneHolidayDates =
     args.zoneId != null
@@ -42,5 +45,6 @@ export function teamPersonElapsedNetWeekdays(args: {
     eligibleWeekdayDates: args.eligibleWeekdays,
     zoneHolidayDates,
     personPtoHoursByDate: args.ptoHoursByPersonDate.get(args.personId) ?? NO_PTO_HOURS,
+    employedSpan: args.employedSpanByPerson.get(args.personId) ?? WHOLE_MONTH,
   })
 }
