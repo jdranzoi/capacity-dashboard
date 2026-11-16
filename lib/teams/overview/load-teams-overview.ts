@@ -17,6 +17,13 @@ export type TeamsDistributionRow = {
   sharePct: number | null
 }
 
+/** People of one month role, for the roster list. Names only, sorted. */
+export type TeamsRoleRoster = {
+  key: string
+  label: string
+  members: string[]
+}
+
 export type TeamsOverviewPayload = {
   monthLabel: string
   snapshotId: string
@@ -27,6 +34,7 @@ export type TeamsOverviewPayload = {
   avgTenureMonths: number | null
   byRole: TeamsDistributionRow[]
   byZone: TeamsDistributionRow[]
+  rosterByRole: TeamsRoleRoster[]
 }
 
 function sharePct(headcount: number, total: number): number | null {
@@ -89,6 +97,7 @@ export async function loadTeamsOverview(params: {
           avgTenureMonths: null,
           byRole: [],
           byZone: [],
+          rosterByRole: [],
         },
         error: null,
       }
@@ -138,6 +147,7 @@ export async function loadTeamsOverview(params: {
       string,
       { id: string | null; key: string; label: string; headcount: number }
     >()
+    const membersByRole = new Map<string, string[]>()
     const tenureSamples: number[] = []
     const referenceDate = endOfMonth(parse(monthStartStr, 'yyyy-MM-dd', new Date()))
 
@@ -155,6 +165,9 @@ export async function loadTeamsOverview(params: {
       byRole.set(roleKey, roleRow)
 
       const person = peopleResult.peopleById.get(personId)
+      const members = membersByRole.get(roleKey) ?? []
+      members.push(person?.name ?? personId)
+      membersByRole.set(roleKey, members)
       const zoneId = person?.zoneId ?? null
       const zoneKey = groupKey(zoneId)
       const zoneInfo = zoneId ? zoneMeta.get(zoneId) : null
@@ -200,6 +213,15 @@ export async function loadTeamsOverview(params: {
         avgTenureMonths,
         byRole: buildDistributionRows(byRole, headcount),
         byZone: buildDistributionRows(byZone, headcount),
+        rosterByRole: Array.from(byRole.entries())
+          .map(([roleKey, row]) => ({
+            key: row.key,
+            label: row.label,
+            members: (membersByRole.get(roleKey) ?? []).sort((a, b) =>
+              a.localeCompare(b, 'en', { sensitivity: 'base' })
+            ),
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label, 'en', { sensitivity: 'base' })),
       },
       error: null,
     }
@@ -213,16 +235,19 @@ async function loadPeopleMeta(
   supabase: SupabaseClient<Database>,
   personIds: readonly string[]
 ): Promise<{
-  peopleById: Map<string, { zoneId: string | null; hireDate: string | null }>
+  peopleById: Map<string, { name: string; zoneId: string | null; hireDate: string | null }>
   error: string | null
 }> {
-  const peopleById = new Map<string, { zoneId: string | null; hireDate: string | null }>()
+  const peopleById = new Map<
+    string,
+    { name: string; zoneId: string | null; hireDate: string | null }
+  >()
 
   for (let i = 0; i < personIds.length; i += DIM_BATCH) {
     const slice = personIds.slice(i, i + DIM_BATCH)
     const { data, error } = await supabase
       .from('dim_person')
-      .select('id, zone_id, hire_date')
+      .select('id, name, zone_id, hire_date')
       .in('id', slice)
 
     if (error) {
@@ -231,6 +256,7 @@ async function loadPeopleMeta(
 
     for (const row of data ?? []) {
       peopleById.set(row.id, {
+        name: row.name,
         zoneId: row.zone_id,
         hireDate: row.hire_date,
       })

@@ -132,7 +132,7 @@ export const NAV_DOMAINS: NavigationDomainConfig[] = [
         'Teams',
         'Overview',
         '/teams/overview',
-        'Organizational structure visualization. Headcount, roles, geographic distribution. Seniority mix and skill composition surfaced as placeholders until a data source exists.'
+        'Organizational structure visualization. Headcount, roles, geographic distribution, and the list of people per role.'
       ),
       domainItem(
         'Teams',
