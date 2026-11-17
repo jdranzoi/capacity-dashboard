@@ -47,7 +47,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | Track | Route | Status | Plan anchor |
 |---|---|---|---|
 | SP-2.0 Foundation | — | **Done** | [§ SP-2.0](./SP2_CAPACITY_PLAN.md#shared-foundation-sp-20) |
-| SP-2.2 Overview | `/capacity/overview` | **Done** — current-month strip + YoY cards | [§ SP-2.2](./SP2_CAPACITY_PLAN.md#sp-22--overview-capacityoverview) |
+| SP-2.2 Overview | `/capacity/overview` | **Done** — monthly breakdown matrix (year tabs) + YoY cards | [§ SP-2.2](./SP2_CAPACITY_PLAN.md#sp-22--overview-capacityoverview) |
 | SP-2.3 Operations | `/capacity/operations` | Not started | [§ SP-2.3](./SP2_CAPACITY_PLAN.md#sp-23--operations-capacityoperations) |
 | SP-2.4 Planning | `/capacity/planning` | **Done** | [§ SP-2.4](./SP2_CAPACITY_PLAN.md#sp-24--planning-capacityplanning) |
 | SP-2.5 Allocations | `/capacity/allocations` | Not started | [§ SP-2.5](./SP2_CAPACITY_PLAN.md#sp-25--allocations-capacityallocations) |
@@ -72,7 +72,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | Route | Label | Notes |
 |---|---|---|
 | `/` | Overview | **Substantial** — weekly cards, KPIs, charts |
-| `/capacity/overview` | Capacity → Overview | **Shipped** — current-month strip + same-period YoY cards, weekly trends |
+| `/capacity/overview` | Capacity → Overview | **Shipped** — monthly breakdown matrix (months, quarters, year) + same-period YoY cards, weekly trends |
 | `/capacity/utilization` | Capacity → Utilization | **Shipped** — same ops KPI grid + role/person dashboard |
 | `/capacity/planning` | Capacity → Planning | **Shipped** — dual-tab workspace (People + Project planning) |
 | `/teams` | Teams | Redirects → `/teams/overview` |
@@ -135,4 +135,4 @@ Ask         /ask
 
 ---
 
-*Last updated: 2026-11-16 — stage 1 data model live in production (028–031, data copy, first sync); 032 applied in staging.*
+*Last updated: 2026-11-16 — Capacity Overview monthly breakdown matrix; stage 1 data model live in production (028–031, data copy, first sync); 032 applied in staging.*

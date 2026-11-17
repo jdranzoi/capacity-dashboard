@@ -2,7 +2,7 @@ import { connection } from 'next/server'
 import { parse } from 'date-fns'
 
 import { CapacityOverviewTrendsSection } from '@/components/capacity/overview/capacity-overview-charts-section'
-import { CapacityOverviewMonthStrip } from '@/components/capacity/overview/capacity-overview-month-strip'
+import { CapacityYearGridSection } from '@/components/capacity/overview/capacity-year-grid'
 import { CapacityYearSection } from '@/components/capacity/overview/capacity-year-section'
 import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import { loadCapacityOverview } from '@/lib/capacity/overview/load-capacity-overview'
@@ -46,9 +46,11 @@ export async function CapacityOverviewBlock() {
 
     return (
       <div className="flex flex-col gap-6">
-        <CapacityOverviewMonthStrip data={monthResult.data} />
         {yearResult.data ? (
-          <CapacityYearSection data={yearResult.data} />
+          <>
+            <CapacityYearGridSection grids={yearResult.data.grids} />
+            <CapacityYearSection data={yearResult.data} />
+          </>
         ) : (
           <p className="text-sm text-muted-foreground">
             Year comparison is empty. Apply migration 026 and run rebuild-month-ops.

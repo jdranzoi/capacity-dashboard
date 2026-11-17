@@ -391,14 +391,14 @@ isOneToOne: false
                   ]
                 },"fact_month_projects": {
                   Row: {
-                    "id": string,"logged_hours": number,"month_date": string,"project_id": string,"updated_at": string
+                    "id": string,"logged_hours": number,"month_date": string,"population_commercial_hours": number,"population_non_commercial_hours": number,"project_id": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "id"?: string,"logged_hours"?: number,"month_date": string,"project_id": string,"updated_at"?: string
+                    "id"?: string,"logged_hours"?: number,"month_date": string,"population_commercial_hours"?: number,"population_non_commercial_hours"?: number,"project_id": string,"updated_at"?: string
                   }
                   Update: {
-                    "id"?: string,"logged_hours"?: number,"month_date"?: string,"project_id"?: string,"updated_at"?: string
+                    "id"?: string,"logged_hours"?: number,"month_date"?: string,"population_commercial_hours"?: number,"population_non_commercial_hours"?: number,"project_id"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {

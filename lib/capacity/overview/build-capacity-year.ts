@@ -1,6 +1,13 @@
 import { format } from 'date-fns'
 
 import type { CapacityYearFacts } from '@/lib/capacity/overview/load-capacity-year-facts'
+import { buildCapacityYearGrid } from '@/lib/capacity/overview/build-capacity-year-grid'
+import {
+  bucketMonthOpsByYear,
+  monthIndexOf,
+  yearOf,
+  type MonthOpsBucket,
+} from '@/lib/capacity/overview/month-ops-buckets'
 import {
   CAPACITY_YEAR_KPI_KEYS,
   type CapacityYearCompareRow,
@@ -15,6 +22,7 @@ import {
   roleKeyAcronym,
 } from '@/lib/domain/role-keys'
 import { roleColorVar } from '@/lib/ui/collaboration-role-colors'
+import type { ProjectTypeOption } from '@/lib/domain/project-types'
 import {
   COMMERCIAL_UTILIZATION_KPI,
   UTILIZATION_KPI,
@@ -24,27 +32,6 @@ import {
   loggedUtilizationPct,
   STANDARD_WORKDAY_HOURS,
 } from '@/lib/domain/workload-metrics'
-
-type HourKey =
-  | 'net_capacity_hours'
-  | 'logged_hours'
-  | 'non_commercial_logged_hours'
-  | 'commercial_logged_hours'
-  | 'pto_hours'
-
-type MonthBucket = {
-  hasRows: boolean
-  hours: Record<HourKey, number>
-  elapsedDays: number
-}
-
-const HOUR_KEYS: HourKey[] = [
-  'net_capacity_hours',
-  'logged_hours',
-  'non_commercial_logged_hours',
-  'commercial_logged_hours',
-  'pto_hours',
-]
 
 type LineKpiKey = Exclude<CapacityYearKpiKey, 'headcount' | 'projectCount'>
 
@@ -82,43 +69,12 @@ const KPI_META: Record<
   },
 }
 
-function emptyHours(): Record<HourKey, number> {
-  return {
-    net_capacity_hours: 0,
-    logged_hours: 0,
-    non_commercial_logged_hours: 0,
-    commercial_logged_hours: 0,
-    pto_hours: 0,
-  }
-}
-
-function emptyBucket(): MonthBucket {
-  return {
-    hasRows: false,
-    hours: emptyHours(),
-    elapsedDays: 0,
-  }
-}
-
-function yearOf(monthDate: string): number {
-  return Number(monthDate.slice(0, 4))
-}
-
-function monthIndexOf(monthDate: string): number {
-  return Number(monthDate.slice(5, 7)) - 1
-}
-
-function num(value: number | string | null | undefined): number {
-  const n = typeof value === 'number' ? value : Number(value)
-  return Number.isFinite(n) ? n : 0
-}
-
 function deltaPct(current: number | null, prior: number | null): number | null {
   if (current == null || prior == null || prior === 0) return null
   return ((current - prior) / Math.abs(prior)) * 100
 }
 
-function monthMetric(bucket: MonthBucket, key: LineKpiKey): number | null {
+function monthMetric(bucket: MonthOpsBucket, key: LineKpiKey): number | null {
   if (!bucket.hasRows) return null
   switch (key) {
     case 'netCapacityHours':
@@ -145,7 +101,7 @@ function monthMetric(bucket: MonthBucket, key: LineKpiKey): number | null {
 }
 
 function rangeMetric(
-  buckets: MonthBucket[],
+  buckets: MonthOpsBucket[],
   from: number,
   to: number,
   key: LineKpiKey
@@ -188,30 +144,14 @@ function throughLabel(throughMonthIndex: number): string {
 
 export function buildCapacityYear(
   facts: CapacityYearFacts,
+  projectTypes: readonly ProjectTypeOption[],
   now: Date = new Date()
 ): CapacityYearPayload | null {
   if (facts.ops.length === 0) return null
 
   const currentYear = now.getFullYear()
   const throughMonthIndex = now.getMonth()
-  const byYear = new Map<number, MonthBucket[]>()
-
-  for (const row of facts.ops) {
-    const year = yearOf(row.month_date)
-    const monthIndex = monthIndexOf(row.month_date)
-    if (monthIndex < 0 || monthIndex > 11) continue
-    let months = byYear.get(year)
-    if (!months) {
-      months = Array.from({ length: 12 }, emptyBucket)
-      byYear.set(year, months)
-    }
-    const bucket = months[monthIndex]
-    bucket.hasRows = true
-    for (const key of HOUR_KEYS) {
-      bucket.hours[key] += num(row[key])
-    }
-    bucket.elapsedDays += num(row.elapsed_net_weekdays)
-  }
+  const byYear = bucketMonthOpsByYear(facts.ops)
 
   const years = [...byYear.keys()].sort((a, b) => a - b)
   const keys: LineKpiKey[] = [
@@ -270,6 +210,20 @@ export function buildCapacityYear(
     throughMonthIndex,
     throughLabel: throughLabel(throughMonthIndex),
     cards,
+    grids: years
+      .filter((year) => year <= currentYear)
+      .sort((a, b) => b - a)
+      .map((year) =>
+        buildCapacityYearGrid({
+          year,
+          ops: facts.ops.filter((row) => yearOf(row.month_date) === year),
+          projects: facts.projects.filter((row) => yearOf(row.month_date) === year),
+          roles: facts.roles,
+          projectTypes,
+          currentYear,
+          throughMonthIndex,
+        })
+      ),
   }
 }
 

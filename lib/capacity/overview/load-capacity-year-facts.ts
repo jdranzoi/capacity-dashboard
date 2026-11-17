@@ -29,6 +29,9 @@ export type CapacityYearProjectRow = {
   month_date: string
   project_type: string | null
   is_commercial: boolean
+  /** Capacity population hours (no contractors), split by the worklog's is_commercial stamp. */
+  population_commercial_hours: number
+  population_non_commercial_hours: number
 }
 
 export type CapacityYearFacts = {
@@ -58,10 +61,17 @@ export async function loadCapacityYearFacts(): Promise<{
         .range(from, from + PAGE - 1)
     ),
     supabase.from('dim_role').select('id, key, label').order('key'),
-    pagedQuery<{ project_id: string; month_date: string }>(async (from) =>
+    pagedQuery<{
+      project_id: string
+      month_date: string
+      population_commercial_hours: number
+      population_non_commercial_hours: number
+    }>(async (from) =>
       supabase
         .from('fact_month_projects')
-        .select('project_id, month_date')
+        .select(
+          'project_id, month_date, population_commercial_hours, population_non_commercial_hours'
+        )
         .order('month_date')
         .order('project_id')
         .range(from, from + PAGE - 1)
@@ -96,6 +106,8 @@ export async function loadCapacityYearFacts(): Promise<{
           month_date: row.month_date,
           project_type: dim?.project_type ?? null,
           is_commercial: dim?.is_commercial ?? false,
+          population_commercial_hours: Number(row.population_commercial_hours) || 0,
+          population_non_commercial_hours: Number(row.population_non_commercial_hours) || 0,
         }
       }),
     },

@@ -157,21 +157,28 @@ All Phase 1 sub-sections consume existing v2 ingestion. No new sync work require
 
 #### Metrics
 
-Collapsible **this-month** strip: shared three-column ops KPI grid (`CapacityOpsKpiColumns`) with Utilization. Elapsed capacity and capacity fill stay on this strip only. Bench hours belong on SP-2.6, not this row.
+**Monthly breakdown** (top of the page): month x KPI matrix from `fact_month_ops` with a year tab per year with data (most recent first). Columns: Jan–Dec, Q1–Q4, year. Rows: Headcount, Net capacity, Logged hours, Commercial hours, Non-commercial hours, PTO, Capacity fill, Utilization, Commercial utilization. In the current year the month in progress is marked MTD and later months are empty. Bench hours belong on SP-2.6, not this page.
+
+| Row | Month | Quarter / year |
+| --- | --- | --- |
+| Headcount | `fact_month_ops` rows of the month (capacity population, D-034) | Average of the months with data |
+| Net capacity, Logged, Commercial, Non-commercial, PTO | Sum of the person-month hours | Sum |
+| Capacity fill | `logged / net capacity` (`capacityFillPct`) | Ratio of summed hours |
+| Utilization | `logged / elapsed capacity` (`loggedUtilizationPct`) | Ratio of summed hours (D-032) |
+| Commercial utilization | `commercial / elapsed capacity` (`commercialUtilizationPct`) | Ratio of summed hours |
+
+Capacity fill equals utilization for closed months; it only differs for the month in progress, where net capacity is the full month and logged runs through the last sync.
+
+Expandable rows (same aggregation rules per child row):
+
+| Rows | Breakdown | Source |
+| --- | --- | --- |
+| Headcount, Net capacity, Logged hours, Utilization, Commercial utilization | By role (month role) | `fact_month_ops.role_id` → `dim_role.label`; children sum to the parent for headcount and hours |
+| Commercial hours, Non-commercial hours | By project type | `fact_month_projects.population_commercial_hours` / `population_non_commercial_hours` (capacity population only, migration 033) grouped by `dim_project.project_type`; labels and order from `dim_project_type`. Children sum to the parent. Empty until capacity-mcp migration 033 is applied and `rebuild-month-ops` runs |
+
+Vertical hairlines separate each quarter of months, the quarter totals and the year. Export actions on the visible rows (expanded children included): **Copy for Excel** (tab-separated, whole numbers, unit in the row label), **Copy Markdown** (display format) and **CSV** download.
 
 **Year section** (org-wide, no toolbar): nine cards (3 per row) — Net capacity / Headcount / Projects; Logged / Commercial hours / Non-commercial hours; Utilization / Commercial utilization / PTO. Hours and % cards are same-period YTD vs prior years plus a monthly line series per year. Headcount adds YoY unique-people lines plus current-year role stacks. Projects table and solid YoY lines are unique **commercial** projects (`dim_project.is_commercial` — build + support, same flag as commercial hours). Dotted YoY lines are **NC** (non-commercial) project counts, one series per year in that year’s compare color. A two-layer stack (commercial vs other) shows the current-year mix. Line dots and stacked-bar segments open `/projects/activity` in a new tab for that month.
-
-| Column | KPI | Source |
-| --- | --- | --- |
-| Capacity | Net capacity | Full-month `fact_capacity.net_capacity_hours` |
-| Capacity | Elapsed capacity | Sum of elapsed net weekdays × 8h (share of net shown on card) |
-| Capacity | Planned | Non-PTO `fact_plans` (share of net shown on card) |
-| Capacity | PTO | PTO worklogs through calendar month end |
-| Hours (MTD) | Logged | Non-PTO `fact_worklogs` through overview as-of cap |
-| Hours (MTD) | Non-commercial / Commercial | Same worklogs split by `is_commercial` |
-| Metrics | Capacity fill | `logged_mtd / net_capacity` (`capacityFillPct`) |
-| Metrics | Utilization | Mean per-person pace (`loadWeeklyOverview.utilizationPct`) |
-| Metrics | Commercial utilization | `commercial_logged_mtd / elapsed_capacity` |
 
 #### Charts
 
@@ -183,12 +190,12 @@ Collapsible **this-month** strip: shared three-column ops KPI grid (`CapacityOps
 
 #### Loader
 
-`lib/capacity/overview/load-capacity-overview.ts` — current-month strip (`loadWeeklyOverview` + commercial hours + role summary).  
-`lib/capacity/overview/load-capacity-year.ts` — YoY cards from `fact_month_ops` (D-026). No `fact_bench` on this page. No month / role / zone / project filters.
+`lib/capacity/overview/load-capacity-overview.ts` — current-month weekly trends and role summary (`loadWeeklyOverview` + `loadRoleAnalytics`).  
+`lib/capacity/overview/load-capacity-year.ts` — monthly breakdown matrix (`build-capacity-year-grid.ts`) and YoY cards from `fact_month_ops` (D-026); month buckets shared via `month-ops-buckets.ts`. No `fact_bench` on this page. No month / role / zone / project filters.
 
 #### Components
 
-`components/capacity/overview/capacity-overview-kpi-section.tsx` (wraps shared `CapacityOpsKpiColumns`), `capacity-overview-month-strip.tsx`, `capacity-year-section.tsx`, `capacity-overview-charts-section.tsx`, `capacity-overview-role-summary.tsx`.
+`components/capacity/overview/capacity-year-grid.tsx` (monthly breakdown with year tabs), `capacity-year-section.tsx`, `capacity-overview-charts-section.tsx`, `capacity-overview-role-summary.tsx`.
 
 #### Checklist
 
@@ -197,7 +204,9 @@ Collapsible **this-month** strip: shared three-column ops KPI grid (`CapacityOps
 - [x] **SP-2.2.3** Weekly evolution + composition charts
 - [x] **SP-2.2.4** Role summary table
 - [x] **SP-2.2.5** Wire route `app/(dashboard)/capacity/overview/page.tsx`
-- [x] **SP-2.2.6** Same-period YoY cards from `fact_month_ops` (strip stays current month, no period picker)
+- [x] **SP-2.2.6** Same-period YoY cards from `fact_month_ops`
+- [x] **SP-2.2.7** Monthly breakdown matrix (months, quarters, year; year tabs) replaces the current-month strip
+- [x] **SP-2.2.8** Expandable rows (by role, by project type), quarter separators, copy for Excel / Markdown and CSV export
 
 ---
 
@@ -400,7 +409,7 @@ Update the row for the track you ship. Do not mark other tracks.
 | Track | ID | Item | Status |
 | --- | --- | --- | --- |
 | Foundation | SP-2.0 | Shared filters, month context, `_shared` UI | **Done** |
-| Overview | SP-2.2 | `/capacity/overview` — KPIs, charts, role summary | **Done** |
+| Overview | SP-2.2 | `/capacity/overview` — monthly breakdown matrix, YoY cards, charts, role summary | **Done** |
 | Operations | SP-2.3 | `/capacity/operations` — role breakdown, saturation | Not started |
 | Planning & Horizon | SP-2.4 | `/capacity/planning` — project-grain plans + multi-month horizon | **Done** |
 | Allocations | SP-2.5 | `/capacity/allocations` — allocation grid | Not started |
@@ -449,4 +458,4 @@ When SP-1 resumes, import from Capacity sub-section components (props-only):
 
 ---
 
-*Last updated: Overview + Utilization share compact three-column ops KPIs (commercial utilization, elapsed vs net capacity). Next = SP-2.6 Bench.*
+*Last updated: 2026-11-16 — Capacity Overview monthly breakdown matrix replaces the current-month strip. Next = SP-2.6 Bench.*

@@ -88,11 +88,21 @@ export function CapacityYearGridSkeleton() {
   )
 }
 
+/** Month x KPI matrix on Capacity Overview. */
+export function CapacityYearMatrixSkeleton() {
+  return (
+    <div className="space-y-3">
+      <Skeleton className="h-3 w-32" />
+      <Skeleton className={cn(DASHBOARD_SURFACE, 'h-[22rem] w-full')} />
+    </div>
+  )
+}
+
 export function CapacityPageSkeleton() {
   return (
     <div className="flex flex-col gap-6">
       <DashboardSectionHeaderSkeleton />
-      <CapacityOpsKpiSkeleton />
+      <CapacityYearMatrixSkeleton />
       <CapacityYearGridSkeleton />
       <CapacityChartsSkeleton />
       <CapacityRoleSummarySkeleton />

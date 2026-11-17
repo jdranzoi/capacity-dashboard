@@ -109,7 +109,7 @@ migration is applied, run `pnpm db:types` so they leave `lib/supabase/database.t
 | `fact_fragmentation` | Snapshot per sync | `(snapshot_id, person_id, month_date, source)` | Pre-computed fragmentation flags |
 | `fact_bench` | Pre-computed per sync | `(snapshot_id, person_id, month_date)` | `availability_hours` is a generated column (`net_capacity_hours - planned_hours`) |
 | `fact_month_ops` | Upsert | `(person_id, month_date)` | Derived month rollup (D-026): net/logged/commercial/PTO hours + `elapsed_net_weekdays`. Headcount = rows of the month (the capacity population, net capacity 0 included — D-034). |
-| `fact_month_projects` | Upsert | `(project_id, month_date)` | Distinct projects with non-PTO logged hours. Join `dim_project` for `project_type`. |
+| `fact_month_projects` | Upsert | `(project_id, month_date)` | Distinct projects with non-PTO logged hours (`logged_hours`, contractors included). `population_commercial_hours` / `population_non_commercial_hours`: capacity population only, sum to `fact_month_ops` commercial / non-commercial (migration 033). Join `dim_project` for `project_type`. |
 | `dim_issue` | Upsert | `(project_id, issue_key)` | Jira issues; first consumer MCT Training. Arrays: fix_versions, components, labels. Estimate on the ticket. |
 | `fact_issue_worklogs` | Upsert | `(issue_id, person_id, log_date)` | Tempo hours at issue grain. Do not merge with `fact_worklogs`. |
 
@@ -125,7 +125,7 @@ Write access: `audit_log` only (one row per `/api/chat` call).
 | Bench grid | `fact_bench` (latest `snapshot_id`) | role, month |
 | Fragmentation | `fact_fragmentation`, `fact_plans`, `dim_person`, `dim_project` | role, month, source |
 | Same-period YoY | any fact table | `month_date` range spanning multiple years |
-| Capacity Overview YoY | `fact_month_ops`, `fact_month_projects`, `dim_role`, `dim_project` | year; Projects card joins `is_commercial` (and type) on `dim_project` |
+| Capacity Overview YoY + monthly breakdown | `fact_month_ops`, `fact_month_projects`, `dim_role`, `dim_project` | year; Projects card joins `is_commercial` (and type) on `dim_project`; matrix: quarters/year sum hours, average headcount, ratios of summed hours; rows expand by role (`fact_month_ops.role_id`) or by project type (`fact_month_projects` population hours) |
 | Utilization trend (intra-month) | `fact_project_actuals` filtered by `snapshot_id` | project, month |
 | Overview (weekly cards on `/`) | `sync_snapshot`, `fact_capacity`, `fact_plans`, `fact_worklogs` | `month_date`, `snapshot_id`, worklog `log_date` (see *Overview page (`/`) — weekly metrics*) |
 | Training (`/projects/training`) | `dim_issue`, `fact_issue_worklogs`, `dim_person` | MCT children; month on worklog `log_date`; taxonomy arrays (fix versions → components → labels) |

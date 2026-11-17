@@ -4,10 +4,10 @@ import { CapacityRoutePendingShell } from '@/components/capacity/_shared/capacit
 import { CapacityRouteSection } from '@/components/capacity/_shared/capacity-route-pending-shell'
 import {
   CapacityChartsSkeleton,
-  CapacityOpsKpiSkeleton,
   CapacityPageSkeleton,
   CapacityRoleSummarySkeleton,
   CapacityYearGridSkeleton,
+  CapacityYearMatrixSkeleton,
 } from '@/components/capacity/_shared/capacity-section-skeletons'
 import { CapacityOverviewBlock } from '@/components/capacity/overview/capacity-overview-block'
 import { CapacityOverviewChromeBlock } from '@/components/capacity/overview/capacity-overview-chrome-block'
@@ -33,7 +33,7 @@ async function CapacityOverviewPageContent() {
       <Suspense
         fallback={
           <div className="flex flex-col gap-6">
-            <CapacityOpsKpiSkeleton />
+            <CapacityYearMatrixSkeleton />
             <CapacityYearGridSkeleton />
             <CapacityChartsSkeleton />
             <CapacityRoleSummarySkeleton />
@@ -43,7 +43,7 @@ async function CapacityOverviewPageContent() {
         <CapacityRouteSection
           fallback={
             <div className="flex flex-col gap-6">
-              <CapacityOpsKpiSkeleton />
+              <CapacityYearMatrixSkeleton />
               <CapacityYearGridSkeleton />
               <CapacityChartsSkeleton />
               <CapacityRoleSummarySkeleton />
