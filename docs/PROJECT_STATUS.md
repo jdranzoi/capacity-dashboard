@@ -32,7 +32,7 @@ The dashboard reads the stage 1 data model (D-028..D-034 in `capacity/doc/DECISI
 | Production data | **Replaced** by the validated staging data; the first production sync on the new model completed |
 | Dashboard alignment | **Done** — Planned = delivery plans (`DELIVERY_PLAN_FILTER`), utilization as ratio of sums, PTO rule, employment window, project types from `dim_project_type`, every project status with an Active filter, `em` role removed |
 | Migration 032 (destructive: drop `holiday_calendar` / `team_zones`, `plan_kind` NOT NULL, placeholders out of `dim_person`, name not unique, `project_type` FK) | Applied in staging; **production pending** |
-| Migration 033 (`fact_month_projects` population commercial / non-commercial hours) + `rebuild-month-ops` | Applied and rebuilt in staging; **production pending** — the Capacity Overview loader reads the new columns, so apply 033 before deploying the dashboard |
+| Migration 033 (`fact_month_projects` population commercial / non-commercial hours) + `rebuild-month-ops` | Applied and rebuilt in staging and production (2026-11-17; reconcile vs `fact_month_ops` within 0.04 h over 23 months) |
 | Manual data follow-ups | Commercial projects ended in Jira need `completed` / `cancelled` (sync warning `project_outcome_pending`) |
 
 **Next platform stage:** stage 2 — the agent MCP reads Supabase only (no live Tempo calls), with KPI definitions shared with the dashboard.
@@ -136,4 +136,4 @@ Ask         /ask
 
 ---
 
-*Last updated: 2026-11-17 — Capacity Overview monthly breakdown matrix (plan months, export, links) and capacity-mcp migration 033 (applied in staging); stage 1 data model live in production (028–031, data copy, first sync); 032 applied in staging.*
+*Last updated: 2026-11-17 — Capacity Overview monthly breakdown matrix (plan months, export, links) and capacity-mcp migration 033 (applied and rebuilt in staging and production); stage 1 data model live in production (028–031, data copy, first sync); 032 applied in staging.*
