@@ -20,8 +20,8 @@ import {
   type CapacityYearKpiKind,
 } from '@/lib/capacity/overview/capacity-year-types'
 import {
-  CAPACITY_FILL_KPI,
   COMMERCIAL_UTILIZATION_KPI,
+  PLANNED_UTILIZATION_KPI,
   UTILIZATION_KPI,
 } from '@/lib/domain/capacity-kpi-contract'
 import {
@@ -31,20 +31,21 @@ import {
 } from '@/lib/domain/project-types'
 import { compareRoleKeysByDisplayOrder } from '@/lib/domain/role-keys'
 import {
-  capacityFillPct,
   commercialUtilizationPct,
   loggedUtilizationPct,
+  plannedPct,
   STANDARD_WORKDAY_HOURS,
 } from '@/lib/domain/workload-metrics'
 
 const ROW_META: Record<CapacityYearGridRowKey, { label: string; kind: CapacityYearKpiKind }> = {
   headcount: { label: 'Headcount', kind: 'count' },
   netCapacityHours: { label: 'Net capacity', kind: 'hours' },
+  plannedHours: { label: 'Planned hours', kind: 'hours' },
   loggedHours: { label: 'Logged hours', kind: 'hours' },
   commercialLoggedHours: { label: 'Commercial hours', kind: 'hours' },
   nonCommercialLoggedHours: { label: 'Non-commercial hours', kind: 'hours' },
   ptoHours: { label: 'PTO', kind: 'hours' },
-  capacityFillPct: { label: CAPACITY_FILL_KPI.label, kind: 'pct' },
+  plannedUtilizationPct: { label: PLANNED_UTILIZATION_KPI.label, kind: 'pct' },
   utilizationPct: { label: UTILIZATION_KPI.label, kind: 'pct' },
   commercialUtilizationPct: { label: COMMERCIAL_UTILIZATION_KPI.label, kind: 'pct' },
 }
@@ -52,7 +53,9 @@ const ROW_META: Record<CapacityYearGridRowKey, { label: string; kind: CapacityYe
 const ROLE_BREAKDOWN_ROWS = new Set<CapacityYearGridRowKey>([
   'headcount',
   'netCapacityHours',
+  'plannedHours',
   'loggedHours',
+  'plannedUtilizationPct',
   'utilizationPct',
   'commercialUtilizationPct',
 ])
@@ -68,37 +71,56 @@ const UNASSIGNED_ROLE = { key: 'unassigned', label: 'Unassigned' } as const
 
 const QUARTERS = [0, 1, 2, 3] as const
 
+/** Periods in column order: 12 months, 4 quarters, the year. Each is a list of month indexes. */
+const PERIODS: number[][] = [
+  ...Array.from({ length: 12 }, (_, m) => [m]),
+  ...QUARTERS.map((q) => [q * 3, q * 3 + 1, q * 3 + 2]),
+  Array.from({ length: 12 }, (_, m) => m),
+]
+
+/**
+ * Period totals. Capacity-side figures (headcount, net capacity, planned, PTO) cover every
+ * month with data, plan months included. Logged-side figures cover synced months only:
+ * plan months have nothing logged yet.
+ */
 type PeriodTotals = {
-  monthsWithRows: number
+  months: number
   headcountSum: number
   netCapacity: number
+  planned: number
+  pto: number
+  actualMonths: number
   logged: number
   commercial: number
   nonCommercial: number
-  pto: number
   elapsedCapacity: number
 }
 
-function totalsOf(buckets: MonthOpsBucket[]): PeriodTotals | null {
-  const withRows = buckets.filter((bucket) => bucket.hasRows)
+function totalsOf(months: { bucket: MonthOpsBucket; plan: boolean }[]): PeriodTotals | null {
+  const withRows = months.filter((month) => month.bucket.hasRows)
   if (withRows.length === 0) return null
   const totals: PeriodTotals = {
-    monthsWithRows: withRows.length,
+    months: withRows.length,
     headcountSum: 0,
     netCapacity: 0,
+    planned: 0,
+    pto: 0,
+    actualMonths: 0,
     logged: 0,
     commercial: 0,
     nonCommercial: 0,
-    pto: 0,
     elapsedCapacity: 0,
   }
-  for (const bucket of withRows) {
+  for (const { bucket, plan } of withRows) {
     totals.headcountSum += bucket.headcount
     totals.netCapacity += bucket.hours.net_capacity_hours
+    totals.planned += bucket.hours.planned_hours
+    totals.pto += bucket.hours.pto_hours
+    if (plan) continue
+    totals.actualMonths += 1
     totals.logged += bucket.hours.logged_hours
     totals.commercial += bucket.hours.commercial_logged_hours
     totals.nonCommercial += bucket.hours.non_commercial_logged_hours
-    totals.pto += bucket.hours.pto_hours
     totals.elapsedCapacity += bucket.elapsedDays * STANDARD_WORKDAY_HOURS
   }
   return totals
@@ -112,19 +134,24 @@ function periodValue(totals: PeriodTotals | null, key: CapacityYearGridRowKey): 
   if (!totals) return null
   switch (key) {
     case 'headcount':
-      return totals.headcountSum / totals.monthsWithRows
+      return totals.headcountSum / totals.months
     case 'netCapacityHours':
       return totals.netCapacity
+    case 'plannedHours':
+      return totals.planned
+    case 'ptoHours':
+      return totals.pto
+    case 'plannedUtilizationPct':
+      return plannedPct(totals.planned, totals.netCapacity)
+  }
+  if (totals.actualMonths === 0) return null
+  switch (key) {
     case 'loggedHours':
       return totals.logged
     case 'commercialLoggedHours':
       return totals.commercial
     case 'nonCommercialLoggedHours':
       return totals.nonCommercial
-    case 'ptoHours':
-      return totals.pto
-    case 'capacityFillPct':
-      return capacityFillPct(totals.logged, totals.netCapacity)
     case 'utilizationPct':
       return loggedUtilizationPct(totals.logged, totals.elapsedCapacity)
     case 'commercialUtilizationPct':
@@ -132,24 +159,10 @@ function periodValue(totals: PeriodTotals | null, key: CapacityYearGridRowKey): 
   }
 }
 
-/** Periods in column order: 12 months, 4 quarters, the year. Each is a list of month indexes. */
-const PERIODS: number[][] = [
-  ...Array.from({ length: 12 }, (_, m) => [m]),
-  ...QUARTERS.map((q) => [q * 3, q * 3 + 1, q * 3 + 2]),
-  Array.from({ length: 12 }, (_, m) => m),
-]
-
-function opsValues(
-  months: MonthOpsBucket[],
-  key: CapacityYearGridRowKey
-): (number | null)[] {
-  return PERIODS.map((period) => periodValue(totalsOf(period.map((m) => months[m])), key))
-}
-
-/** Sum of project hours over the period's months that have capacity data; null when none. */
-function hoursValues(monthHours: number[], visibleMonths: boolean[]): (number | null)[] {
+/** Sum of project hours over the period's synced months; null when the period has none. */
+function hoursValues(monthHours: number[], actualMonths: boolean[]): (number | null)[] {
   return PERIODS.map((period) => {
-    const months = period.filter((m) => visibleMonths[m])
+    const months = period.filter((m) => actualMonths[m])
     if (months.length === 0) return null
     return months.reduce((sum, m) => sum + monthHours[m], 0)
   })
@@ -160,16 +173,19 @@ function hasAnyValue(values: (number | null)[]): boolean {
 }
 
 /**
- * Month x KPI matrix for one year from `fact_month_ops`: 12 months, 4 quarters and the year.
- * In the current year, months after `throughMonthIndex` are left empty so quarter and year
- * totals cover only elapsed months.
+ * Month x KPI matrix for one year: 12 months, 4 quarters and the year.
  *
- * Some rows carry a breakdown: by month role (`fact_month_ops.role_id`) or by project type
+ * Synced months come from `fact_month_ops`. Months after `throughMonthIndex` of the current
+ * year, and every month of a later year, come from `planOps` (the latest snapshot's capacity
+ * and delivery plans, up to the sync horizon) and only carry capacity-side figures.
+ *
+ * Some rows carry a breakdown: by month role (`role_id`) or by project type
  * (`fact_month_projects` population hours, which sum to the commercial / non-commercial rows).
  */
 export function buildCapacityYearGrid(params: {
   year: number
   ops: CapacityYearOpsRow[]
+  planOps: CapacityYearOpsRow[]
   projects: CapacityYearProjectRow[]
   roles: CapacityYearRoleRow[]
   projectTypes: readonly ProjectTypeOption[]
@@ -178,11 +194,24 @@ export function buildCapacityYearGrid(params: {
 }): CapacityYearGrid {
   const { year, roles, projectTypes, currentYear, throughMonthIndex } = params
   const isCurrentYear = year === currentYear
-  const isVisibleMonth = (monthIndex: number) => !isCurrentYear || monthIndex <= throughMonthIndex
+  const isPlanMonth = (monthIndex: number) =>
+    year > currentYear || (isCurrentYear && monthIndex > throughMonthIndex)
 
-  const ops = params.ops.filter((row) => isVisibleMonth(monthIndexOf(row.month_date)))
+  const ops = [
+    ...params.ops.filter((row) => !isPlanMonth(monthIndexOf(row.month_date))),
+    ...params.planOps.filter((row) => isPlanMonth(monthIndexOf(row.month_date))),
+  ]
+
+  const withPlanFlag = (buckets: MonthOpsBucket[]) =>
+    buckets.map((bucket, monthIndex) => ({ bucket, plan: isPlanMonth(monthIndex) }))
+  const valuesOf = (buckets: MonthOpsBucket[], key: CapacityYearGridRowKey) => {
+    const months = withPlanFlag(buckets)
+    return PERIODS.map((period) => periodValue(totalsOf(period.map((m) => months[m])), key))
+  }
+
   const months = bucketMonthOpsByYear(ops).get(year) ?? emptyMonthOpsYear()
-  const visibleMonths = months.map((bucket) => bucket.hasRows)
+  const actualMonths = months.map((bucket, m) => bucket.hasRows && !isPlanMonth(m))
+  const planMonths = months.map((bucket, m) => bucket.hasRows && isPlanMonth(m))
 
   const roleById = new Map(roles.map((role) => [role.id, role]))
   const opsByRole = new Map<string, { label: string; rows: CapacityYearOpsRow[] }>()
@@ -199,13 +228,17 @@ export function buildCapacityYearGrid(params: {
   })
 
   const typeByValue = new Map(projectTypes.map((type) => [type.value, type]))
-  const typeHours = new Map<string, Record<'population_commercial_hours' | 'population_non_commercial_hours', number[]>>()
+  const typeHours = new Map<
+    string,
+    Record<'population_commercial_hours' | 'population_non_commercial_hours', number[]>
+  >()
   for (const row of params.projects) {
     const monthIndex = monthIndexOf(row.month_date)
     if (monthIndex < 0 || monthIndex > 11) continue
-    const typeKey = row.project_type && typeByValue.has(row.project_type)
-      ? row.project_type
-      : UNCLASSIFIED_PROJECT_TYPE
+    const typeKey =
+      row.project_type && typeByValue.has(row.project_type)
+        ? row.project_type
+        : UNCLASSIFIED_PROJECT_TYPE
     const entry = typeHours.get(typeKey) ?? {
       population_commercial_hours: Array.from({ length: 12 }, () => 0),
       population_non_commercial_hours: Array.from({ length: 12 }, () => 0),
@@ -215,7 +248,9 @@ export function buildCapacityYearGrid(params: {
     typeHours.set(typeKey, entry)
   }
   const orderedTypes = [...typeHours.keys()]
-    .map((key) => typeByValue.get(key) ?? { value: key, label: 'Unclassified', isCommercial: false })
+    .map(
+      (key) => typeByValue.get(key) ?? { value: key, label: 'Unclassified', isCommercial: false }
+    )
     .sort(compareProjectTypes)
 
   const columns: CapacityYearGridColumn[] = [
@@ -224,19 +259,30 @@ export function buildCapacityYearGrid(params: {
       label: format(new Date(year, monthIndex, 1), 'MMM'),
       kind: 'month' as const,
       inProgress: isCurrentYear && monthIndex === throughMonthIndex,
+      plan: planMonths[monthIndex],
+      monthKey: format(new Date(year, monthIndex, 1), 'yyyy-MM'),
     })),
     ...QUARTERS.map((quarter) => ({
       key: `q${quarter + 1}`,
       label: `Q${quarter + 1}`,
       kind: 'quarter' as const,
       inProgress: isCurrentYear && Math.floor(throughMonthIndex / 3) === quarter,
+      plan: PERIODS[12 + quarter].some((m) => planMonths[m]),
+      monthKey: null,
     })),
-    { key: 'year', label: String(year), kind: 'year' as const, inProgress: isCurrentYear },
+    {
+      key: 'year',
+      label: String(year),
+      kind: 'year' as const,
+      inProgress: isCurrentYear,
+      plan: planMonths.some(Boolean),
+      monthKey: null,
+    },
   ]
 
   const rows = CAPACITY_YEAR_GRID_ROW_KEYS.map((key): CapacityYearGridRow => {
     const { label, kind } = ROW_META[key]
-    const row: CapacityYearGridRow = { key, label, kind, values: opsValues(months, key) }
+    const row: CapacityYearGridRow = { key, label, kind, values: valuesOf(months, key) }
 
     if (ROLE_BREAKDOWN_ROWS.has(key)) {
       const children = roleMonths
@@ -244,7 +290,7 @@ export function buildCapacityYearGrid(params: {
           key: `${key}:${role.key}`,
           label: role.label,
           kind,
-          values: opsValues(role.months, key),
+          values: valuesOf(role.months, key),
         }))
         .filter((child) => hasAnyValue(child.values))
       if (children.length > 0) row.breakdown = { label: 'By role', rows: children }
@@ -257,7 +303,7 @@ export function buildCapacityYearGrid(params: {
           key: `${key}:${type.value}`,
           label: type.label,
           kind,
-          values: hoursValues(typeHours.get(type.value)![typeField], visibleMonths),
+          values: hoursValues(typeHours.get(type.value)![typeField], actualMonths),
         }))
         .filter((child) => hasAnyValue(child.values))
       if (children.length > 0) row.breakdown = { label: 'By project type', rows: children }

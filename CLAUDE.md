@@ -125,7 +125,7 @@ Write access: `audit_log` only (one row per `/api/chat` call).
 | Bench grid | `fact_bench` (latest `snapshot_id`) | role, month |
 | Fragmentation | `fact_fragmentation`, `fact_plans`, `dim_person`, `dim_project` | role, month, source |
 | Same-period YoY | any fact table | `month_date` range spanning multiple years |
-| Capacity Overview YoY + monthly breakdown | `fact_month_ops`, `fact_month_projects`, `dim_role`, `dim_project` | year; Projects card joins `is_commercial` (and type) on `dim_project`; matrix: quarters/year sum hours, average headcount, ratios of summed hours; rows expand by role (`fact_month_ops.role_id`) or by project type (`fact_month_projects` population hours) |
+| Capacity Overview YoY + monthly breakdown | `fact_month_ops`, `fact_month_projects`, `dim_role`, `dim_project` | year; Projects card joins `is_commercial` (and type) on `dim_project`; matrix: quarters/year sum hours, average headcount, ratios of summed hours; rows expand by role (`fact_month_ops.role_id`) or by project type (`fact_month_projects` population hours); months after the current one (through December of next year, up to the sync horizon) come from the latest snapshot's `fact_capacity` + delivery `fact_plans` |
 | Utilization trend (intra-month) | `fact_project_actuals` filtered by `snapshot_id` | project, month |
 | Overview (weekly cards on `/`) | `sync_snapshot`, `fact_capacity`, `fact_plans`, `fact_worklogs` | `month_date`, `snapshot_id`, worklog `log_date` (see *Overview page (`/`) — weekly metrics*) |
 | Training (`/projects/training`) | `dim_issue`, `fact_issue_worklogs`, `dim_person` | MCT children; month on worklog `log_date`; taxonomy arrays (fix versions → components → labels) |
@@ -372,7 +372,7 @@ and `capacity/doc/DECISIONS.md` before changing any code here.
 
 **Overview workload KPIs** (logged utilization, productivity, efficiency, weekly billable vs capacity, capacity-share ratios) live in `lib/domain/workload-metrics.ts`; keep UI and loaders free of duplicated formulas. **Display** of those KPIs uses integer rounding via `roundDisplayStat` and the shared formatters in `lib/overview/overview-metrics.ts` (see *Display statistics (KPIs)*).
 
-**Capacity Overview and Utilization ops KPIs** share `components/capacity/_shared/capacity-ops-kpi-columns.tsx`: net vs elapsed capacity, commercial vs non-commercial logged hours, capacity fill (`logged / net capacity`), utilization (`logged / elapsed capacity`, ratio of sums), commercial utilization (`commercial hours / elapsed capacity`). Tempo billable hours are not a headline KPI on those pages.
+**Utilization ops KPIs** use `components/capacity/_shared/capacity-ops-kpi-columns.tsx`: net vs elapsed capacity, commercial vs non-commercial logged hours, capacity fill (`logged / net capacity`), utilization (`logged / elapsed capacity`, ratio of sums), commercial utilization (`commercial hours / elapsed capacity`). **Capacity Overview** shows the same measures per month, quarter and year in its monthly breakdown matrix (`lib/capacity/overview/build-capacity-year-grid.ts`), plus planned hours and planned utilization (`planned / net capacity`). Tempo billable hours are not a headline KPI on those pages.
 
 ## Cross-repo coordination — READ FIRST
 

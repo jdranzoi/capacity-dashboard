@@ -85,7 +85,9 @@ Build once before sub-section tracks. Treat as a **frozen contract** — extend 
 | `components/capacity/_shared/capacity-header-block.tsx` | Title + sync freshness |
 | `components/capacity/_shared/capacity-toolbar-block.tsx` | Month picker (+ filter slots per page) |
 | `components/capacity/_shared/capacity-coming-soon.tsx` | Forecast / Scenarios stub |
-| `components/capacity/_shared/capacity-ops-kpi-columns.tsx` | Shared three-column ops KPI grid (Overview + Utilization) |
+| `components/capacity/_shared/capacity-ops-kpi-columns.tsx` | Three-column ops KPI grid (Utilization) |
+| `components/capacity/_shared/role-analytics-table.tsx` | Role table with people sub-rows (Overview month to date, Utilization) |
+| `lib/capacity/shared/load-planning-month-options.ts` | Planning period options (Planning picker, Overview Planned links) |
 | `lib/capacity/shared/sum-logged-hours-by-commercial.ts` | Commercial vs non-commercial logged hours (`is_commercial`) |
 
 ### Reuse from existing code (read-only)
@@ -112,10 +114,10 @@ Add to `lib/domain/workload-metrics.ts` as needed. Display at UI boundary via `r
 | Metric | Formula | Primary tracks |
 | --- | --- | --- |
 | Capacity fill | `logged_mtd / net_capacity × 100` (`capacityFillPct`) | Overview, Utilization |
-| Utilization | mean per-person `logged / (elapsed net weekdays × 8h)` | Overview, Utilization |
+| Utilization | `sum(logged) / sum(elapsed net weekdays × 8h)`, ratio of sums (D-032, `loggedUtilizationPct`) | Overview, Utilization |
 | Elapsed capacity | `sum(elapsed net weekdays × 8h)` | Overview, Utilization |
 | Commercial utilization | `commercial_logged_mtd / elapsed_capacity × 100` (`commercialUtilizationPct`) | Overview, Utilization |
-| Planned | `planned / net_capacity × 100` (`plannedPct`) | Overview, Utilization, Planning |
+| Planned (Planned utilization on the Overview matrix) | `planned / net_capacity × 100` (`plannedPct`) | Overview, Utilization, Planning |
 | Bench rate (hours) | `sum(availability_hours) / sum(net_capacity) × 100` | Bench |
 | Bench headcount | `count(is_bench = true)` | Bench |
 | Allocation % | `planned_hours_on_project / net_capacity × 100` | Allocations |
@@ -153,60 +155,76 @@ All Phase 1 sub-sections consume existing v2 ingestion. No new sync work require
 
 ### SP-2.2 — Overview (`/capacity/overview`)
 
-**Question:** What is our capacity position this month, and how does the year compare to prior years?
+**Question:** What is our capacity position across the year, this month, and against prior years?
 
-#### Metrics
+Page order (org-wide, no toolbar or filters): **Monthly breakdown** matrix → **Month to date** section → same-period **Year** cards. No `fact_bench` on this page; bench belongs on SP-2.6.
 
-**Monthly breakdown** (top of the page): month x KPI matrix from `fact_month_ops` with a year tab per year with data (most recent first). Columns: Jan–Dec, Q1–Q4, year. Rows: Headcount, Net capacity, Logged hours, Commercial hours, Non-commercial hours, PTO, Capacity fill, Utilization, Commercial utilization. In the current year the month in progress is marked MTD and later months are empty. Bench hours belong on SP-2.6, not this page.
+#### Monthly breakdown
 
-| Row | Month | Quarter / year |
+Month x KPI matrix with a tab per year (most recent first; the current year is the default tab). Columns: Jan–Dec, Q1–Q4, year, with vertical hairlines before each quarter of months, before the quarter totals and before the year. Columns have fixed widths so switching years does not move the table.
+
+| Row | Month value | Quarter / year |
 | --- | --- | --- |
 | Headcount | `fact_month_ops` rows of the month (capacity population, D-034) | Average of the months with data |
-| Net capacity, Logged, Commercial, Non-commercial, PTO | Sum of the person-month hours | Sum |
-| Capacity fill | `logged / net capacity` (`capacityFillPct`) | Ratio of summed hours |
+| Net capacity | Sum of `net_capacity_hours` | Sum |
+| Planned hours | Sum of `planned_hours` (delivery plans of the month's canonical snapshot, D-029) | Sum |
+| PTO (divider above) | Sum of `pto_hours` | Sum |
+| Logged / Commercial / Non-commercial hours | Sums of the person-month hours | Sum |
+| Planned utilization (divider above) | `planned / net capacity` (`plannedPct`, `PLANNED_UTILIZATION_KPI`) | Ratio of summed hours |
 | Utilization | `logged / elapsed capacity` (`loggedUtilizationPct`) | Ratio of summed hours (D-032) |
 | Commercial utilization | `commercial / elapsed capacity` (`commercialUtilizationPct`) | Ratio of summed hours |
 
-Capacity fill equals utilization for closed months; it only differs for the month in progress, where net capacity is the full month and logged runs through the last sync.
+The month in progress is marked **MTD**. Months after it are **plan months** (marked **Plan**; quarters and years that include one are marked **incl. plan**), through December of the next year. The next year gets its own tab as soon as the latest snapshot plans into it.
 
-Expandable rows (same aggregation rules per child row):
+**Plan months** (`lib/capacity/overview/load-capacity-plan-months.ts`): months not in `fact_month_ops` yet, read from the latest `sync_snapshot`. `fact_capacity` gives the month's population (headcount), net capacity, planned PTO (D-030) and month role; `fact_plans` with `DELIVERY_PLAN_FILTER` gives planned hours, limited to that population. They fill Headcount, Net capacity, Planned hours, PTO and Planned utilization; logged-side rows stay empty. In quarters and years, capacity-side rows include plan months and logged-side rows cover synced months only. Plan months reach as far as the sync horizon (`sync-v2.ts`: furthest active build end date, 4 months by default, 12 at most); the matrix notes the last plan month when it stops before December. Plans for distant months are usually incomplete, so planned utilization drops with distance.
+
+**Expandable rows** (same aggregation rules per child row):
 
 | Rows | Breakdown | Source |
 | --- | --- | --- |
-| Headcount, Net capacity, Logged hours, Utilization, Commercial utilization | By role (month role) | `fact_month_ops.role_id` → `dim_role.label`; children sum to the parent for headcount and hours |
-| Commercial hours, Non-commercial hours | By project type | `fact_month_projects.population_commercial_hours` / `population_non_commercial_hours` (capacity population only, migration 033) grouped by `dim_project.project_type`; labels and order from `dim_project_type`. Children sum to the parent. Empty until capacity-mcp migration 033 is applied and `rebuild-month-ops` runs |
+| Headcount, Net capacity, Planned hours, Logged hours, Planned utilization, Utilization, Commercial utilization | By role (month role) | `fact_month_ops.role_id` (plan months: `fact_capacity.role_id`) → `dim_role.label`; children sum to the parent for headcount and hours |
+| Commercial hours, Non-commercial hours | By project type | `fact_month_projects.population_commercial_hours` / `population_non_commercial_hours` (capacity population only, capacity-mcp migration 033) grouped by the current `dim_project.project_type`; labels and order from `dim_project_type`. Children sum to the parent. A Jira category change regroups history at the next sync without a rebuild, unless it changes `is_commercial` |
 
-Vertical hairlines separate each quarter of months, the quarter totals and the year. Export actions on the visible rows (expanded children included): **Copy for Excel** (tab-separated, whole numbers, unit in the row label), **Copy Markdown** (display format) and **CSV** download.
+**Month links** (open in a new tab, only for months the target page's picker offers; other cells stay plain):
 
-**Year section** (org-wide, no toolbar): nine cards (3 per row) — Net capacity / Headcount / Projects; Logged / Commercial hours / Non-commercial hours; Utilization / Commercial utilization / PTO. Hours and % cards are same-period YTD vs prior years plus a monthly line series per year. Headcount adds YoY unique-people lines plus current-year role stacks. Projects table and solid YoY lines are unique **commercial** projects (`dim_project.is_commercial` — build + support, same flag as commercial hours). Dotted YoY lines are **NC** (non-commercial) project counts, one series per year in that year’s compare color. A two-layer stack (commercial vs other) shows the current-year mix. Line dots and stacked-bar segments open `/projects/activity` in a new tab for that month.
-
-#### Charts
-
-| Chart | Type | Reuse |
+| Row | Target | Months with a link |
 | --- | --- | --- |
-| Weekly evolution | Grouped bar + logged line | `WeeklyEvolutionChart` |
-| Capacity composition | Donut | Overview capacity-share pattern |
-| Role summary | Compact table (top roles) | Adapt role table from team analytics |
+| Headcount | `/teams/overview?month=YYYY-MM` | `TEAMS_MONTH_HORIZON` (8 months back, 3 forward) with `fact_capacity` data |
+| Planned hours | `/capacity/planning?from=YYYY-MM` | Current month onward with plans and capacity in the same snapshot (`lib/capacity/shared/load-planning-month-options.ts`) |
+| Utilization | `/capacity/utilization?month=YYYY-MM` | Months in `fact_capacity` through the current month |
 
-#### Loader
+**Export** dropdown (`components/ui/dropdown-menu.tsx`) over the visible rows, expanded children included: Copy as Markdown (display format), Copy as JSON, Copy as CSV, Copy for Google Sheets (HTML table + tab-separated text; pastes as cells in Sheets and Excel) and Download CSV. Spreadsheet formats use whole numbers with the unit in the row label. Shift+Cmd+M / J / C / G / D run them while the menu is open.
 
-`lib/capacity/overview/load-capacity-overview.ts` — current-month weekly trends and role summary (`loadWeeklyOverview` + `loadRoleAnalytics`).  
-`lib/capacity/overview/load-capacity-year.ts` — monthly breakdown matrix (`build-capacity-year-grid.ts`) and YoY cards from `fact_month_ops` (D-026); month buckets shared via `month-ops-buckets.ts`. No `fact_bench` on this page. No month / role / zone / project filters.
+#### Month to date
+
+**Month to date · <month>**: weekly evolution chart and role summary for the month in progress. The role summary (`RoleAnalyticsTable`, shared with Utilization) lists capacity fill, utilization and planned share per role; each role expands to its people (TanStack sub-rows; the Role filter also matches people).
+
+#### Year
+
+Nine cards (3 per row) — Net capacity / Headcount / Projects; Logged / Commercial hours / Non-commercial hours; Utilization / Commercial utilization / PTO. Hours and % cards are same-period YTD vs prior years plus a monthly line series per year. Headcount adds YoY unique-people lines plus current-year role stacks. Projects table and solid YoY lines are unique **commercial** projects (`dim_project.is_commercial`, same flag as commercial hours). Dotted YoY lines are **NC** (non-commercial) project counts, one series per year in that year's compare color. A two-layer stack (commercial vs other) shows the current-year mix. Line dots and stacked-bar segments open `/projects/activity` in a new tab for that month.
+
+#### Loaders
+
+- `lib/capacity/overview/load-capacity-year.ts` — monthly breakdown (`build-capacity-year-grid.ts`) and Year cards (`build-capacity-year.ts`) from `fact_month_ops` / `fact_month_projects` (D-026), plus plan months (`load-capacity-plan-months.ts`). Month buckets shared via `month-ops-buckets.ts`; export formats in `capacity-year-grid-export.ts`.
+- `lib/capacity/overview/load-capacity-overview.ts` — month to date: weekly evolution (`loadWeeklyOverview`) and role summary with people (`loadRoleAnalytics`).
 
 #### Components
 
-`components/capacity/overview/capacity-year-grid.tsx` (monthly breakdown with year tabs), `capacity-year-section.tsx`, `capacity-overview-charts-section.tsx`, `capacity-overview-role-summary.tsx`.
+`components/capacity/overview/`: `capacity-overview-block.tsx` (page order, month link options), `capacity-year-grid.tsx` (monthly breakdown), `capacity-overview-charts-section.tsx` (month to date), `capacity-overview-role-summary.tsx`, `capacity-year-section.tsx` (Year cards).
 
 #### Checklist
 
 - [x] **SP-2.2.1** Loader + DTO types
-- [x] **SP-2.2.2** KPI row
-- [x] **SP-2.2.3** Weekly evolution + composition charts
+- [x] **SP-2.2.2** KPI row (replaced by the monthly breakdown in SP-2.2.7)
+- [x] **SP-2.2.3** Weekly evolution chart
 - [x] **SP-2.2.4** Role summary table
 - [x] **SP-2.2.5** Wire route `app/(dashboard)/capacity/overview/page.tsx`
 - [x] **SP-2.2.6** Same-period YoY cards from `fact_month_ops`
 - [x] **SP-2.2.7** Monthly breakdown matrix (months, quarters, year; year tabs) replaces the current-month strip
-- [x] **SP-2.2.8** Expandable rows (by role, by project type), quarter separators, copy for Excel / Markdown and CSV export
+- [x] **SP-2.2.8** Expandable rows (by role, by project type), quarter separators, Export dropdown
+- [x] **SP-2.2.9** Plan months up to the sync horizon, next-year tab, Planned hours and Planned utilization rows
+- [x] **SP-2.2.10** Month to date section under the matrix; role summary expands to people
+- [x] **SP-2.2.11** Month links (Teams overview, Planning, Utilization)
 
 ---
 
@@ -458,4 +476,4 @@ When SP-1 resumes, import from Capacity sub-section components (props-only):
 
 ---
 
-*Last updated: 2026-11-16 — Capacity Overview monthly breakdown matrix replaces the current-month strip. Next = SP-2.6 Bench.*
+*Last updated: 2026-11-17 — Capacity Overview: monthly breakdown with plan months, breakdowns, export and month links; month to date section; role people. Next = SP-2.6 Bench.*

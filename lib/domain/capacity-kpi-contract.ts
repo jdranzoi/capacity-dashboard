@@ -28,6 +28,12 @@ export const PLANNED_KPI = {
   formulaFootnote: 'Planned / net capacity',
 } as const
 
+/** Same formula as {@link PLANNED_KPI}; named as a utilization where it sits next to actuals. */
+export const PLANNED_UTILIZATION_KPI = {
+  label: 'Planned utilization',
+  formulaFootnote: PLANNED_KPI.formulaFootnote,
+} as const
+
 export const COMMERCIAL_UTILIZATION_KPI = {
   label: 'Commercial utilization',
   formulaFootnote: 'Commercial hours / elapsed capacity',

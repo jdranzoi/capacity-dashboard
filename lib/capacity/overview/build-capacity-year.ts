@@ -1,6 +1,9 @@
 import { format } from 'date-fns'
 
-import type { CapacityYearFacts } from '@/lib/capacity/overview/load-capacity-year-facts'
+import type {
+  CapacityYearFacts,
+  CapacityYearOpsRow,
+} from '@/lib/capacity/overview/load-capacity-year-facts'
 import { buildCapacityYearGrid } from '@/lib/capacity/overview/build-capacity-year-grid'
 import {
   bucketMonthOpsByYear,
@@ -145,6 +148,7 @@ function throughLabel(throughMonthIndex: number): string {
 export function buildCapacityYear(
   facts: CapacityYearFacts,
   projectTypes: readonly ProjectTypeOption[],
+  planOps: CapacityYearOpsRow[],
   now: Date = new Date()
 ): CapacityYearPayload | null {
   if (facts.ops.length === 0) return null
@@ -210,13 +214,15 @@ export function buildCapacityYear(
     throughMonthIndex,
     throughLabel: throughLabel(throughMonthIndex),
     cards,
-    grids: years
-      .filter((year) => year <= currentYear)
+    // Synced years plus the next year once the latest snapshot plans into it.
+    grids: [...new Set([...years, ...planOps.map((row) => yearOf(row.month_date))])]
+      .filter((year) => year <= currentYear + 1)
       .sort((a, b) => b - a)
       .map((year) =>
         buildCapacityYearGrid({
           year,
           ops: facts.ops.filter((row) => yearOf(row.month_date) === year),
+          planOps: planOps.filter((row) => yearOf(row.month_date) === year),
           projects: facts.projects.filter((row) => yearOf(row.month_date) === year),
           roles: facts.roles,
           projectTypes,

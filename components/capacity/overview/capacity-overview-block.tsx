@@ -1,22 +1,27 @@
 import { connection } from 'next/server'
-import { parse } from 'date-fns'
+import { format, parse } from 'date-fns'
 
-import { CapacityOverviewTrendsSection } from '@/components/capacity/overview/capacity-overview-charts-section'
+import { CapacityOverviewMonthToDateSection } from '@/components/capacity/overview/capacity-overview-charts-section'
 import { CapacityYearGridSection } from '@/components/capacity/overview/capacity-year-grid'
 import { CapacityYearSection } from '@/components/capacity/overview/capacity-year-section'
 import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import { loadCapacityOverview } from '@/lib/capacity/overview/load-capacity-overview'
 import { loadCapacityYear } from '@/lib/capacity/overview/load-capacity-year'
 import { getCapacityMonthContext } from '@/lib/capacity/shared/capacity-page-cache'
+import { loadPlanningMonthOptions } from '@/lib/capacity/shared/load-planning-month-options'
+import { loadOverviewMonthOptions } from '@/lib/overview/overview-month-options'
+import { TEAMS_MONTH_HORIZON } from '@/lib/teams/shared/teams-month-horizon'
 import { emptyCapacityRouteFilters } from '@/lib/capacity/shared/capacity-route-filters'
 import { perfSpan } from '@/lib/dev/perf-log'
 
 export async function CapacityOverviewBlock() {
   return perfSpan('capacity/overview', async () => {
     await connection()
-    const [ctx, yearResult] = await Promise.all([
+    const [ctx, yearResult, teamsMonths, planningMonths] = await Promise.all([
       getCapacityMonthContext(undefined, emptyCapacityRouteFilters()),
       loadCapacityYear(),
+      loadOverviewMonthOptions(TEAMS_MONTH_HORIZON),
+      loadPlanningMonthOptions(),
     ])
 
     if (ctx.error) {
@@ -44,19 +49,35 @@ export async function CapacityOverviewBlock() {
       )
     }
 
-    return (
-      <div className="flex flex-col gap-6">
-        {yearResult.data ? (
-          <>
-            <CapacityYearGridSection grids={yearResult.data.grids} />
-            <CapacityYearSection data={yearResult.data} />
-          </>
-        ) : (
+    const monthToDate = (
+      <CapacityOverviewMonthToDateSection
+        data={monthResult.data}
+        monthLabel={format(referenceDate, 'MMMM yyyy')}
+      />
+    )
+
+    if (!yearResult.data) {
+      return (
+        <div className="flex flex-col gap-6">
           <p className="text-sm text-muted-foreground">
             Year comparison is empty. Apply migration 026 and run rebuild-month-ops.
           </p>
-        )}
-        <CapacityOverviewTrendsSection data={monthResult.data} />
+          {monthToDate}
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex flex-col gap-6">
+        <CapacityYearGridSection
+          grids={yearResult.data.grids}
+          defaultYear={yearResult.data.currentYear}
+          headcountLinkMonths={teamsMonths.options.map((option) => option.monthKey)}
+          plannedLinkMonths={planningMonths.options.map((option) => option.monthKey)}
+          utilizationLinkMonths={ctx.data.options.map((option) => option.monthKey)}
+        />
+        {monthToDate}
+        <CapacityYearSection data={yearResult.data} />
       </div>
     )
   })

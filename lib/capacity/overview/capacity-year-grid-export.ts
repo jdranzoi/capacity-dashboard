@@ -1,5 +1,6 @@
 import type {
   CapacityYearGrid,
+  CapacityYearGridColumn,
   CapacityYearGridRow,
   CapacityYearKpiKind,
 } from '@/lib/capacity/overview/capacity-year-types'
@@ -23,22 +24,35 @@ const UNIT_SUFFIX: Record<CapacityYearKpiKind, string> = {
   count: '',
 }
 
-type ExportRow = { label: string; row: CapacityYearGridRow }
+type ExportRow = { label: string; row: CapacityYearGridRow; parent?: string }
 
 /** Rows as shown on screen: parents plus the breakdown rows of expanded parents. */
 function visibleRows(grid: CapacityYearGrid, expanded: ReadonlySet<string>): ExportRow[] {
   return grid.rows.flatMap((row) => [
     { label: row.label, row },
     ...(row.breakdown && expanded.has(row.key)
-      ? row.breakdown.rows.map((child) => ({ label: `${row.label} – ${child.label}`, row: child }))
+      ? row.breakdown.rows.map((child) => ({
+          label: `${row.label} – ${child.label}`,
+          row: child,
+          parent: row.label,
+        }))
       : []),
   ])
 }
 
+export function columnNote(column: CapacityYearGridColumn): string | null {
+  if (column.kind === 'month') {
+    if (column.plan) return 'Plan'
+    return column.inProgress ? 'MTD' : null
+  }
+  return column.plan ? 'incl. plan' : null
+}
+
 function headerCells(grid: CapacityYearGrid): string[] {
-  return grid.columns.map((column) =>
-    column.inProgress && column.kind === 'month' ? `${column.label} (MTD)` : column.label
-  )
+  return grid.columns.map((column) => {
+    const note = columnNote(column)
+    return note ? `${column.label} (${note})` : column.label
+  })
 }
 
 /** Spreadsheet cells: whole numbers without units (the unit is in the row label), blank when empty. */
@@ -52,11 +66,25 @@ function numericTable(grid: CapacityYearGrid, expanded: ReadonlySet<string>): st
   ]
 }
 
-/** Tab-separated: pastes into Excel or Google Sheets as cells. */
+/** Tab-separated plain text: Google Sheets and Excel paste it as cells. */
 export function capacityYearGridToTsv(grid: CapacityYearGrid, expanded: ReadonlySet<string>): string {
   return numericTable(grid, expanded)
     .map((cells) => cells.join('\t'))
     .join('\n')
+}
+
+function htmlCell(cell: string): string {
+  return cell.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+}
+
+/** HTML table for the clipboard: spreadsheets keep the cells and read values as numbers. */
+export function capacityYearGridToHtml(grid: CapacityYearGrid, expanded: ReadonlySet<string>): string {
+  const [header, ...body] = numericTable(grid, expanded)
+  const row = (cells: string[], tag: 'th' | 'td') =>
+    `<tr>${cells.map((cell) => `<${tag}>${htmlCell(cell)}</${tag}>`).join('')}</tr>`
+  return `<table><thead>${row(header, 'th')}</thead><tbody>${body
+    .map((cells) => row(cells, 'td'))
+    .join('')}</tbody></table>`
 }
 
 function csvCell(cell: string): string {
@@ -83,4 +111,27 @@ export function capacityYearGridToMarkdown(
     ),
   ]
   return lines.join('\n')
+}
+
+const JSON_UNIT: Record<CapacityYearKpiKind, 'hours' | 'percent' | 'people'> = {
+  hours: 'hours',
+  pct: 'percent',
+  count: 'people',
+}
+
+/** Whole numbers keyed by column label; breakdown rows name their parent metric. */
+export function capacityYearGridToJson(
+  grid: CapacityYearGrid,
+  expanded: ReadonlySet<string>
+): string {
+  const labels = headerCells(grid)
+  const rows = visibleRows(grid, expanded).map(({ row, parent }) => ({
+    metric: parent ?? row.label,
+    ...(parent ? { breakdown: row.label } : {}),
+    unit: JSON_UNIT[row.kind],
+    values: Object.fromEntries(
+      row.values.map((value, i) => [labels[i], value == null ? null : roundDisplayStat(value)])
+    ),
+  }))
+  return JSON.stringify({ year: grid.year, rows }, null, 2)
 }

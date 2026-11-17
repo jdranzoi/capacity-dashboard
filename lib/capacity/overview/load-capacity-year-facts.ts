@@ -11,6 +11,8 @@ export type CapacityYearOpsRow = {
   month_date: string
   role_id: string | null
   net_capacity_hours: number
+  /** Delivery plans of the month's canonical snapshot (D-029). */
+  planned_hours: number
   logged_hours: number
   commercial_logged_hours: number
   non_commercial_logged_hours: number
@@ -54,7 +56,7 @@ export async function loadCapacityYearFacts(): Promise<{
       supabase
         .from('fact_month_ops')
         .select(
-          'person_id, month_date, role_id, net_capacity_hours, logged_hours, commercial_logged_hours, non_commercial_logged_hours, pto_hours, elapsed_net_weekdays'
+          'person_id, month_date, role_id, net_capacity_hours, planned_hours, logged_hours, commercial_logged_hours, non_commercial_logged_hours, pto_hours, elapsed_net_weekdays'
         )
         .order('month_date')
         .order('person_id')

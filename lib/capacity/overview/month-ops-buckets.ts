@@ -2,6 +2,7 @@ import type { CapacityYearOpsRow } from '@/lib/capacity/overview/load-capacity-y
 
 export type MonthOpsHourKey =
   | 'net_capacity_hours'
+  | 'planned_hours'
   | 'logged_hours'
   | 'non_commercial_logged_hours'
   | 'commercial_logged_hours'
@@ -9,6 +10,7 @@ export type MonthOpsHourKey =
 
 export const MONTH_OPS_HOUR_KEYS: MonthOpsHourKey[] = [
   'net_capacity_hours',
+  'planned_hours',
   'logged_hours',
   'non_commercial_logged_hours',
   'commercial_logged_hours',
@@ -30,6 +32,7 @@ function emptyBucket(): MonthOpsBucket {
     headcount: 0,
     hours: {
       net_capacity_hours: 0,
+      planned_hours: 0,
       logged_hours: 0,
       non_commercial_logged_hours: 0,
       commercial_logged_hours: 0,

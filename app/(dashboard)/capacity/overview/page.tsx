@@ -34,9 +34,9 @@ async function CapacityOverviewPageContent() {
         fallback={
           <div className="flex flex-col gap-6">
             <CapacityYearMatrixSkeleton />
-            <CapacityYearGridSkeleton />
             <CapacityChartsSkeleton />
             <CapacityRoleSummarySkeleton />
+            <CapacityYearGridSkeleton />
           </div>
         }
       >
@@ -44,9 +44,9 @@ async function CapacityOverviewPageContent() {
           fallback={
             <div className="flex flex-col gap-6">
               <CapacityYearMatrixSkeleton />
-              <CapacityYearGridSkeleton />
               <CapacityChartsSkeleton />
               <CapacityRoleSummarySkeleton />
+              <CapacityYearGridSkeleton />
             </div>
           }
         >

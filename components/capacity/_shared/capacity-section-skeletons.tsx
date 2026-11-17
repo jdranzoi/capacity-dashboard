@@ -103,9 +103,9 @@ export function CapacityPageSkeleton() {
     <div className="flex flex-col gap-6">
       <DashboardSectionHeaderSkeleton />
       <CapacityYearMatrixSkeleton />
-      <CapacityYearGridSkeleton />
       <CapacityChartsSkeleton />
       <CapacityRoleSummarySkeleton />
+      <CapacityYearGridSkeleton />
     </div>
   );
 }

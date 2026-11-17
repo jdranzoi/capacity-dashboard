@@ -32,6 +32,7 @@ The dashboard reads the stage 1 data model (D-028..D-034 in `capacity/doc/DECISI
 | Production data | **Replaced** by the validated staging data; the first production sync on the new model completed |
 | Dashboard alignment | **Done** — Planned = delivery plans (`DELIVERY_PLAN_FILTER`), utilization as ratio of sums, PTO rule, employment window, project types from `dim_project_type`, every project status with an Active filter, `em` role removed |
 | Migration 032 (destructive: drop `holiday_calendar` / `team_zones`, `plan_kind` NOT NULL, placeholders out of `dim_person`, name not unique, `project_type` FK) | Applied in staging; **production pending** |
+| Migration 033 (`fact_month_projects` population commercial / non-commercial hours) + `rebuild-month-ops` | Applied and rebuilt in staging; **production pending** — the Capacity Overview loader reads the new columns, so apply 033 before deploying the dashboard |
 | Manual data follow-ups | Commercial projects ended in Jira need `completed` / `cancelled` (sync warning `project_outcome_pending`) |
 
 **Next platform stage:** stage 2 — the agent MCP reads Supabase only (no live Tempo calls), with KPI definitions shared with the dashboard.
@@ -47,7 +48,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | Track | Route | Status | Plan anchor |
 |---|---|---|---|
 | SP-2.0 Foundation | — | **Done** | [§ SP-2.0](./SP2_CAPACITY_PLAN.md#shared-foundation-sp-20) |
-| SP-2.2 Overview | `/capacity/overview` | **Done** — monthly breakdown matrix (year tabs) + YoY cards | [§ SP-2.2](./SP2_CAPACITY_PLAN.md#sp-22--overview-capacityoverview) |
+| SP-2.2 Overview | `/capacity/overview` | **Done** — monthly breakdown matrix (plan months, breakdowns, export, month links) + month to date + YoY cards | [§ SP-2.2](./SP2_CAPACITY_PLAN.md#sp-22--overview-capacityoverview) |
 | SP-2.3 Operations | `/capacity/operations` | Not started | [§ SP-2.3](./SP2_CAPACITY_PLAN.md#sp-23--operations-capacityoperations) |
 | SP-2.4 Planning | `/capacity/planning` | **Done** | [§ SP-2.4](./SP2_CAPACITY_PLAN.md#sp-24--planning-capacityplanning) |
 | SP-2.5 Allocations | `/capacity/allocations` | Not started | [§ SP-2.5](./SP2_CAPACITY_PLAN.md#sp-25--allocations-capacityallocations) |
@@ -72,7 +73,7 @@ SP-0 navigation is done. **SP-2.0 Foundation** and **SP-2.2 Overview** are shipp
 | Route | Label | Notes |
 |---|---|---|
 | `/` | Overview | **Substantial** — weekly cards, KPIs, charts |
-| `/capacity/overview` | Capacity → Overview | **Shipped** — monthly breakdown matrix (months, quarters, year) + same-period YoY cards, weekly trends |
+| `/capacity/overview` | Capacity → Overview | **Shipped** — monthly breakdown matrix (months, quarters, year; plan months to the sync horizon) + month to date (weekly evolution, roles with people) + same-period YoY cards |
 | `/capacity/utilization` | Capacity → Utilization | **Shipped** — same ops KPI grid + role/person dashboard |
 | `/capacity/planning` | Capacity → Planning | **Shipped** — dual-tab workspace (People + Project planning) |
 | `/teams` | Teams | Redirects → `/teams/overview` |
@@ -135,4 +136,4 @@ Ask         /ask
 
 ---
 
-*Last updated: 2026-11-16 — Capacity Overview monthly breakdown matrix; stage 1 data model live in production (028–031, data copy, first sync); 032 applied in staging.*
+*Last updated: 2026-11-17 — Capacity Overview monthly breakdown matrix (plan months, export, links) and capacity-mcp migration 033 (applied in staging); stage 1 data model live in production (028–031, data copy, first sync); 032 applied in staging.*

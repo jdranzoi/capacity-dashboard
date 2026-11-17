@@ -53,11 +53,12 @@ export type CapacityYearKpiCard = {
 export const CAPACITY_YEAR_GRID_ROW_KEYS = [
   'headcount',
   'netCapacityHours',
+  'plannedHours',
+  'ptoHours',
   'loggedHours',
   'commercialLoggedHours',
   'nonCommercialLoggedHours',
-  'ptoHours',
-  'capacityFillPct',
+  'plannedUtilizationPct',
   'utilizationPct',
   'commercialUtilizationPct',
 ] as const
@@ -72,6 +73,10 @@ export type CapacityYearGridColumn = {
   kind: CapacityYearGridColumnKind
   /** Month in progress: logged hours run through the last sync, net capacity is the full month. */
   inProgress: boolean
+  /** Month not synced yet (values from the latest snapshot's plan), or a period that includes one. */
+  plan: boolean
+  /** `YYYY-MM` on month columns (Overview `?month=` value); null on quarters and the year. */
+  monthKey: string | null
 }
 
 export type CapacityYearGridRow = {
