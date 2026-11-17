@@ -2,7 +2,7 @@
 
 import { cva } from 'class-variance-authority'
 import { Check, ChevronDown, ChevronRight, Copy, Download, Link2, Sheet } from 'lucide-react'
-import { Fragment, useMemo, useState, type KeyboardEvent } from 'react'
+import { Fragment, useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -56,7 +56,9 @@ const labelCellVariants = cva(
     variants: {
       level: {
         parent: 'text-foreground',
-        child: 'pl-9 text-muted-foreground',
+        child: 'pl-5.5 text-muted-foreground',
+        grandchild: 'pl-10 text-muted-foreground',
+        greatGrandchild: 'pl-14.5 text-muted-foreground',
       },
     },
     defaultVariants: { level: 'parent' },
@@ -379,72 +381,75 @@ export function CapacityYearGridSection({
             </tr>
           </thead>
           <tbody>
-            {grid.rows.map((row, rowIndex) => {
-              const isOpen = row.breakdown != null && expanded.has(row.key)
-              return (
-                <Fragment key={row.key}>
-                  <tr
-                    data-slot="capacity-year-grid-row"
-                    className={cn(
-                      'transition-colors hover:bg-muted/20',
-                      dividerRows.has(rowIndex) && 'border-t border-border'
-                    )}
-                  >
-                    <th scope="row" className={labelCellVariants()}>
-                      {row.breakdown ? (
-                        <button
-                          type="button"
-                          onClick={() => toggle(row.key)}
-                          aria-expanded={isOpen}
-                          title={row.breakdown.label}
-                          className="-ml-1 inline-flex cursor-pointer items-center gap-1 rounded-sm pr-1 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                        >
-                          <ChevronRight
-                            aria-hidden
-                            className={cn(
-                              'size-3.5 text-muted-foreground transition-transform duration-150',
-                              isOpen && 'rotate-90'
-                            )}
-                          />
-                          {row.label}
-                          <span className="sr-only">, {row.breakdown.label}</span>
-                        </button>
-                      ) : (
-                        <span className="pl-3.5">{row.label}</span>
-                      )}
-                    </th>
-                    <GridValueCells
-                      row={row}
-                      columns={grid.columns}
-                      separators={separators}
-                      monthLinks={monthLinks}
-                    />
-                  </tr>
-                  {isOpen
-                    ? row.breakdown!.rows.map((child) => (
-                        <tr
-                          key={child.key}
-                          data-slot="capacity-year-grid-breakdown-row"
-                          className="text-muted-foreground transition-colors hover:bg-muted/20"
-                        >
-                          <th scope="row" className={labelCellVariants({ level: 'child' })}>
-                            {child.label}
-                          </th>
-                          <GridValueCells
-                            row={child}
-                            columns={grid.columns}
-                            separators={separators}
-                            monthLinks={monthLinks}
-                          />
-                        </tr>
-                      ))
-                    : null}
-                </Fragment>
-              )
-            })}
+            {grid.rows.map((row, rowIndex) => renderRow(row, 0, dividerRows.has(rowIndex)))}
           </tbody>
+          {grid.contractorRows.length > 0 ? (
+            <tbody data-slot="capacity-year-grid-contractors">
+              {grid.contractorRows.map((row) => renderRow(row, 0, true))}
+            </tbody>
+          ) : null}
         </table>
       </div>
     </section>
   )
+
+  /** A row, then its breakdown rows when expanded; breakdown rows can expand in turn. */
+  function renderRow(row: CapacityYearGridRow, depth: number, divider: boolean): ReactNode {
+    const isOpen = row.breakdown != null && expanded.has(row.key)
+    const level = (['parent', 'child', 'grandchild', 'greatGrandchild'] as const)[Math.min(depth, 3)]
+    return (
+      <Fragment key={row.key}>
+        <tr
+          data-slot={depth === 0 ? 'capacity-year-grid-row' : 'capacity-year-grid-breakdown-row'}
+          className={cn(
+            'transition-colors hover:bg-muted/20',
+            depth > 0 && 'text-muted-foreground',
+            divider && 'border-t border-border'
+          )}
+        >
+          <th scope="row" className={labelCellVariants({ level })}>
+            {row.breakdown ? (
+              <button
+                type="button"
+                onClick={() => toggle(row.key)}
+                aria-expanded={isOpen}
+                title={row.breakdown.label}
+                className="-ml-1 inline-flex max-w-full cursor-pointer items-center gap-1 rounded-sm pr-1 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              >
+                <ChevronRight
+                  aria-hidden
+                  className={cn(
+                    'size-3.5 shrink-0 text-muted-foreground transition-transform duration-150',
+                    isOpen && 'rotate-90'
+                  )}
+                />
+                <span className="truncate">{row.label}</span>
+                <span className="sr-only">, {row.breakdown.label}</span>
+              </button>
+            ) : (
+              <span className="pl-3.5" title={row.label}>
+                {row.label}
+              </span>
+            )}
+          </th>
+          {row.note ? (
+            <td
+              colSpan={grid.columns.length}
+              className="px-2.5 py-2 text-left text-[0.7rem] text-muted-foreground"
+            >
+              {row.note}
+            </td>
+          ) : (
+            <GridValueCells
+              row={row}
+              columns={grid.columns}
+              separators={separators}
+              monthLinks={monthLinks}
+            />
+          )}
+        </tr>
+        {isOpen ? row.breakdown!.rows.map((child) => renderRow(child, depth + 1, false)) : null}
+      </Fragment>
+    )
+  }
 }

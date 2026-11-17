@@ -5,6 +5,7 @@ import type {
   CapacityYearProjectRow,
   CapacityYearRoleRow,
 } from '@/lib/capacity/overview/load-capacity-year-facts'
+import type { ContractorMonthHoursRow } from '@/lib/capacity/overview/load-contractor-month-hours'
 import {
   bucketMonthOpsByYear,
   emptyMonthOpsYear,
@@ -168,6 +169,115 @@ function hoursValues(monthHours: number[], actualMonths: boolean[]): (number | n
   })
 }
 
+/** Sum of the months in `included` for each period; null when nothing was planned or logged. */
+function summedValues(monthHours: number[], included: boolean[]): (number | null)[] {
+  return PERIODS.map((period) => {
+    const total = period.filter((m) => included[m]).reduce((sum, m) => sum + monthHours[m], 0)
+    return total > 0 ? total : null
+  })
+}
+
+/**
+ * Contractor planned hours (every month with capacity data, plan months included) and logged
+ * hours (synced months only), each broken down by person, then by project. Kept apart from
+ * the KPI rows.
+ */
+function buildContractorRows(params: {
+  hours: ContractorMonthHoursRow[]
+  dataMonths: boolean[]
+  actualMonths: boolean[]
+}): CapacityYearGridRow[] {
+  const zeros = () => Array.from({ length: 12 }, () => 0)
+  type MonthHours = { planned: number[]; logged: number[] }
+  const total: MonthHours = { planned: zeros(), logged: zeros() }
+  const people = new Map<
+    string,
+    MonthHours & { name: string; projects: Map<string, MonthHours & { label: string }> }
+  >()
+  for (const row of params.hours) {
+    const monthIndex = monthIndexOf(row.month_date)
+    if (monthIndex < 0 || monthIndex > 11) continue
+    const person = people.get(row.person_id) ?? {
+      name: row.person_name,
+      planned: zeros(),
+      logged: zeros(),
+      projects: new Map(),
+    }
+    const project = person.projects.get(row.project_id) ?? {
+      label: row.project_label,
+      planned: zeros(),
+      logged: zeros(),
+    }
+    for (const target of [total, person, project]) {
+      target.planned[monthIndex] += row.planned_hours
+      target.logged[monthIndex] += row.logged_hours
+    }
+    person.projects.set(row.project_id, project)
+    people.set(row.person_id, person)
+  }
+  const byName = <T extends { name?: string; label?: string }>(a: [string, T], b: [string, T]) =>
+    (a[1].name ?? a[1].label ?? '').localeCompare(b[1].name ?? b[1].label ?? '', 'en')
+
+  const metrics = [
+    {
+      key: 'contractorPlannedHours',
+      label: 'Planned hours',
+      field: 'planned',
+      months: params.dataMonths,
+    },
+    {
+      key: 'contractorLoggedHours',
+      label: 'Logged hours',
+      field: 'logged',
+      months: params.actualMonths,
+    },
+  ] as const
+  const measureRows = metrics.map((metric): CapacityYearGridRow => {
+    const valuesOf = (hours: MonthHours) => summedValues(hours[metric.field], metric.months)
+    const personRows = [...people.entries()]
+      .sort(byName)
+      .map(([personId, person]): CapacityYearGridRow => {
+        const projectRows = [...person.projects.entries()]
+          .sort(byName)
+          .map(([projectId, project]) => ({
+            key: `${metric.key}:${personId}:${projectId}`,
+            label: project.label,
+            kind: 'hours' as const,
+            values: valuesOf(project),
+          }))
+          .filter((row) => hasAnyValue(row.values))
+        return {
+          key: `${metric.key}:${personId}`,
+          label: person.name,
+          kind: 'hours',
+          values: valuesOf(person),
+          ...(projectRows.length > 0
+            ? { breakdown: { label: 'By project', rows: projectRows } }
+            : {}),
+        }
+      })
+      .filter((row) => hasAnyValue(row.values))
+    return {
+      key: metric.key,
+      label: metric.label,
+      kind: 'hours',
+      values: valuesOf(total),
+      ...(personRows.length > 0 ? { breakdown: { label: 'By person', rows: personRows } } : {}),
+    }
+  })
+  if (!measureRows.some((row) => hasAnyValue(row.values))) return []
+  return [
+    {
+      key: 'contractors',
+      label: 'Contractors',
+      kind: 'hours',
+      values: PERIODS.map(() => null),
+      note: 'Not included in the KPIs above.',
+      breakdown: { label: 'Planned and logged hours', rows: measureRows },
+    },
+  ]
+}
+
 function hasAnyValue(values: (number | null)[]): boolean {
   return values.some((value) => value != null && value !== 0)
 }
@@ -187,6 +297,7 @@ export function buildCapacityYearGrid(params: {
   ops: CapacityYearOpsRow[]
   planOps: CapacityYearOpsRow[]
   projects: CapacityYearProjectRow[]
+  contractorHours: ContractorMonthHoursRow[]
   roles: CapacityYearRoleRow[]
   projectTypes: readonly ProjectTypeOption[]
   currentYear: number
@@ -312,5 +423,11 @@ export function buildCapacityYearGrid(params: {
     return row
   })
 
-  return { year, columns, rows }
+  const contractorRows = buildContractorRows({
+    hours: params.contractorHours,
+    dataMonths: months.map((bucket) => bucket.hasRows),
+    actualMonths,
+  })
+
+  return { year, columns, rows, contractorRows }
 }

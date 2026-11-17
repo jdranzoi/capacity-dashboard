@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import {
   PlannedLoggedBarLegend,
@@ -27,8 +27,20 @@ function HoursCell({ hours }: { hours: number }) {
   )
 }
 
+function ContractorTag() {
+  return (
+    <span
+      data-slot="projects-team-contractor-tag"
+      className="ml-1.5 rounded-sm border border-border px-1 py-px align-middle text-[0.55rem] font-medium uppercase tracking-wide text-muted-foreground"
+    >
+      Contractor
+    </span>
+  )
+}
+
 function HoursRow({
   label,
+  tag,
   plannedHours,
   loggedHours,
   scaleMaxHours,
@@ -36,6 +48,7 @@ function HoursRow({
   labelClassName,
 }: {
   label: string
+  tag?: ReactNode
   plannedHours: number
   loggedHours: number
   scaleMaxHours: number
@@ -44,7 +57,10 @@ function HoursRow({
 }) {
   return (
     <div className={ROW_GRID}>
-      <span className={cn('min-w-0 truncate', labelClassName)}>{label}</span>
+      <span className={cn('min-w-0 truncate', labelClassName)}>
+        {label}
+        {tag}
+      </span>
       <HoursCell hours={plannedHours} />
       <HoursCell hours={loggedHours} />
       <PlannedLoggedProgressBar
@@ -76,6 +92,7 @@ function RolePeopleList({
           <li key={person.personId}>
             <HoursRow
               label={person.personName}
+              tag={person.isContractor ? <ContractorTag /> : null}
               plannedHours={person.plannedHours}
               loggedHours={person.loggedHours}
               scaleMaxHours={scaleMaxHours}

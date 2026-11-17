@@ -5,6 +5,7 @@ import type {
   CapacityYearOpsRow,
 } from '@/lib/capacity/overview/load-capacity-year-facts'
 import { buildCapacityYearGrid } from '@/lib/capacity/overview/build-capacity-year-grid'
+import type { ContractorMonthHoursRow } from '@/lib/capacity/overview/load-contractor-month-hours'
 import {
   bucketMonthOpsByYear,
   monthIndexOf,
@@ -149,6 +150,7 @@ export function buildCapacityYear(
   facts: CapacityYearFacts,
   projectTypes: readonly ProjectTypeOption[],
   planOps: CapacityYearOpsRow[],
+  contractorHours: ContractorMonthHoursRow[],
   now: Date = new Date()
 ): CapacityYearPayload | null {
   if (facts.ops.length === 0) return null
@@ -224,6 +226,7 @@ export function buildCapacityYear(
           ops: facts.ops.filter((row) => yearOf(row.month_date) === year),
           planOps: planOps.filter((row) => yearOf(row.month_date) === year),
           projects: facts.projects.filter((row) => yearOf(row.month_date) === year),
+          contractorHours: contractorHours.filter((row) => yearOf(row.month_date) === year),
           roles: facts.roles,
           projectTypes,
           currentYear,

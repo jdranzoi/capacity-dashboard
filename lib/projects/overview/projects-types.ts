@@ -63,6 +63,8 @@ export type ProjectExecutionScope = 'lifetime' | 'month'
 export type ProjectDetailTeamPersonHours = {
   personId: string
   personName: string
+  /** Contractor (D-035): hours count on the project, never in capacity KPIs. */
+  isContractor: boolean
   plannedHours: number
   loggedHours: number
 }

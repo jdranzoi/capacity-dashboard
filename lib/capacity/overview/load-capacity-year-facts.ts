@@ -38,6 +38,8 @@ export type CapacityYearProjectRow = {
 
 export type CapacityYearFacts = {
   ops: CapacityYearOpsRow[]
+  /** `YYYY-MM-01` → snapshot the month's ops (and its Planned) were built from. */
+  snapshotByMonth: Record<string, string>
   roles: CapacityYearRoleRow[]
   projects: CapacityYearProjectRow[]
 }
@@ -52,11 +54,11 @@ export async function loadCapacityYearFacts(): Promise<{
 
   const supabase = createServiceClientCached()
   const [opsResult, rolesResult, projectRows, projectDims] = await Promise.all([
-    pagedQuery<CapacityYearOpsRow>(async (from) =>
+    pagedQuery<CapacityYearOpsRow & { source_capacity_snapshot_id: string | null }>(async (from) =>
       supabase
         .from('fact_month_ops')
         .select(
-          'person_id, month_date, role_id, net_capacity_hours, planned_hours, logged_hours, commercial_logged_hours, non_commercial_logged_hours, pto_hours, elapsed_net_weekdays'
+          'person_id, month_date, role_id, net_capacity_hours, planned_hours, logged_hours, commercial_logged_hours, non_commercial_logged_hours, pto_hours, elapsed_net_weekdays, source_capacity_snapshot_id'
         )
         .order('month_date')
         .order('person_id')
@@ -97,9 +99,15 @@ export async function loadCapacityYearFacts(): Promise<{
     projectDims.rows.map((row) => [row.id, row])
   )
 
+  const snapshotByMonth: Record<string, string> = {}
+  for (const row of opsResult.rows) {
+    if (row.source_capacity_snapshot_id) snapshotByMonth[row.month_date] = row.source_capacity_snapshot_id
+  }
+
   return {
     data: {
-      ops: opsResult.rows,
+      ops: opsResult.rows.map(({ source_capacity_snapshot_id: _snapshot, ...row }) => row),
+      snapshotByMonth,
       roles: rolesResult.data ?? [],
       projects: projectRows.rows.map((row) => {
         const dim = dimByProject.get(row.project_id)

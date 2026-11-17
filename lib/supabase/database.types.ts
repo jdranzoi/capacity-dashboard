@@ -859,6 +859,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          in_population: boolean
           is_pto: boolean
           issue_id: string | null
           month_date: string
@@ -872,6 +873,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          in_population?: boolean
           is_pto?: boolean
           issue_id?: string | null
           month_date: string
@@ -885,6 +887,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          in_population?: boolean
           is_pto?: boolean
           issue_id?: string | null
           month_date?: string

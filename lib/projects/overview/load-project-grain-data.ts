@@ -15,7 +15,7 @@ import { CACHE_TAG_MONTH_FACTS, cacheTagSnapshot } from '@/lib/data/cache-tags'
 import { roundDisplayStat } from '@/lib/format/display-stats'
 import type { OverviewMonthOption } from '@/lib/overview/overview-month-options'
 import { createServiceClientCached } from '@/lib/supabase/server'
-import { DELIVERY_PLAN_FILTER } from '@/lib/data/delivery-plan-filter'
+import { PROJECT_DELIVERY_PLAN_FILTER } from '@/lib/data/delivery-plan-filter'
 
 export type ProjectActualsRow = {
   project_id: string
@@ -134,7 +134,7 @@ export async function loadProjectGrainPlans(
       .select('person_id, project_id, role_id, planned_hours')
       .eq('snapshot_id', snapshotId)
       .eq('month_date', monthStartStr)
-      .or(DELIVERY_PLAN_FILTER)
+      .or(PROJECT_DELIVERY_PLAN_FILTER)
       .not('project_id', 'is', null)
       .order('project_id')
       .range(from, from + 999)
@@ -176,7 +176,7 @@ export async function loadProjectPersonPlans(
       .eq('snapshot_id', snapshotId)
       .eq('month_date', monthStartStr)
       .eq('project_id', projectId)
-      .or(DELIVERY_PLAN_FILTER)
+      .or(PROJECT_DELIVERY_PLAN_FILTER)
       .order('person_id')
       .range(from, from + 999)
   )

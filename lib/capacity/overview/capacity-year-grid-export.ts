@@ -24,20 +24,33 @@ const UNIT_SUFFIX: Record<CapacityYearKpiKind, string> = {
   count: '',
 }
 
-type ExportRow = { label: string; row: CapacityYearGridRow; parent?: string }
+type ExportRow = { label: string; row: CapacityYearGridRow; parent?: string; path?: string }
 
-/** Rows as shown on screen: parents plus the breakdown rows of expanded parents. */
+/** A row and, when expanded, its breakdown rows (recursively), labelled with their path. */
+function expandRow(
+  row: CapacityYearGridRow,
+  expanded: ReadonlySet<string>,
+  parent?: string,
+  path: string[] = []
+): ExportRow[] {
+  const top = parent ?? row.label
+  const own: ExportRow =
+    path.length === 0
+      ? { label: row.label, row }
+      : { label: [top, ...path].join(' – '), row, parent: top, path: path.join(' – ') }
+  if (!row.breakdown || !expanded.has(row.key)) return [own]
+  return [
+    own,
+    ...row.breakdown.rows.flatMap((child) => expandRow(child, expanded, top, [...path, child.label])),
+  ]
+}
+
+/**
+ * Rows as shown on screen: parents plus the breakdown rows of expanded rows, then the
+ * contractor rows.
+ */
 function visibleRows(grid: CapacityYearGrid, expanded: ReadonlySet<string>): ExportRow[] {
-  return grid.rows.flatMap((row) => [
-    { label: row.label, row },
-    ...(row.breakdown && expanded.has(row.key)
-      ? row.breakdown.rows.map((child) => ({
-          label: `${row.label} – ${child.label}`,
-          row: child,
-          parent: row.label,
-        }))
-      : []),
-  ])
+  return [...grid.rows, ...grid.contractorRows].flatMap((row) => expandRow(row, expanded))
 }
 
 export function columnNote(column: CapacityYearGridColumn): string | null {
@@ -125,9 +138,9 @@ export function capacityYearGridToJson(
   expanded: ReadonlySet<string>
 ): string {
   const labels = headerCells(grid)
-  const rows = visibleRows(grid, expanded).map(({ row, parent }) => ({
+  const rows = visibleRows(grid, expanded).map(({ row, parent, path }) => ({
     metric: parent ?? row.label,
-    ...(parent ? { breakdown: row.label } : {}),
+    ...(path ? { breakdown: path } : {}),
     unit: JSON_UNIT[row.kind],
     values: Object.fromEntries(
       row.values.map((value, i) => [labels[i], value == null ? null : roundDisplayStat(value)])

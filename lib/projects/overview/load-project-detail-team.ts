@@ -105,16 +105,18 @@ export async function loadProjectDetailTeam(params: {
 
   const namesById = new Map<string, string>()
   const personRoleIdById = new Map<string, string | null>()
+  const contractorIds = new Set<string>()
   for (let i = 0; i < personIds.length; i += BATCH) {
     const slice = personIds.slice(i, i + BATCH)
     const { data, error } = await supabase
       .from('dim_person')
-      .select('id, name, role_id')
+      .select('id, name, role_id, is_contractor')
       .in('id', slice)
     if (error) return { data: null, error: error.message }
     for (const row of data ?? []) {
       namesById.set(row.id, row.name)
       personRoleIdById.set(row.id, row.role_id)
+      if (row.is_contractor) contractorIds.add(row.id)
     }
   }
 
@@ -126,6 +128,7 @@ export async function loadProjectDetailTeam(params: {
         planRows: planWorklog.planRows,
         worklogRows: planWorklog.worklogRows,
         namesById,
+        contractorIds,
         personRoleIdById,
         roleById,
       }),

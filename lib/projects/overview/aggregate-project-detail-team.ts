@@ -26,6 +26,7 @@ export function aggregateProjectTeamHours(params: {
   planRows: readonly PlanInput[]
   worklogRows: readonly WorklogInput[]
   namesById: ReadonlyMap<string, string>
+  contractorIds: ReadonlySet<string>
   personRoleIdById: ReadonlyMap<string, string | null>
   roleById: ReadonlyMap<string, { key: string; label: string }>
 }): ProjectDetailTeamRoleHours[] {
@@ -80,6 +81,7 @@ export function aggregateProjectTeamHours(params: {
     const person: ProjectDetailTeamPersonHours = {
       personId,
       personName: params.namesById.get(personId) ?? personId,
+      isContractor: params.contractorIds.has(personId),
       plannedHours: roundDisplayStat(acc.plannedHours),
       loggedHours: roundDisplayStat(acc.loggedHours),
     }

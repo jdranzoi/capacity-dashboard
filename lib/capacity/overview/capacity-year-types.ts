@@ -88,12 +88,19 @@ export type CapacityYearGridRow = {
   values: (number | null)[]
   /** Rows that split this one, e.g. by role or by project type. */
   breakdown?: { label: string; rows: CapacityYearGridRow[] }
+  /** Grouping row without values of its own: its cells show this note instead. */
+  note?: string
 }
 
 export type CapacityYearGrid = {
   year: number
   columns: CapacityYearGridColumn[]
   rows: CapacityYearGridRow[]
+  /**
+   * One grouping row, "Contractors", when the year has contractor hours: planned and logged
+   * hours, then person, then project. Outside every capacity KPI above (D-035).
+   */
+  contractorRows: CapacityYearGridRow[]
 }
 
 export type CapacityYearPayload = {
