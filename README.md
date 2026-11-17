@@ -142,7 +142,7 @@ The app imports table shapes from `lib/supabase/database.types.ts`. That file sh
 | **Prerequisite** | The CLI must be **authenticated to Supabase** (this is *not* the same as `NEXT_PUBLIC_SUPABASE_*` or the service role key in `.env.local`). Do **one** of: run `supabase login` once on your machine, or set a personal `SUPABASE_ACCESS_TOKEN` in the environment for that shell or CI. Without this, the command fails with “Access token not provided.” |
 | **Secrets** | Do **not** put access tokens in the repo or in `.env.local` for the Next.js app unless you have a clear team convention and keep it out of version control. Prefer `supabase login` for local work. |
 
-The Supabase project id used by the script is set in the `db:types` entry in `package.json`. If the project id ever changes, update it there, then run `pnpm db:types` again.
+The script reads the project ref from `NEXT_PUBLIC_SUPABASE_URL` in `.env.local`. To generate from another project, pass its env file: `pnpm db:types .env.staging.local`.
 
 ---
 
