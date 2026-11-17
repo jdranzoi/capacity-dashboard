@@ -18,7 +18,7 @@ export function CapacityOverviewRoleSummary({
     >
       <p className="shrink-0 text-sm font-medium tracking-tight">By role</p>
       <p className="mt-0.5 shrink-0 text-xs text-muted-foreground">
-        Capacity fill, utilization, and planned share per role. Sort and filter per column.
+        Capacity fill, utilization, and planned share per role. Expand a role to list its people. Sort and filter per column.
       </p>
       <div className="mt-3 min-h-0 flex-1 overflow-hidden">
         <RoleAnalyticsTable rows={rows} wrapperClassName="h-full" />

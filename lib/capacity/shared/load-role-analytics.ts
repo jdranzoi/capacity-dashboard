@@ -28,6 +28,17 @@ import { fetchMonthRolesForPeople } from '@/lib/workforce/month-role'
 
 const DIM_BATCH = 200
 
+/** One person of a role, same measures as the role row. */
+export type RoleAnalyticsPersonRow = {
+  personId: string
+  name: string
+  netCapacityHours: number
+  plannedHours: number
+  loggedHoursMtd: number
+  utilizationPct: number | null
+  capacityFillPct: number | null
+}
+
 export type RoleAnalyticsRow = {
   roleId: string | null
   roleKey: string
@@ -40,6 +51,8 @@ export type RoleAnalyticsRow = {
   utilizationPct: number | null
   /** Rolled-up hours ratio: sum logged MTD / sum monthly net capacity (**Capacity fill**). */
   capacityFillPct: number | null
+  /** People of the role (month role), sorted by name. */
+  people: RoleAnalyticsPersonRow[]
 }
 
 function keepPerson(personIdFilter: Set<string> | null, pid: string): boolean {
@@ -134,15 +147,17 @@ export async function loadRoleAnalytics(
     if (roleMapErr) return { data: [], error: roleMapErr }
 
     const personZoneId = new Map<string, string | null>()
+    const personName = new Map<string, string>()
     for (let i = 0; i < capacityPersonIds.length; i += DIM_BATCH) {
       const slice = capacityPersonIds.slice(i, i + DIM_BATCH)
       const { data: people, error: pErr } = await supabase
         .from('dim_person')
-        .select('id, zone_id')
+        .select('id, zone_id, name')
         .in('id', slice)
       if (pErr) return { data: [], error: pErr.message }
       for (const row of people ?? []) {
         personZoneId.set(row.id, row.zone_id)
+        personName.set(row.id, row.name)
       }
     }
 
@@ -161,6 +176,7 @@ export async function loadRoleAnalytics(
       plannedHours: number
       loggedHoursMtd: number
       elapsedCapacityHours: number
+      people: RoleAnalyticsPersonRow[]
     }
 
     const groupKey = (roleId: string | null) => (roleId == null ? '__none__' : roleId)
@@ -176,14 +192,28 @@ export async function loadRoleAnalytics(
           plannedHours: 0,
           loggedHoursMtd: 0,
           elapsedCapacityHours: 0,
+          people: [],
         }
         byRole.set(k, a)
       }
+      const net = capByPerson.get(pid) ?? 0
+      const planned = plannedByPerson.get(pid) ?? 0
+      const logged = loggedByPerson.get(pid) ?? 0
+      const elapsedHours = elapsedDays * STANDARD_WORKDAY_HOURS
       a.headcount += 1
-      a.netCapacityHours += capByPerson.get(pid) ?? 0
-      a.plannedHours += plannedByPerson.get(pid) ?? 0
-      a.loggedHoursMtd += loggedByPerson.get(pid) ?? 0
-      a.elapsedCapacityHours += elapsedDays * STANDARD_WORKDAY_HOURS
+      a.netCapacityHours += net
+      a.plannedHours += planned
+      a.loggedHoursMtd += logged
+      a.elapsedCapacityHours += elapsedHours
+      a.people.push({
+        personId: pid,
+        name: personName.get(pid) ?? pid,
+        netCapacityHours: roundDisplayStat(net),
+        plannedHours: roundDisplayStat(planned),
+        loggedHoursMtd: roundDisplayStat(logged),
+        utilizationPct: loggedUtilizationPct(logged, elapsedHours),
+        capacityFillPct: capacityFillPct(logged, net),
+      })
     }
 
     for (const pid of capacityPersonIds) {
@@ -227,6 +257,7 @@ export async function loadRoleAnalytics(
           loggedHoursMtd: loggedRounded,
           utilizationPct: utilizationPctValue,
           capacityFillPct: capacityFillPctValue,
+          people: [...agg.people].sort((a, b) => a.name.localeCompare(b.name)),
         },
       })
     }

@@ -4,12 +4,14 @@ import { useState } from 'react'
 import {
   flexRender,
   getCoreRowModel,
+  getExpandedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
   type ColumnFiltersState,
+  type ExpandedState,
   type SortingState,
 } from '@tanstack/react-table'
 
@@ -27,6 +29,11 @@ export type InteractiveDataTableProps<T> = {
   data: T[]
   columns: ColumnDef<T, unknown>[]
   getRowId: (row: T) => string
+  /**
+   * Nested rows (e.g. people of a role). Cells toggle them with `row.getToggleExpandedHandler()`;
+   * column filters then match leaf rows too and keep their parents.
+   */
+  getSubRows?: (row: T) => T[] | undefined
   initialSorting?: SortingState
   enablePagination?: boolean
   pageSize?: number
@@ -52,6 +59,7 @@ export function InteractiveDataTable<T>({
   data,
   columns,
   getRowId,
+  getSubRows,
   initialSorting = [],
   enablePagination = false,
   pageSize = DEFAULT_PAGE_SIZE,
@@ -70,19 +78,28 @@ export function InteractiveDataTable<T>({
 }: InteractiveDataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>(initialSorting)
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [expanded, setExpanded] = useState<ExpandedState>({})
 
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, columnFilters },
+    state: { sorting, columnFilters, expanded },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onExpandedChange: setExpanded,
     enableMultiSort: true,
     autoResetPageIndex: true,
     getRowId: (row) => getRowId(row),
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    ...(getSubRows
+      ? {
+          getSubRows,
+          getExpandedRowModel: getExpandedRowModel(),
+          filterFromLeafRows: true,
+        }
+      : {}),
     ...(enablePagination
       ? {
           getPaginationRowModel: getPaginationRowModel(),
@@ -231,6 +248,7 @@ export function InteractiveDataTable<T>({
                   key={row.id}
                   className={cn(
                     "border-b border-border/60 last:border-b-0",
+                    row.depth > 0 && "text-muted-foreground",
                     onRowClick && "cursor-pointer hover:bg-muted/30",
                     isRowSelected?.(row.original) && "bg-muted/40",
                   )}

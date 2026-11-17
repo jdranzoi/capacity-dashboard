@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import { createColumnHelper, type ColumnDef } from '@tanstack/react-table'
+import { ChevronRight } from 'lucide-react'
 
 import { InteractiveDataTable } from '@/components/ui/data-table/interactive-data-table'
 import { SortableHeader } from '@/components/ui/data-table/sortable-header'
@@ -19,12 +20,49 @@ import {
 } from '@/lib/table/table-filter-fns'
 import { compareNullableNumber } from '@/lib/table/table-sort-utils'
 import type { RoleAnalyticsRow } from '@/lib/capacity/shared/load-role-analytics'
+import { cn } from '@/lib/utils'
 import {
   utilizationLoggedVsCapacityBarStyles,
   utilizationLoggedVsCapacityCellStyle,
 } from '@/lib/capacity/shared/utilization-tone'
 
-const columnHelper = createColumnHelper<RoleAnalyticsRow>()
+/** A role, or one of its people as a sub-row. */
+type RoleTableRow = {
+  id: string
+  label: string
+  netCapacityHours: number
+  plannedHours: number
+  loggedHoursMtd: number
+  utilizationPct: number | null
+  capacityFillPct: number | null
+  subRows?: RoleTableRow[]
+}
+
+function toTableRows(rows: RoleAnalyticsRow[]): RoleTableRow[] {
+  return rows.map((role) => {
+    const id = role.roleId ?? `unassigned-${role.roleKey}`
+    return {
+      id,
+      label: role.roleLabel,
+      netCapacityHours: role.netCapacityHours,
+      plannedHours: role.plannedHours,
+      loggedHoursMtd: role.loggedHoursMtd,
+      utilizationPct: role.utilizationPct,
+      capacityFillPct: role.capacityFillPct,
+      subRows: role.people.map((person) => ({
+        id: `${id}:${person.personId}`,
+        label: person.name,
+        netCapacityHours: person.netCapacityHours,
+        plannedHours: person.plannedHours,
+        loggedHoursMtd: person.loggedHoursMtd,
+        utilizationPct: person.utilizationPct,
+        capacityFillPct: person.capacityFillPct,
+      })),
+    }
+  })
+}
+
+const columnHelper = createColumnHelper<RoleTableRow>()
 
 const RIGHT_ALIGNED = new Set([
   'netCapacityHours',
@@ -37,15 +75,36 @@ const RIGHT_ALIGNED = new Set([
 
 // Columns: ROLE | NET CAP | PLANNED | PLANNED % | LOGGED | CAPACITY FILL | UTIL + bar
 const COLUMNS = [
-  columnHelper.accessor('roleLabel', {
+  columnHelper.accessor('label', {
     enableColumnFilter: true,
     filterFn: filterTextIncludesCi,
     header: ({ column }) => <SortableHeader column={column}>Role</SortableHeader>,
-    cell: (info) => (
-      <span className="block truncate font-medium text-foreground" title={info.getValue()}>
-        {info.getValue()}
-      </span>
-    ),
+    cell: ({ row, getValue }) =>
+      row.getCanExpand() ? (
+        <button
+          type="button"
+          onClick={row.getToggleExpandedHandler()}
+          aria-expanded={row.getIsExpanded()}
+          className="-ml-1 flex max-w-full cursor-pointer items-center gap-1 rounded-sm pr-1 text-left font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          title={`${getValue()}: show people`}
+        >
+          <ChevronRight
+            aria-hidden
+            className={cn(
+              'size-3.5 shrink-0 text-muted-foreground transition-transform duration-150',
+              row.getIsExpanded() && 'rotate-90'
+            )}
+          />
+          <span className="truncate">{getValue()}</span>
+        </button>
+      ) : (
+        <span
+          className={cn('block truncate', row.depth > 0 ? 'pl-5' : 'pl-3.5 font-medium text-foreground')}
+          title={getValue()}
+        >
+          {getValue()}
+        </span>
+      ),
   }),
   columnHelper.accessor('netCapacityHours', {
     enableColumnFilter: true,
@@ -181,7 +240,7 @@ const COLUMNS = [
       )
     },
   }),
-] as ColumnDef<RoleAnalyticsRow, unknown>[]
+] as ColumnDef<RoleTableRow, unknown>[]
 
 export function RoleAnalyticsTable({
   rows,
@@ -190,14 +249,15 @@ export function RoleAnalyticsTable({
   rows: RoleAnalyticsRow[]
   wrapperClassName?: string
 }) {
-  const columns = useMemo(() => COLUMNS, [])
+  const data = useMemo(() => toTableRows(rows), [rows])
 
   return (
     <InteractiveDataTable
-      data={rows}
-      columns={columns}
-      getRowId={(r) => r.roleId ?? `unassigned-${r.roleKey}`}
-      initialSorting={[{ id: 'roleLabel', desc: false }]}
+      data={data}
+      columns={COLUMNS}
+      getRowId={(r) => r.id}
+      getSubRows={(r) => r.subRows}
+      initialSorting={[{ id: 'label', desc: false }]}
       emptyMessage="No capacity rows in scope for this month."
       scopeNoun="roles in scope"
       embedded
