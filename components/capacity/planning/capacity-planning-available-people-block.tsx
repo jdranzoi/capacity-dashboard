@@ -3,7 +3,7 @@ import { connection } from 'next/server'
 import { SectionDataError, SectionEmptyState } from '@/components/ui/section-data-states'
 import { CapacityPlanningAvailablePeopleCard } from '@/components/capacity/planning/capacity-planning-available-people-card'
 import { loadPlanningAvailablePeople } from '@/lib/capacity/planning/load-planning-available-people'
-import { loadPlanningMonthOptions } from '@/lib/capacity/planning/load-planning-month-options'
+import { loadPlanningMonthOptions } from '@/lib/capacity/shared/load-planning-month-options'
 import { resolvePlanningPeriod } from '@/lib/capacity/planning/planning-route-period'
 
 export async function CapacityPlanningAvailablePeopleBlock({

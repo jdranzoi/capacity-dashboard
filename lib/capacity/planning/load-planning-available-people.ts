@@ -10,7 +10,7 @@ import {
   type FragmentationFactRow,
 } from '@/lib/data/load-fragmentation-by-person'
 import { roundDisplayStat } from '@/lib/format/display-stats'
-import { loadPlanningMonthOptions } from '@/lib/capacity/planning/load-planning-month-options'
+import { loadPlanningMonthOptions } from '@/lib/capacity/shared/load-planning-month-options'
 import {
   DEFAULT_PLANNING_MIN_AVAILABILITY,
   parsePlanningMinAvailabilityParam,

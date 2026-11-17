@@ -5,7 +5,7 @@ import { CapacityPlanningHeader } from '@/components/capacity/planning/capacity-
 import { CapacityPlanningMonthKpiStrip } from '@/components/capacity/planning/capacity-planning-month-kpi-strip'
 import { CapacityPlanningPeriodPicker } from '@/components/capacity/planning/capacity-planning-period-picker'
 import { loadPlanningWorkspaceCached } from '@/lib/capacity/planning/load-planning-workspace'
-import { loadPlanningMonthOptions } from '@/lib/capacity/planning/load-planning-month-options'
+import { loadPlanningMonthOptions } from '@/lib/capacity/shared/load-planning-month-options'
 
 export async function CapacityPlanningChromeBlock({
   fromParam,
