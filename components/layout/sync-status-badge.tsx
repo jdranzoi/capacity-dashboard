@@ -11,8 +11,8 @@ function getStatusTier(syncedAt: string | null): StatusTier {
   if (!syncedAt) return 'error'
   const ageHours =
     (Date.now() - new Date(syncedAt).getTime()) / (1000 * 60 * 60)
-  if (ageHours < 4) return 'fresh'
-  if (ageHours < 24) return 'stale'
+  if (ageHours < 12) return 'fresh'
+  if (ageHours <= 24) return 'stale'
   return 'old'
 }
 
